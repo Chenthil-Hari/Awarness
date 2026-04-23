@@ -7,7 +7,7 @@ import Navbar from '../components/Navbar';
 import InboxClient from '../components/InboxClient';
 import LoadingSpinner from '../components/LoadingSpinner';
 import DrillLottie from '../components/DrillLottie';
-import { calculateLevel } from '../lib/game';
+import { calculateLevel } from '../../lib/game';
 
 export default function InboxPage() {
   const { data: session, status } = useSession();
