@@ -10,7 +10,7 @@ export async function GET(req) {
     const db = client.db();
     const pollsCollection = db.collection("polls");
 
-    // Temporary cleanup to ensure real data starts from 0
+    // FORCED RESET: Clear old test data permanently
     await pollsCollection.deleteMany({});
 
     // Fetch the most recent poll
@@ -19,7 +19,7 @@ export async function GET(req) {
     // Seed a default poll if none exist
     if (!activePoll) {
       const defaultPoll = {
-        question: "Which of these emerging threats is your top priority to master?",
+        question: "Which cybersecurity trend concerns you most today?",
         options: [
           { id: 1, text: "AI-Generated Voice Clones", votes: 0 },
           { id: 2, text: "Malicious QR Codes (Quishing)", votes: 0 },
