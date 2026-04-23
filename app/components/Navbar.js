@@ -1,6 +1,6 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut, ArrowLeft } from 'lucide-react';
+import { Shield, LogOut, Home } from 'lucide-react';
 import StreakIcon from './StreakIcon';
 import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
@@ -61,6 +61,11 @@ export default function Navbar({ score = 0, level = 1 }) {
 
         {session && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Link href="/" title="Home" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-secondary)', transition: 'color 0.2s', padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
+              <Home size={20} />
+              <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Home</span>
+            </Link>
+
             <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-secondary)', transition: 'color 0.2s', padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
               <TrophyIcon size={22} />
               <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>Ranking</span>
