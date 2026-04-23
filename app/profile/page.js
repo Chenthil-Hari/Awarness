@@ -169,8 +169,6 @@ export default function ProfilePage() {
           </form>
         </motion.div>
       </div>
-        </motion.div>
-      </div>
     </main>
   );
 }
