@@ -6,6 +6,8 @@ import Navbar from '../components/Navbar';
 import InboxClient from '../components/InboxClient';
 import LoadingSpinner from '../components/LoadingSpinner';
 
+import DrillLottie from '../components/DrillLottie';
+
 export default function InboxPage() {
   const { data: session, status } = useSession();
 
@@ -21,13 +23,19 @@ export default function InboxPage() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}
           >
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>
-              Live <span className="gradient-text">Drills</span> 📩
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
-              Test your threat detection skills in real-time. Can you spot the phish?
-            </p>
+            <div>
+              <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.2rem' }}>
+                Live <span className="gradient-text">Drills</span>
+              </h1>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
+                Test your threat detection skills in real-time. Can you spot the phish?
+              </p>
+            </div>
+            <div style={{ transform: 'translateY(-5px)' }}>
+              <DrillLottie width={120} height={120} />
+            </div>
           </motion.div>
         </div>
 
