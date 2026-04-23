@@ -156,7 +156,7 @@ export default function InboxClient() {
         </div>
 
         {/* Email Detail */}
-        <div style={{ display: 'flex', flexDirection: 'column', background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)', position: 'relative' }}>
           {selectedEmail ? (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               {/* Toolbar */}
@@ -172,37 +172,74 @@ export default function InboxClient() {
                 <ActionButton icon={<Send size={18}/>} label="Reply" color="#7c3aed" onClick={() => handleAction('Reply')} disabled={selectedEmail.acted} isDark={isDark} />
               </div>
 
-              {/* Content Area */}
-              <div 
-                onClick={handleContentClick}
-                style={{ padding: '2.5rem', overflowY: 'auto', flex: 1 }}
-              >
-                <div style={{ marginBottom: '2.5rem' }}>
-                  <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '1.25rem', letterSpacing: '-0.5px', color: isDark ? 'white' : '#1e293b' }}>{selectedEmail.subject}</h1>
-                  <div className="flex-center" style={{ justifyContent: 'flex-start', gap: '1rem' }}>
-                    <div style={{ 
-                      width: '45px', height: '45px', borderRadius: '12px', 
-                      background: 'var(--accent-primary)', display: 'flex', 
-                      alignItems: 'center', justifyContent: 'center', fontWeight: 800,
-                      fontSize: '1.2rem', boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
-                      color: 'white'
-                    }}>
-                      {selectedEmail.sender[0]}
+              {/* Content Area with Animation */}
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={selectedId}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={handleContentClick}
+                  style={{ padding: '2.5rem', overflowY: 'auto', flex: 1 }}
+                >
+                  <div style={{ marginBottom: '2.5rem' }}>
+                    <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '1.25rem', letterSpacing: '-0.5px', color: isDark ? 'white' : '#1e293b' }}>{selectedEmail.subject}</h1>
+                    <div className="flex-center" style={{ justifyContent: 'flex-start', gap: '1rem' }}>
+                      <div style={{ 
+                        width: '45px', height: '45px', borderRadius: '12px', 
+                        background: 'var(--accent-primary)', display: 'flex', 
+                        alignItems: 'center', justifyContent: 'center', fontWeight: 800,
+                        fontSize: '1.2rem', boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
+                        color: 'white'
+                      }}>
+                        {selectedEmail.sender[0]}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '1rem', color: isDark ? 'white' : '#334155' }}>{selectedEmail.sender}</div>
+                        <div style={{ fontSize: '0.85rem', color: isDark ? 'var(--text-secondary)' : '#64748b', opacity: 0.8 }}>&lt;{selectedEmail.senderEmail}&gt;</div>
+                      </div>
+                      <div style={{ marginLeft: 'auto', fontSize: '0.85rem', color: isDark ? 'var(--text-secondary)' : '#94a3b8', fontWeight: 500 }}>{selectedEmail.timestamp}</div>
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '1rem', color: isDark ? 'white' : '#334155' }}>{selectedEmail.sender}</div>
-                      <div style={{ fontSize: '0.85rem', color: isDark ? 'var(--text-secondary)' : '#64748b', opacity: 0.8 }}>&lt;{selectedEmail.senderEmail}&gt;</div>
-                    </div>
-                    <div style={{ marginLeft: 'auto', fontSize: '0.85rem', color: isDark ? 'var(--text-secondary)' : '#94a3b8', fontWeight: 500 }}>{selectedEmail.timestamp}</div>
                   </div>
-                </div>
 
-                <div 
-                  className="email-body"
-                  style={{ color: isDark ? 'var(--text-secondary)' : '#475569', lineHeight: 1.7, fontSize: '1.05rem' }}
-                  dangerouslySetInnerHTML={{ __html: selectedEmail.content }}
-                />
-              </div>
+                  <div 
+                    className="email-body"
+                    style={{ color: isDark ? 'var(--text-secondary)' : '#475569', lineHeight: 1.7, fontSize: '1.05rem' }}
+                    dangerouslySetInnerHTML={{ __html: selectedEmail.content }}
+                  />
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Success Badge */}
+              <AnimatePresence>
+                {feedback?.correct && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5, y: -20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    style={{
+                      position: 'absolute',
+                      top: '5rem',
+                      right: '2rem',
+                      background: '#10b981',
+                      color: 'white',
+                      padding: '0.5rem 1rem',
+                      borderRadius: 'var(--radius-full)',
+                      fontWeight: 800,
+                      fontSize: '0.8rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      boxShadow: '0 10px 20px rgba(16, 185, 129, 0.3)',
+                      zIndex: 10
+                    }}
+                  >
+                    <CheckCircle2 size={16} />
+                    THREAT NEUTRALIZED
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Feedback Overlay */}
               <AnimatePresence>
@@ -221,7 +258,8 @@ export default function InboxClient() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '1.5rem',
-                      boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                      zIndex: 5
                     }}
                   >
                     {feedback.correct ? <CheckCircle2 color="#22c55e" size={32} /> : <AlertCircle color="#ef4444" size={32} />}
