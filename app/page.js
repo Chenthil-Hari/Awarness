@@ -16,6 +16,8 @@ export default function Home() {
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [userXp, setUserXp] = useState(0);
 
+  const [globalStats, setGlobalStats] = useState({ activeUsers: 0, neutralizedThreats: 0 });
+
   // Initialize XP from session
   useEffect(() => {
     if (session?.user?.xp !== undefined) {
@@ -23,9 +25,20 @@ export default function Home() {
     }
   }, [session]);
 
+  // Fetch Global Stats
+  useEffect(() => {
+    fetch('/api/stats/global')
+      .then(res => res.json())
+      .then(data => setGlobalStats(data))
+      .catch(err => console.error("Stats fetch error:", err));
+  }, []);
+
   const handleScenarioComplete = () => {
     setSelectedScenario(null);
-    // Refresh XP would happen here, but for simplicity we rely on local state updates if needed
+    // Refresh stats after completion
+    fetch('/api/stats/global')
+      .then(res => res.json())
+      .then(data => setGlobalStats(data));
   };
 
   const level = calculateLevel(userXp);
@@ -128,11 +141,11 @@ export default function Home() {
               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>Active Users</span>
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>1,284</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{globalStats.activeUsers.toLocaleString()}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>Threats Neutralized</span>
-                  <span style={{ color: '#10b981', fontWeight: 700 }}>12,402</span>
+                  <span style={{ color: '#10b981', fontWeight: 700 }}>{globalStats.neutralizedThreats.toLocaleString()}</span>
                 </div>
               </div>
             </div>

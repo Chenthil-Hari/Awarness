@@ -31,6 +31,14 @@ export async function POST(req) {
       updateQuery
     );
 
+    // Update global stats
+    const statsCollection = db.collection("stats");
+    await statsCollection.updateOne(
+      { name: "global" },
+      { $inc: { neutralized_threats: 1 } },
+      { upsert: true }
+    );
+
     return NextResponse.json({ message: "Progress saved successfully" });
   } catch (error) {
     console.error("Progress save error:", error);
