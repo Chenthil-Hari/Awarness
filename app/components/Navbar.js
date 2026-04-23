@@ -1,6 +1,6 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut, Sun, Moon } from 'lucide-react';
+import { Shield, LogOut, ArrowLeft } from 'lucide-react';
 import StreakIcon from './StreakIcon';
 import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
@@ -10,7 +10,6 @@ import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar({ score = 0, level = 1 }) {
   const { data: session } = useSession();
-  const { theme, toggleTheme } = useTheme();
 
   return (
     <nav className="glass" style={{
@@ -23,17 +22,17 @@ export default function Navbar({ score = 0, level = 1 }) {
       alignItems: 'center',
       marginBottom: '2rem'
     }}>
-      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
         <div style={{
-          width: '40px',
-          height: '40px',
+          width: '36px',
+          height: '36px',
           background: 'var(--accent-primary)',
           borderRadius: 'var(--radius-md)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          <Shield size={24} color="white" />
+          <Shield size={20} color="white" />
         </div>
         <div>
           <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Awareness <span className="gradient-text">Pro</span></h2>
@@ -41,33 +40,14 @@ export default function Navbar({ score = 0, level = 1 }) {
         </div>
       </Link>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-        <div style={{ textAlign: 'right', display: 'none', md: 'block' }}>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>CURRENT SCORE</p>
-          <p style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'var(--accent-secondary)' }}>{score} XP</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ textAlign: 'right', display: 'none', md: 'block', marginRight: '0.25rem' }}>
+          <p style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 700 }}>XP</p>
+          <p style={{ fontSize: '0.9rem', fontWeight: 900, margin: 0, color: 'var(--accent-secondary)' }}>{score}</p>
         </div>
 
-        <button 
-          onClick={toggleTheme}
-          style={{ 
-            width: '40px', 
-            height: '40px', 
-            borderRadius: '50%', 
-            background: 'var(--bg-tertiary)', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            border: '1px solid var(--glass-border)',
-            color: 'var(--text-primary)',
-            transition: 'all 0.3s ease'
-          }}
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-        </button>
-        
         <div style={{
-          padding: '0.4rem 1rem',
+          padding: '0.35rem 0.75rem',
           background: 'rgba(255, 255, 255, 0.05)',
           borderRadius: 'var(--radius-full)',
           display: 'flex',
@@ -75,25 +55,25 @@ export default function Navbar({ score = 0, level = 1 }) {
           gap: '0.4rem',
           border: '1px solid var(--glass-border)'
         }}>
-          <LevelIcon size={24} />
-          <span style={{ fontWeight: 600 }}>Level {level}</span>
+          <LevelIcon size={20} />
+          <span style={{ fontWeight: 700, fontSize: '0.8rem' }}>Lv. {level}</span>
         </div>
 
         {session && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginRight: '1rem' }}>
-            <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
-              <TrophyIcon size={24} />
-              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Ranking</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-secondary)', transition: 'color 0.2s', padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
+              <TrophyIcon size={22} />
+              <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>Ranking</span>
             </Link>
 
-            <Link href="/settings" title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
-              <SettingsIcon size={24} />
-              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Settings</span>
+            <Link href="/settings" title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-secondary)', transition: 'color 0.2s', padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
+              <SettingsIcon size={22} />
+              <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>Settings</span>
             </Link>
             
-            <div title="Daily Streak" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', padding: '0.2rem 0.8rem 0.2rem 0.4rem', background: 'rgba(255, 120, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 120, 0, 0.2)' }}>
-              <StreakIcon size={28} />
-              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#FF7800' }}>{session.user.streak || 0}</span>
+            <div title="Daily Streak" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', padding: '0.15rem 0.75rem 0.15rem 0.3rem', background: 'rgba(255, 120, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 120, 0, 0.2)' }}>
+              <StreakIcon size={24} />
+              <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#FF7800' }}>{session.user.streak || 0}</span>
             </div>
           </div>
         )}

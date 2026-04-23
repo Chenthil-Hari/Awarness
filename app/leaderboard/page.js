@@ -5,7 +5,8 @@ import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import TrophyIcon from '../components/TrophyIcon';
 import { motion } from 'framer-motion';
-import { Medal, Star, Target, Crown } from 'lucide-react';
+import { Medal, Star, Target, Crown, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LeaderboardPage() {
   const [users, setUsers] = useState([]);
@@ -33,6 +34,19 @@ export default function LeaderboardPage() {
       
       <div style={{ marginTop: '4rem', marginBottom: '4rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+          <Link href="/" style={{ 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: '0.5rem', 
+            color: 'var(--text-secondary)', 
+            marginBottom: '2rem',
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            transition: 'color 0.2s'
+          }} className="hover-link">
+            <ArrowLeft size={18} /> Back to Home
+          </Link>
+
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}

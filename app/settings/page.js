@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Monitor, ChevronRight } from 'lucide-react';
+import { Sun, Moon, Monitor, ChevronRight, ArrowLeft } from 'lucide-react';
 import SettingsIcon from '../components/SettingsIcon';
 import { useTheme } from '../context/ThemeContext';
 import Link from 'next/link';
@@ -26,6 +26,19 @@ export default function SettingsPage() {
       <Navbar score={1200} level={4} />
       
       <div className="flex-center" style={{ marginTop: '4rem' }}>
+        <Link href="/" style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '0.5rem', 
+          color: 'var(--text-secondary)', 
+          marginBottom: '2rem',
+          fontSize: '0.9rem',
+          fontWeight: 600,
+          transition: 'color 0.2s'
+        }} className="hover-link">
+          <ArrowLeft size={18} /> Back to Home
+        </Link>
+
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

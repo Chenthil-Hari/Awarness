@@ -7,7 +7,8 @@ import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProfileIcon from '../components/ProfileIcon';
 import { motion } from 'framer-motion';
-import { Check, AlertCircle, Save, Star } from 'lucide-react';
+import { Check, AlertCircle, Save, Star, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ProfilePage() {
   const { data: session, update } = useSession();
@@ -70,7 +71,21 @@ export default function ProfilePage() {
     <main className="container">
       <Navbar score={1200} level={4} />
       
-      <div className="flex-center" style={{ marginTop: '4rem' }}>
+      <div className="flex-center" style={{ marginTop: '4rem', flexDirection: 'column' }}>
+        <Link href="/" style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '0.5rem', 
+          color: 'var(--text-secondary)', 
+          marginBottom: '2rem',
+          fontSize: '0.9rem',
+          fontWeight: 600,
+          alignSelf: 'center',
+          transition: 'color 0.2s'
+        }} className="hover-link">
+          <ArrowLeft size={18} /> Back to Home
+        </Link>
+
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
