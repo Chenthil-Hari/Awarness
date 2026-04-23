@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, ShieldAlert, Trash2, Send, Inbox, Star, AlertCircle, CheckCircle2, ChevronRight, Search } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { simulatedEmails } from '../data/emails';
 
 export default function InboxClient() {
+  const { data: session } = useSession();
   const [emails, setEmails] = useState(simulatedEmails.map(e => ({ ...e, read: false, acted: false })));
   const [selectedId, setSelectedId] = useState(simulatedEmails[0].id);
   const [feedback, setFeedback] = useState(null);
@@ -13,7 +15,16 @@ export default function InboxClient() {
 
   const selectedEmail = emails.find(e => e.id === selectedId);
 
-  const handleAction = (action) => {
+  // Mark as read when selected
+  useEffect(() => {
+    if (selectedId) {
+      setEmails(prev => prev.map(e => 
+        e.id === selectedId && !e.read ? { ...e, read: true } : e
+      ));
+    }
+  }, [selectedId]);
+
+  const handleAction = async (action) => {
     if (selectedEmail.acted) return;
 
     const isCorrect = action === selectedEmail.correctAction;
@@ -29,6 +40,23 @@ export default function InboxClient() {
     setEmails(prev => prev.map(e => 
       e.id === selectedId ? { ...e, acted: true, read: true } : e
     ));
+
+    // Sync XP to database if logged in
+    if (session && isCorrect) {
+      try {
+        await fetch('/api/user/complete-simulation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            xpToAdd: pointsAwarded, 
+            badgeAwarded: null,
+            isInboxDrill: true // Flag for backend analytics if needed
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to sync Inbox XP:", err);
+      }
+    }
   };
 
   return (
