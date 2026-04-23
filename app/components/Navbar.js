@@ -14,31 +14,54 @@ export default function Navbar({ score = 0, level = 1 }) {
   return (
     <nav className="glass" style={{
       position: 'sticky',
-      top: 0,
+      top: '1rem',
       zIndex: 100,
-      padding: '1rem 2rem',
+      padding: '0.75rem 2.5rem',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: '2rem'
+      marginBottom: '3rem',
+      width: 'calc(100% - 4rem)',
+      margin: '1rem auto',
+      borderRadius: 'var(--radius-xl)'
     }}>
-      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-        <div style={{
-          width: '36px',
-          height: '36px',
-          background: 'var(--accent-primary)',
-          borderRadius: 'var(--radius-md)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <Shield size={20} color="white" />
-        </div>
-        <div>
-          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Awareness <span className="gradient-text">Pro</span></h2>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>Simulate. Learn. Survive.</p>
-        </div>
-      </Link>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            background: 'var(--accent-primary)',
+            borderRadius: 'var(--radius-md)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Shield size={20} color="white" />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Awareness <span className="gradient-text">Pro</span></h2>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>Simulate. Learn. Survive.</p>
+          </div>
+        </Link>
+
+        {session && (
+          <Link href="/" title="Home Dashboard" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.5rem', 
+            color: 'var(--text-secondary)', 
+            transition: 'all 0.3s ease', 
+            padding: '0.5rem 1rem', 
+            borderRadius: 'var(--radius-md)', 
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid var(--glass-border)',
+            marginLeft: '1rem'
+          }} className="hover-lift">
+            <Home size={18} />
+            <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>HOME</span>
+          </Link>
+        )}
+      </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <div style={{ textAlign: 'right', display: 'none', md: 'block', marginRight: '0.25rem' }}>
@@ -60,12 +83,7 @@ export default function Navbar({ score = 0, level = 1 }) {
         </div>
 
         {session && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Link href="/" title="Home" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-secondary)', transition: 'color 0.2s', padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
-              <Home size={20} />
-              <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Home</span>
-            </Link>
-
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-secondary)', transition: 'color 0.2s', padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
               <TrophyIcon size={22} />
               <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>Ranking</span>
