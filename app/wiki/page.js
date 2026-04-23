@@ -5,13 +5,14 @@ import { useSession } from 'next-auth/react';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ThumbsUp, Plus, Search, BookOpen, Send, X, MessageSquare, ShieldCheck } from 'lucide-react';
+import { ThumbsUp, Plus, Search, BookOpen, Send, X, MessageSquare, ShieldCheck, Trash2, Flag, AlertCircle } from 'lucide-react';
 
 export default function WikiPage() {
   const { data: session } = useSession();
   const [guides, setGuides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Form State
@@ -19,6 +20,11 @@ export default function WikiPage() {
   const [content, setContent] = useState('');
   const [domain, setDomain] = useState('Cybersecurity');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Report State
+  const [reportingGuide, setReportingGuide] = useState(null);
+  const [reportReason, setReportReason] = useState('Inaccurate Information');
+  const [reportDetails, setReportDetails] = useState('');
 
   useEffect(() => {
     fetchGuides();
@@ -47,10 +53,51 @@ export default function WikiPage() {
       });
       
       if (res.ok) {
-        fetchGuides(); // Refresh list to update votes
+        fetchGuides();
       }
     } catch (error) {
       console.error('Failed to vote');
+    }
+  };
+
+  const handleDelete = async (guideId) => {
+    if (!confirm('Are you sure you want to delete this guide?')) return;
+
+    try {
+      const res = await fetch(`/api/guides/${guideId}`, {
+        method: 'DELETE',
+      });
+      
+      if (res.ok) {
+        setGuides(guides.filter(g => g._id !== guideId));
+      }
+    } catch (error) {
+      console.error('Failed to delete guide');
+    }
+  };
+
+  const handleReport = async (e) => {
+    e.preventDefault();
+    if (!session || !reportingGuide) return;
+
+    try {
+      const res = await fetch('/api/guides/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          guideId: reportingGuide._id, 
+          reason: reportReason,
+          details: reportDetails
+        }),
+      });
+
+      if (res.ok) {
+        setShowReportModal(false);
+        setReportDetails('');
+        alert('Thank you for your report. Our team will review it.');
+      }
+    } catch (error) {
+      console.error('Failed to report');
     }
   };
 
@@ -168,7 +215,7 @@ export default function WikiPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.05 }}
                 className="glass-card"
-                style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', display: 'flex', flexDirection: 'column' }}
+                style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', display: 'flex', flexDirection: 'column', position: 'relative' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                   <span style={{ 
@@ -182,19 +229,42 @@ export default function WikiPage() {
                   }}>
                     {guide.domain}
                   </span>
-                  <button 
-                    onClick={() => handleVote(guide._id)}
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem',
-                      color: guide.voters?.includes(session?.user?.id) ? 'var(--accent-primary)' : 'var(--text-muted)',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    <ThumbsUp size={20} fill={guide.voters?.includes(session?.user?.id) ? 'var(--accent-primary)' : 'transparent'} />
-                    <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>{guide.upvotes || 0}</span>
-                  </button>
+                  
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {session?.user?.id === guide.authorId ? (
+                      <button 
+                        onClick={() => handleDelete(guide._id)}
+                        style={{ color: 'var(--accent-danger)', opacity: 0.7 }}
+                        title="Delete Guide"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => {
+                          setReportingGuide(guide);
+                          setShowReportModal(true);
+                        }}
+                        style={{ color: 'var(--text-muted)' }}
+                        title="Report Guide"
+                      >
+                        <Flag size={18} />
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => handleVote(guide._id)}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem',
+                        color: guide.voters?.includes(session?.user?.id) ? 'var(--accent-primary)' : 'var(--text-muted)',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <ThumbsUp size={20} fill={guide.voters?.includes(session?.user?.id) ? 'var(--accent-primary)' : 'transparent'} />
+                      <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>{guide.upvotes || 0}</span>
+                    </button>
+                  </div>
                 </div>
                 
                 <h3 style={{ fontSize: '1.4rem', marginBottom: '1rem', fontWeight: 700 }}>{guide.title}</h3>
@@ -300,6 +370,80 @@ export default function WikiPage() {
                     style={{ width: '100%', padding: '1rem', marginTop: '1rem' }}
                   >
                     {isSubmitting ? 'Publishing...' : <><Send size={20} /> Publish Guide</>}
+                  </button>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Report Modal */}
+        <AnimatePresence>
+          {showReportModal && (
+            <div style={{ 
+              position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
+              background: 'rgba(0,0,0,0.85)', zIndex: 1100, display: 'flex', 
+              alignItems: 'center', justifyContent: 'center', padding: '1rem'
+            }}>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="glass-card"
+                style={{ width: '100%', maxWidth: '500px', padding: '2.5rem', borderRadius: 'var(--radius-xl)' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <AlertCircle size={24} color="var(--accent-warning)" />
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Report <span className="gradient-text">Strategy</span></h2>
+                  </div>
+                  <button onClick={() => setShowReportModal(false)} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
+                </div>
+
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                  Help us keep the hub safe and accurate. Why are you reporting <strong>{reportingGuide?.title}</strong>?
+                </p>
+
+                <form onSubmit={handleReport} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>REASON</label>
+                    <select 
+                      value={reportReason}
+                      onChange={(e) => setReportReason(e.target.value)}
+                      style={{
+                        padding: '1rem', background: 'var(--bg-tertiary)', 
+                        border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
+                        color: 'var(--text-primary)', outline: 'none'
+                      }}
+                    >
+                      <option>Inaccurate Information</option>
+                      <option>Inappropriate Content</option>
+                      <option>Spam or Scams</option>
+                      <option>Incorrect Category</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>ADDITIONAL DETAILS</label>
+                    <textarea 
+                      rows={4}
+                      placeholder="Help us understand the issue..."
+                      value={reportDetails}
+                      onChange={(e) => setReportDetails(e.target.value)}
+                      style={{
+                        padding: '1rem', background: 'var(--bg-tertiary)', 
+                        border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
+                        color: 'var(--text-primary)', outline: 'none', resize: 'none'
+                      }}
+                    />
+                  </div>
+
+                  <button 
+                    className="btn-primary" 
+                    style={{ width: '100%', padding: '1rem', background: 'var(--accent-warning)', boxShadow: '0 4px 14px 0 rgba(217, 119, 6, 0.3)' }}
+                  >
+                    Submit Report
                   </button>
                 </form>
               </motion.div>
