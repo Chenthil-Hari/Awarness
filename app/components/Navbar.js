@@ -14,15 +14,15 @@ export default function Navbar({ score = 0, level = 1 }) {
   return (
     <nav className="glass" style={{
       position: 'sticky',
-      top: '1rem',
+      top: '0.5rem',
       zIndex: 100,
-      padding: '0.75rem 2.5rem',
+      padding: '0.75rem 3rem',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: '3rem',
-      width: 'calc(100% - 4rem)',
-      margin: '1rem auto',
+      marginBottom: '4rem',
+      width: 'calc(100% - 1.5rem)',
+      margin: '0.5rem auto',
       borderRadius: 'var(--radius-xl)'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
@@ -61,9 +61,7 @@ export default function Navbar({ score = 0, level = 1 }) {
             <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>HOME</span>
           </Link>
         )}
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
         <div style={{ textAlign: 'right', display: 'none', md: 'block', marginRight: '0.25rem' }}>
           <p style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 700 }}>XP</p>
           <p style={{ fontSize: '0.9rem', fontWeight: 900, margin: 0, color: 'var(--accent-secondary)' }}>{score}</p>
@@ -83,7 +81,7 @@ export default function Navbar({ score = 0, level = 1 }) {
         </div>
 
         {session && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-secondary)', transition: 'color 0.2s', padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
               <TrophyIcon size={22} />
               <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>Ranking</span>
