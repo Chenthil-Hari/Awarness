@@ -94,8 +94,9 @@ export default function ProfilePage() {
             }}>
               <ProfileIcon size={56} />
             </div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>Account <span className="gradient-text">Settings</span></h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Manage your unique identity</p>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>{session.user.name}</h2>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0, color: 'var(--text-secondary)' }}>Account <span className="gradient-text">Identity</span></h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>Manage your unique platform presence</p>
           </div>
 
             <div style={{ marginBottom: '2.5rem' }}>
