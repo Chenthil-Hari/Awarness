@@ -48,27 +48,22 @@ export const authOptions = {
         // Check if user already exists in our DB
         const existingUser = await usersCollection.findOne({ email: user.email });
 
+        // RULE: Only allowed if user already exists in DB
         if (!existingUser) {
-          // Generate a base username from the Google name
-          let baseUsername = profile.name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '');
-          let uniqueUsername = baseUsername;
-          let counter = 1;
-
-          // Keep checking until we find a unique username
-          while (await usersCollection.findOne({ username: uniqueUsername })) {
-            uniqueUsername = `${baseUsername}_${Math.floor(Math.random() * 1000)}`;
-            counter++;
-          }
-
-          // Attach the unique username to the user object before creation
-          user.username = uniqueUsername;
-          // The adapter will handle the insertion, but we can also do it manually if needed
-          // However, NextAuth adapter inserts the 'user' object.
+          return false; // Reject the login
         }
+
+        // Attach existing username to user object for the session
+        user.username = existingUser.username;
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // Handle the 'update' trigger from the client-side session update
+      if (trigger === "update" && session?.user?.username) {
+        token.username = session.user.username;
+      }
+      
       if (user) {
         token.id = user.id;
         token.username = user.username;
