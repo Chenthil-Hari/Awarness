@@ -57,9 +57,10 @@ export default function Navbar({ score = 0, level = 1 }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '1rem', paddingLeft: '1rem', borderLeft: '1px solid var(--glass-border)' }}>
             <div style={{ textAlign: 'right' }}>
               <p style={{ fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>{session.user.name}</p>
+              <p style={{ fontSize: '0.7rem', color: 'var(--accent-secondary)', margin: '0 0 0.25rem 0' }}>@{session.user.username || 'user'}</p>
               <button 
                 onClick={() => signOut()}
-                style={{ fontSize: '0.7rem', color: 'var(--accent-danger)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                style={{ fontSize: '0.7rem', color: 'var(--accent-danger)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginLeft: 'auto' }}
               >
                 <LogOut size={12} /> Sign Out
               </button>
