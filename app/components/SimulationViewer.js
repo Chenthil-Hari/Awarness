@@ -11,6 +11,7 @@ export default function SimulationViewer({ scenario, onExit }) {
   const {
     currentStep,
     score,
+    inventory,
     isComplete,
     lastFeedback,
     makeDecision,
