@@ -4,9 +4,13 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { BarChart3, Users, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 export default function CommunityPoll() {
   const { data: session } = useSession();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  
   const [poll, setPoll] = useState(null);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
@@ -69,8 +73,8 @@ export default function CommunityPoll() {
     <div className="glass-card" style={{ 
       padding: '2rem', 
       borderRadius: 'var(--radius-xl)', 
-      background: 'rgba(255, 255, 255, 0.03)',
-      border: '1px solid var(--glass-border)',
+      background: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+      border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
       height: '100%'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
@@ -78,12 +82,12 @@ export default function CommunityPoll() {
           <Users size={20} />
         </div>
         <div>
-          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>Community <span className="gradient-text">Pulse</span></h3>
-          <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.5 }}>{totalVotes} total votes</p>
+          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>Community <span className="gradient-text">Pulse</span></h3>
+          <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{totalVotes} total votes</p>
         </div>
       </div>
 
-      <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1.5rem', lineHeight: 1.4 }}>
+      <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1.5rem', lineHeight: 1.4, color: 'var(--text-primary)' }}>
         {poll.question}
       </h4>
 
@@ -100,16 +104,16 @@ export default function CommunityPoll() {
               {poll.options.map((option) => (
                 <motion.button
                   key={option.id}
-                  whileHover={{ scale: 1.02, background: 'rgba(255, 255, 255, 0.08)' }}
+                  whileHover={{ scale: 1.02, background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)' }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleVote(option.id)}
                   disabled={!session || voting}
                   style={{
                     padding: '1rem',
                     borderRadius: '12px',
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'white',
+                    background: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
+                    border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
+                    color: 'var(--text-primary)',
                     textAlign: 'left',
                     cursor: session ? 'pointer' : 'not-allowed',
                     fontSize: '0.9rem',
@@ -143,15 +147,15 @@ export default function CommunityPoll() {
                 return (
                   <div key={option.id}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 600 }}>
-                      <span style={{ opacity: 0.8 }}>{option.text}</span>
+                      <span style={{ color: 'var(--text-primary)', opacity: 0.8 }}>{option.text}</span>
                       <span style={{ color: 'var(--accent-secondary)' }}>{percentage}%</span>
                     </div>
-                    <div style={{ height: '8px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', minHeight: '8px', background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)', borderRadius: '4px', overflow: 'hidden' }}>
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${percentage}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
-                        style={{ height: '100%', background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))' }}
+                        style={{ height: '8px', background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))' }}
                       />
                     </div>
                   </div>
