@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
+import { sendWelcomeEmail } from "@/lib/mail";
 
 export async function POST(req) {
   try {
@@ -38,6 +39,14 @@ export async function POST(req) {
       password: hashedPassword,
       createdAt: new Date(),
     });
+
+    // Send welcome email (async - don't block response)
+    try {
+      await sendWelcomeEmail(email, name);
+    } catch (mailError) {
+      console.error("Failed to send welcome email:", mailError);
+      // We don't fail the signup if the email fails, but we log it
+    }
 
     return NextResponse.json({ message: "User created successfully" }, { status: 201 });
   } catch (error) {
