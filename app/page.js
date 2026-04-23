@@ -7,8 +7,9 @@ import ScenarioCard from './components/ScenarioCard';
 import SimulationViewer from './components/SimulationViewer';
 import { scenarios } from './data/scenarios';
 import { motion } from 'framer-motion';
-import { Shield, Lightbulb, TrendingUp, Users } from 'lucide-react';
+import { Shield, Lightbulb, TrendingUp, Users, Activity } from 'lucide-react';
 import { calculateLevel } from '../lib/game';
+import CommunityPoll from './components/CommunityPoll';
 
 export default function Home() {
   const { data: session } = useSession();
@@ -82,30 +83,61 @@ export default function Home() {
           </motion.div>
         </header>
 
-        {/* Dashboard Sections */}
-        <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <div>
-              <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Active Scenarios</h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Tailored to your current level.</p>
+        {/* Main Dashboard Layout */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 800px), 1fr))',
+          gap: '2.5rem',
+          alignItems: 'start'
+        }}>
+          {/* Left Column: Scenarios */}
+          <section style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem', fontWeight: 800 }}>Active Scenarios</h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Tailored to your current level.</p>
+              </div>
+              <button style={{ color: 'var(--accent-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>View All</button>
             </div>
-            <button style={{ color: 'var(--accent-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>View All</button>
-          </div>
 
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', 
-            gap: '1.5rem' 
-          }}>
-            {scenarios.map((scenario) => (
-              <ScenarioCard 
-                key={scenario.id} 
-                scenario={scenario} 
-                onSelect={(s) => setSelectedScenario(s)} 
-              />
-            ))}
-          </div>
-        </section>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', 
+              gap: '1.5rem' 
+            }}>
+              {scenarios.map((scenario) => (
+                <ScenarioCard 
+                  key={scenario.id} 
+                  scenario={scenario} 
+                  onSelect={(s) => setSelectedScenario(s)} 
+                />
+              ))}
+            </div>
+          </section>
+
+          {/* Right Column: Community & Stats */}
+          <aside style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+            <CommunityPoll />
+            
+            {/* Quick Stats Mini-Card */}
+            <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 'var(--radius-xl)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <Activity size={18} color="var(--accent-primary)" />
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 800, margin: 0 }}>Network Status</h3>
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Active Users</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>1,284</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Threats Neutralized</span>
+                  <span style={{ color: '#10b981', fontWeight: 700 }}>12,402</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
 
         {/* Daily Challenge Card */}
         <motion.div 
