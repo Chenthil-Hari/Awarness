@@ -16,12 +16,12 @@ export default function ScenarioCard({ scenario, onSelect }) {
       whileHover={{ y: -5 }}
       className="glass-card" 
       style={{
-        padding: '1.5rem',
+        padding: '1.25rem',
         borderRadius: 'var(--radius-lg)',
         cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1rem',
+        gap: '0.75rem',
         height: '100%'
       }}
       onClick={() => onSelect(scenario)}

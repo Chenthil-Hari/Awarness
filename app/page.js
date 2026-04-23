@@ -22,18 +22,18 @@ export default function Home() {
     <main style={{ minHeight: '100vh', paddingBottom: '5rem' }}>
       <Navbar score={totalScore} level={level} />
 
-      <div className="container">
+      <div className="container" style={{ padding: '0 1rem' }}>
         {/* Hero Section */}
-        <header style={{ textAlign: 'center', padding: '4rem 0 6rem' }}>
+        <header style={{ textAlign: 'center', padding: '3rem 0 4rem' }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 style={{ fontSize: '3.5rem', marginBottom: '1rem', fontWeight: 800 }}>
+            <h1 className="hero-title" style={{ fontSize: '3rem', marginBottom: '1rem', fontWeight: 800, lineHeight: 1.1 }}>
               Master Real-World <span className="gradient-text">Challenges</span>
             </h1>
-            <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', maxWidth: '700px', margin: '0 auto 3rem' }}>
+            <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '700px', margin: '0 auto 2.5rem', padding: '0 1rem' }}>
               Step into realistic simulations designed to build your awareness and decision-making skills in safety, finance, and digital security.
             </p>
           </motion.div>
@@ -45,27 +45,27 @@ export default function Home() {
             style={{ 
               display: 'flex', 
               justifyContent: 'center', 
-              gap: '2rem',
+              gap: '1rem',
               flexWrap: 'wrap'
             }}
           >
             {[
-              { icon: <Shield size={20} />, label: 'Cyber Security', count: 12 },
-              { icon: <TrendingUp size={20} />, label: 'Financial Literacy', count: 8 },
-              { icon: <Users size={20} />, label: 'Life Skills', count: 15 },
-              { icon: <Lightbulb size={20} />, label: 'Mental Health', count: 6 },
+              { icon: <Shield size={18} />, label: 'Cyber Security', count: 12 },
+              { icon: <TrendingUp size={18} />, label: 'Finance', count: 8 },
+              { icon: <Users size={18} />, label: 'Life Skills', count: 15 },
+              { icon: <Lightbulb size={18} />, label: 'Mental Health', count: 6 },
             ].map((stat, i) => (
               <div key={i} className="glass" style={{ 
-                padding: '0.75rem 1.5rem', 
+                padding: '0.6rem 1.2rem', 
                 borderRadius: 'var(--radius-full)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.75rem',
+                gap: '0.6rem',
                 border: '1px solid var(--glass-border)'
               }}>
                 <span style={{ color: 'var(--accent-primary)' }}>{stat.icon}</span>
-                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{stat.label}</span>
-                <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>{stat.count}</span>
+                <span style={{ fontWeight: 600, fontSize: '0.8rem' }}>{stat.label}</span>
+                <span className="hide-mobile" style={{ fontSize: '0.75rem', opacity: 0.5 }}>{stat.count}</span>
               </div>
             ))}
           </motion.div>
@@ -73,18 +73,18 @@ export default function Home() {
 
         {/* Dashboard Sections */}
         <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
-              <h2 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>Active Scenarios</h2>
-              <p style={{ color: 'var(--text-secondary)' }}>Scenarios tailored to your current level.</p>
+              <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Active Scenarios</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Tailored to your current level.</p>
             </div>
-            <button style={{ color: 'var(--accent-secondary)', fontWeight: 600, fontSize: '0.9rem' }}>View All Scenarios</button>
+            <button style={{ color: 'var(--accent-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>View All</button>
           </div>
 
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', 
-            gap: '2rem' 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', 
+            gap: '1.5rem' 
           }}>
             {scenarios.map((scenario) => (
               <ScenarioCard 
@@ -101,26 +101,25 @@ export default function Home() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5 }}
-          className="glass-card" 
+          className="glass-card flex-mobile-column" 
           style={{ 
-            marginTop: '5rem', 
-            padding: '2.5rem', 
+            marginTop: '4rem', 
+            padding: '2rem', 
             borderRadius: 'var(--radius-xl)',
             background: 'linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            flexWrap: 'wrap',
             gap: '2rem'
           }}
         >
-          <div>
+          <div style={{ textAlign: 'inherit' }}>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Daily Awareness Challenge</h2>
-            <p style={{ color: 'var(--text-secondary)', maxWidth: '500px' }}>
-              Complete today's "Fire Safety Protocol" scenario to earn a 2x XP bonus and unlock the "Safety First" badge.
+            <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', fontSize: '0.9rem' }}>
+              Complete today's "Fire Safety Protocol" scenario to earn a 2x XP bonus.
             </p>
           </div>
-          <button className="btn-primary" style={{ padding: '1rem 2rem' }}>Accept Challenge</button>
+          <button className="btn-primary" style={{ padding: '0.8rem 1.8rem', width: 'auto' }}>Accept</button>
         </motion.div>
       </div>
 

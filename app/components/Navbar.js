@@ -12,35 +12,37 @@ export default function Navbar({ score = 0, level = 1 }) {
   const { data: session } = useSession();
 
   return (
-    <nav className="glass" style={{
+    <nav className="glass navbar-responsive" style={{
       position: 'sticky',
       top: '0.5rem',
       zIndex: 100,
-      padding: '0.75rem 3rem',
+      padding: '0.75rem 1rem',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: '4rem',
-      width: 'calc(100% - 1.5rem)',
+      marginBottom: '2rem',
+      width: 'calc(100% - 1rem)',
       margin: '0.5rem auto',
-      borderRadius: 'var(--radius-xl)'
+      borderRadius: 'var(--radius-lg)',
+      flexWrap: 'wrap',
+      gap: '1rem'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div style={{
-            width: '36px',
-            height: '36px',
+            width: '32px',
+            height: '32px',
             background: 'var(--accent-primary)',
             borderRadius: 'var(--radius-md)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            flexShrink: 0
           }}>
-            <Shield size={20} color="white" />
+            <Shield size={18} color="white" />
           </div>
-          <div>
-            <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Awareness <span className="gradient-text">Pro</span></h2>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>Simulate. Learn. Survive.</p>
+          <div className="hide-mobile">
+            <h2 style={{ fontSize: '1.1rem', margin: 0 }}>Awareness <span className="gradient-text">Pro</span></h2>
           </div>
         </Link>
 
@@ -48,77 +50,75 @@ export default function Navbar({ score = 0, level = 1 }) {
           <Link href="/" title="Home Dashboard" style={{ 
             display: 'flex', 
             alignItems: 'center', 
-            gap: '0.5rem', 
+            gap: '0.4rem', 
             color: 'var(--text-secondary)', 
             transition: 'all 0.3s ease', 
-            padding: '0.5rem 1rem', 
+            padding: '0.4rem 0.75rem', 
             borderRadius: 'var(--radius-md)', 
             background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid var(--glass-border)',
-            marginLeft: '1rem'
+            border: '1px solid var(--glass-border)'
           }} className="hover-lift">
-            <Home size={18} />
-            <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>HOME</span>
+            <Home size={16} />
+            <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>HOME</span>
           </Link>
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
-        <div style={{ textAlign: 'right', display: 'none', md: 'block', marginRight: '0.25rem' }}>
-          <p style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 700 }}>XP</p>
-          <p style={{ fontSize: '0.9rem', fontWeight: 900, margin: 0, color: 'var(--accent-secondary)' }}>{score}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1 }}>
+        <div style={{ textAlign: 'right', display: 'none', lg: 'block' }}>
+          <p style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 700 }}>XP</p>
+          <p style={{ fontSize: '0.85rem', fontWeight: 900, margin: 0, color: 'var(--accent-secondary)' }}>{score}</p>
         </div>
 
         <div style={{
-          padding: '0.35rem 0.75rem',
+          padding: '0.3rem 0.6rem',
           background: 'rgba(255, 255, 255, 0.05)',
           borderRadius: 'var(--radius-full)',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.4rem',
+          gap: '0.3rem',
           border: '1px solid var(--glass-border)'
         }}>
-          <LevelIcon size={20} />
-          <span style={{ fontWeight: 700, fontSize: '0.8rem' }}>Lv. {level}</span>
+          <LevelIcon size={18} />
+          <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>Lvl {level}</span>
         </div>
 
         {session && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-secondary)', transition: 'color 0.2s', padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
-              <TrophyIcon size={22} />
-              <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>Ranking</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
+              <TrophyIcon size={18} />
+              <span className="hide-mobile" style={{ fontSize: '0.65rem', fontWeight: 700 }}>Ranking</span>
             </Link>
 
-            <Link href="/settings" title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-secondary)', transition: 'color 0.2s', padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
-              <SettingsIcon size={22} />
-              <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>Settings</span>
+            <Link href="/settings" title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
+              <SettingsIcon size={18} />
+              <span className="hide-mobile" style={{ fontSize: '0.65rem', fontWeight: 700 }}>Settings</span>
             </Link>
             
-            <div title="Daily Streak" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', padding: '0.15rem 0.75rem 0.15rem 0.3rem', background: 'rgba(255, 120, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 120, 0, 0.2)' }}>
-              <StreakIcon size={24} />
-              <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#FF7800' }}>{session.user.streak || 0}</span>
+            <div title="Daily Streak" style={{ display: 'flex', alignItems: 'center', gap: '0.1rem', padding: '0.15rem 0.6rem 0.15rem 0.2rem', background: 'rgba(255, 120, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 120, 0, 0.2)' }}>
+              <StreakIcon size={20} />
+              <span style={{ fontSize: '0.8rem', fontWeight: 900, color: '#FF7800' }}>{session.user.streak || 0}</span>
             </div>
           </div>
         )}
 
         {session ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '1rem', paddingLeft: '1rem', borderLeft: '1px solid var(--glass-border)' }}>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>{session.user.name}</p>
-              <span style={{ fontSize: '0.7rem', color: 'var(--accent-secondary)', margin: '0 0 0.25rem 0', display: 'block' }}>@{session.user.username || 'user'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '0.75rem', borderLeft: '1px solid var(--glass-border)' }}>
+            <div style={{ textAlign: 'right' }} className="hide-mobile">
+              <p style={{ fontSize: '0.75rem', fontWeight: 600, margin: 0 }}>{session.user.name?.split(' ')[0]}</p>
               <button 
                 onClick={() => signOut()}
-                style={{ fontSize: '0.7rem', color: 'var(--accent-danger)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginLeft: 'auto' }}
+                style={{ fontSize: '0.65rem', color: 'var(--accent-danger)', display: 'flex', alignItems: 'center', gap: '0.2rem', marginLeft: 'auto' }}
               >
-                <LogOut size={12} /> Sign Out
+                <LogOut size={10} /> Out
               </button>
             </div>
-            <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)', overflow: 'hidden' }}>
-              <ProfileIcon size={28} />
-            </div>
+            <Link href="/profile" style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)', overflow: 'hidden', flexShrink: 0 }}>
+              <ProfileIcon size={24} />
+            </Link>
           </div>
         ) : (
-          <Link href="/auth/login" className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem' }}>
+          <Link href="/auth/login" className="btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
             Sign In
           </Link>
         )}

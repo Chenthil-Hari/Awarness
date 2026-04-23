@@ -71,20 +71,20 @@ export default function ProfilePage() {
     <main className="container">
       <Navbar score={1200} level={4} />
       
-      <div className="flex-center" style={{ marginTop: '4rem' }}>
+      <div className="flex-center" style={{ marginTop: '2rem' }}>
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="glass-card" 
-          style={{ width: '100%', maxWidth: '500px', padding: '3rem' }}
+          style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}
         >
           <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
             <div style={{ 
-              width: '80px', 
-              height: '80px', 
+              width: '64px', 
+              height: '64px', 
               borderRadius: '50%', 
               background: 'var(--bg-tertiary)', 
-              margin: '0 auto 1.5rem',
+              margin: '0 auto 1.25rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -92,50 +92,50 @@ export default function ProfilePage() {
               position: 'relative',
               overflow: 'hidden'
             }}>
-              <ProfileIcon size={70} />
+              <ProfileIcon size={56} />
             </div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Account <span className="gradient-text">Settings</span></h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Manage your unique identity on the platform</p>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>Account <span className="gradient-text">Settings</span></h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Manage your unique identity</p>
           </div>
 
             <div style={{ marginBottom: '2.5rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--text-secondary)' }}>YOUR ACHIEVEMENTS</h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+              <h3 style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--text-secondary)' }}>YOUR ACHIEVEMENTS</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
                 {session.user.badges?.length > 0 ? (
                   session.user.badges.map((badge, idx) => (
-                    <div key={idx} className="glass-card" style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(139, 92, 246, 0.1)', borderColor: 'rgba(139, 92, 246, 0.2)' }}>
-                      <Star size={16} color="var(--accent-secondary)" />
-                      <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{badge}</span>
+                    <div key={idx} className="glass-card" style={{ padding: '0.6rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(139, 92, 246, 0.1)', borderColor: 'rgba(139, 92, 246, 0.2)' }}>
+                      <Star size={14} color="var(--accent-secondary)" />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>{badge}</span>
                     </div>
                   ))
                 ) : (
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Complete simulations to earn badges!</p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Complete simulations to earn badges!</p>
                 )}
               </div>
             </div>
 
           {status.message && (
             <div style={{ 
-              padding: '1rem', 
+              padding: '0.75rem', 
               borderRadius: 'var(--radius-md)', 
-              marginBottom: '2rem',
+              marginBottom: '1.5rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.75rem',
+              gap: '0.5rem',
               background: status.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
               border: `1px solid ${status.type === 'success' ? 'var(--accent-success)' : 'var(--accent-danger)'}`,
               color: status.type === 'success' ? 'var(--accent-success)' : 'var(--accent-danger)'
             }}>
-              {status.type === 'success' ? <Check size={20} /> : <AlertCircle size={20} />}
-              <span style={{ fontSize: '0.9rem' }}>{status.message}</span>
+              {status.type === 'success' ? <Check size={18} /> : <AlertCircle size={18} />}
+              <span style={{ fontSize: '0.85rem' }}>{status.message}</span>
             </div>
           )}
 
-          <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>UNIQUE USERNAME</label>
+              <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>UNIQUE USERNAME</label>
               <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-primary)', fontWeight: 700 }}>@</span>
+                <span style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-primary)', fontWeight: 700 }}>@</span>
                 <input 
                   type="text" 
                   value={username}
@@ -143,18 +143,18 @@ export default function ProfilePage() {
                   placeholder="your_handle"
                   style={{
                     width: '100%',
-                    padding: '1rem 1rem 1rem 2.5rem',
+                    padding: '0.75rem 0.75rem 0.75rem 2.2rem',
                     background: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid var(--glass-border)',
                     borderRadius: 'var(--radius-md)',
                     color: 'var(--text-primary)',
-                    fontSize: '1rem',
+                    fontSize: '0.9rem',
                     outline: 'none'
                   }}
                 />
               </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Only letters, numbers, and underscores allowed. Must be unique.
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                Letters, numbers, and underscores only.
               </p>
             </div>
 
@@ -162,11 +162,13 @@ export default function ProfilePage() {
               type="submit" 
               className="btn-primary" 
               disabled={loading}
-              style={{ marginTop: '1rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem' }}
+              style={{ marginTop: '0.5rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
             >
-              {loading ? 'Saving...' : <><Save size={20} /> Save Changes</>}
+              {loading ? 'Saving...' : <><Save size={18} /> Save Changes</>}
             </button>
           </form>
+        </motion.div>
+      </div>
         </motion.div>
       </div>
     </main>
