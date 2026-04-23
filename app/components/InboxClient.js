@@ -24,16 +24,44 @@ export default function InboxClient() {
     }
   }, [selectedId]);
 
+  const handleContentClick = (e) => {
+    // Intercept link clicks in the email body
+    if (e.target.tagName === 'A') {
+      e.preventDefault();
+      if (selectedEmail.acted) return;
+      
+      // Clicking a link in a phishing email is a failure
+      if (selectedEmail.type.includes('Phishing')) {
+        handleAction('ClickLink'); // Specialized failure action
+      }
+    }
+  };
+
   const handleAction = async (action) => {
     if (selectedEmail.acted) return;
 
-    const isCorrect = action === selectedEmail.correctAction;
-    const pointsAwarded = isCorrect ? selectedEmail.points : -50;
+    // Logic: 
+    // - If action is 'Report' and it was phishing: Correct
+    // - If action is 'Delete' and it was phishing: Correct
+    // - If action is 'Reply' and it was legitimate: Correct
+    // - If action is 'ClickLink': Always Wrong (for phishing)
+    
+    let isCorrect = false;
+    if (action === 'ClickLink') {
+      isCorrect = false;
+    } else {
+      isCorrect = action === selectedEmail.correctAction || 
+                 (action === 'Delete' && selectedEmail.type.includes('Phishing'));
+    }
+
+    const pointsAwarded = isCorrect ? selectedEmail.points : -100;
     
     setScore(prev => prev + pointsAwarded);
     setFeedback({
       correct: isCorrect,
-      message: selectedEmail.feedback,
+      message: action === 'ClickLink' 
+        ? "❌ CRITICAL ERROR: You clicked a link in a phishing email. This could have installed malware or stolen your credentials."
+        : selectedEmail.feedback,
       points: pointsAwarded
     });
 
@@ -41,21 +69,14 @@ export default function InboxClient() {
       e.id === selectedId ? { ...e, acted: true, read: true } : e
     ));
 
-    // Sync XP to database if logged in
     if (session && isCorrect) {
       try {
         await fetch('/api/user/complete-simulation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            xpToAdd: pointsAwarded, 
-            badgeAwarded: null,
-            isInboxDrill: true // Flag for backend analytics if needed
-          }),
+          body: JSON.stringify({ xpToAdd: pointsAwarded }),
         });
-      } catch (err) {
-        console.error("Failed to sync Inbox XP:", err);
-      }
+      } catch (err) { console.error(err); }
     }
   };
 
@@ -64,25 +85,30 @@ export default function InboxClient() {
       display: 'grid', 
       gridTemplateColumns: '260px 1fr', 
       height: '80vh',
-      background: 'rgba(255, 255, 255, 0.02)',
+      background: 'rgba(5, 7, 10, 0.4)',
+      backdropFilter: 'blur(20px)',
       borderRadius: 'var(--radius-xl)',
-      border: '1px solid rgba(255, 255, 255, 0.05)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
       overflow: 'hidden'
     }}>
       {/* Sidebar */}
       <div style={{ 
         background: 'rgba(255, 255, 255, 0.03)', 
         padding: '1.5rem',
-        borderRight: '1px solid rgba(255, 255, 255, 0.05)'
+        borderRight: '1px solid rgba(255, 255, 255, 0.1)'
       }}>
         <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>Live <span className="gradient-text">Drills</span></h2>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Score: {score} XP</div>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.5rem' }}>Live <span className="gradient-text">Drills</span></h2>
+          <div style={{ 
+            fontSize: '0.9rem', fontWeight: 700, color: 'var(--accent-secondary)',
+            background: 'rgba(124, 58, 237, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '8px'
+          }}>
+            Score: {score} XP
+          </div>
         </div>
 
         <div className="flex-col" style={{ gap: '0.5rem' }}>
           <SidebarItem icon={<Inbox size={18}/>} label="Inbox" active count={emails.filter(e => !e.read).length} />
-          <SidebarItem icon={<Star size={18}/>} label="Flagged" />
           <SidebarItem icon={<ShieldAlert size={18}/>} label="Security" />
           <SidebarItem icon={<Trash2 size={18}/>} label="Trash" />
         </div>
@@ -91,17 +117,17 @@ export default function InboxClient() {
       {/* Main Content: List + Detail */}
       <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr' }}>
         {/* Email List */}
-        <div style={{ borderRight: '1px solid rgba(255, 255, 255, 0.05)', overflowY: 'auto' }}>
-          <div style={{ padding: '1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+        <div style={{ borderRight: '1px solid rgba(255, 255, 255, 0.1)', overflowY: 'auto', background: 'rgba(255,255,255,0.01)' }}>
+          <div style={{ padding: '1.25rem', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
             <div style={{ position: 'relative' }}>
-              <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+              <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
               <input 
                 type="text" 
                 placeholder="Search drills..." 
                 style={{ 
-                  width: '100%', padding: '0.5rem 0.5rem 0.5rem 2rem', 
-                  background: 'rgba(255,255,255,0.05)', border: 'none', 
-                  borderRadius: '8px', color: 'white', fontSize: '0.85rem' 
+                  width: '100%', padding: '0.6rem 0.6rem 0.6rem 2.2rem', 
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', 
+                  borderRadius: '10px', color: 'white', fontSize: '0.85rem' 
                 }} 
               />
             </div>
@@ -117,39 +143,49 @@ export default function InboxClient() {
         </div>
 
         {/* Email Detail */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.2)' }}>
           {selectedEmail ? (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               {/* Toolbar */}
               <div style={{ 
-                padding: '1rem 2rem', 
+                padding: '1rem 1.5rem', 
+                background: 'rgba(255,255,255,0.02)',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                 display: 'flex',
-                gap: '1rem'
+                gap: '0.75rem'
               }}>
                 <ActionButton icon={<ShieldAlert size={18}/>} label="Report Phishing" color="#ef4444" onClick={() => handleAction('Report')} disabled={selectedEmail.acted} />
-                <ActionButton icon={<Trash2 size={18}/>} label="Delete" color="#6b7280" onClick={() => handleAction('Delete')} disabled={selectedEmail.acted} />
+                <ActionButton icon={<Trash2 size={18}/>} label="Delete" color="#94a3b8" onClick={() => handleAction('Delete')} disabled={selectedEmail.acted} />
                 <ActionButton icon={<Send size={18}/>} label="Reply" color="#7c3aed" onClick={() => handleAction('Reply')} disabled={selectedEmail.acted} />
               </div>
 
               {/* Content Area */}
-              <div style={{ padding: '2rem', overflowY: 'auto', flex: 1 }}>
-                <div style={{ marginBottom: '2rem' }}>
-                  <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem' }}>{selectedEmail.subject}</h1>
+              <div 
+                onClick={handleContentClick}
+                style={{ padding: '2.5rem', overflowY: 'auto', flex: 1 }}
+              >
+                <div style={{ marginBottom: '2.5rem' }}>
+                  <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '1.25rem', letterSpacing: '-0.5px' }}>{selectedEmail.subject}</h1>
                   <div className="flex-center" style={{ justifyContent: 'flex-start', gap: '1rem' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                    <div style={{ 
+                      width: '45px', height: '45px', borderRadius: '12px', 
+                      background: 'var(--accent-primary)', display: 'flex', 
+                      alignItems: 'center', justifyContent: 'center', fontWeight: 800,
+                      fontSize: '1.2rem', boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)'
+                    }}>
                       {selectedEmail.sender[0]}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 600 }}>{selectedEmail.sender}</div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>&lt;{selectedEmail.senderEmail}&gt;</div>
+                      <div style={{ fontWeight: 700, fontSize: '1rem' }}>{selectedEmail.sender}</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', opacity: 0.8 }}>&lt;{selectedEmail.senderEmail}&gt;</div>
                     </div>
-                    <div style={{ marginLeft: 'auto', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{selectedEmail.timestamp}</div>
+                    <div style={{ marginLeft: 'auto', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{selectedEmail.timestamp}</div>
                   </div>
                 </div>
 
                 <div 
-                  style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}
+                  className="email-body"
+                  style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: '1.05rem' }}
                   dangerouslySetInnerHTML={{ __html: selectedEmail.content }}
                 />
               </div>
@@ -158,16 +194,20 @@ export default function InboxClient() {
               <AnimatePresence>
                 {feedback && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
+                    exit={{ opacity: 0, y: 30 }}
                     style={{ 
-                      padding: '1.5rem 2rem',
-                      background: feedback.correct ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                      borderTop: `1px solid ${feedback.correct ? '#22c55e' : '#ef4444'}`,
+                      margin: '1rem',
+                      padding: '1.5rem',
+                      background: feedback.correct ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                      backdropFilter: 'blur(10px)',
+                      borderRadius: '15px',
+                      border: `1px solid ${feedback.correct ? '#10b981' : '#ef4444'}`,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '1.5rem'
+                      gap: '1.5rem',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
                     }}
                   >
                     {feedback.correct ? <CheckCircle2 color="#22c55e" size={32} /> : <AlertCircle color="#ef4444" size={32} />}
