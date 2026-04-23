@@ -1,6 +1,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut, User, Flame, Trophy } from 'lucide-react';
+import { Shield, LogOut, User, Trophy } from 'lucide-react';
+import StreakIcon from './StreakIcon';
 
 export default function Navbar({ score = 0, level = 1 }) {
   const { data: session } = useSession();
@@ -60,9 +61,9 @@ export default function Navbar({ score = 0, level = 1 }) {
               <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Ranking</span>
             </Link>
             
-            <div title="Daily Streak" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.8rem', background: 'rgba(255, 120, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 120, 0, 0.2)' }}>
-              <Flame size={18} color="#FF7800" fill="#FF7800" />
-              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#FF7800' }}>{session.user.streak || 0}</span>
+            <div title="Daily Streak" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', padding: '0.2rem 0.8rem 0.2rem 0.4rem', background: 'rgba(255, 120, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 120, 0, 0.2)' }}>
+              <StreakIcon size={28} />
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#FF7800' }}>{session.user.streak || 0}</span>
             </div>
           </div>
         )}
