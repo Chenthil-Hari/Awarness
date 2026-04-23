@@ -40,26 +40,52 @@ export const authOptions = {
   },
   callbacks: {
     async signIn({ user, account, profile }) {
+      const client = await clientPromise;
+      const db = client.db();
+      const usersCollection = db.collection("users");
+
       if (account.provider === "google") {
-        const client = await clientPromise;
-        const db = client.db();
-        const usersCollection = db.collection("users");
-
-        // Check if user already exists in our DB
         const existingUser = await usersCollection.findOne({ email: user.email });
+        if (!existingUser) return false;
+        user.username = existingUser.username;
+        user.xp = existingUser.xp || 0;
+        user.streak = existingUser.streak || 0;
+      }
 
-        // RULE: Only allowed if user already exists in DB
-        if (!existingUser) {
-          return false; // Reject the login
+      // STREAK LOGIC
+      const dbUser = await usersCollection.findOne({ email: user.email });
+      if (dbUser) {
+        const now = new Date();
+        const lastLogin = dbUser.lastLoginDate ? new Date(dbUser.lastLoginDate) : null;
+        
+        let newStreak = dbUser.streak || 1;
+        
+        if (lastLogin) {
+          const diffInTime = now.getTime() - lastLogin.getTime();
+          const diffInDays = Math.floor(diffInTime / (1000 * 3600 * 24));
+
+          if (diffInDays === 1) {
+            newStreak += 1;
+          } else if (diffInDays > 1) {
+            newStreak = 1;
+          }
         }
 
-        // Attach existing username to user object for the session
-        user.username = existingUser.username;
+        await usersCollection.updateOne(
+          { email: user.email },
+          { 
+            $set: { 
+              lastLoginDate: now.toISOString(),
+              streak: newStreak
+            } 
+          }
+        );
+        user.streak = newStreak;
       }
+
       return true;
     },
     async jwt({ token, user, trigger, session }) {
-      // Handle the 'update' trigger from the client-side session update
       if (trigger === "update" && session?.user?.username) {
         token.username = session.user.username;
       }
@@ -67,6 +93,8 @@ export const authOptions = {
       if (user) {
         token.id = user.id;
         token.username = user.username;
+        token.xp = user.xp || 0;
+        token.streak = user.streak || 0;
       }
       return token;
     },
@@ -74,6 +102,8 @@ export const authOptions = {
       if (token) {
         session.user.id = token.id;
         session.user.username = token.username;
+        session.user.xp = token.xp || 0;
+        session.user.streak = token.streak || 0;
       }
       return session;
     }

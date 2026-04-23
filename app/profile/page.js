@@ -94,6 +94,22 @@ export default function ProfilePage() {
             <p style={{ color: 'var(--text-secondary)' }}>Manage your unique identity on the platform</p>
           </div>
 
+          <div style={{ marginBottom: '2.5rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--text-secondary)' }}>YOUR ACHIEVEMENTS</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+              {session.user.badges?.length > 0 ? (
+                session.user.badges.map((badge, idx) => (
+                  <div key={idx} className="glass-card" style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(139, 92, 246, 0.1)', borderColor: 'rgba(139, 92, 246, 0.2)' }}>
+                    <Star size={16} color="var(--accent-secondary)" />
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{badge}</span>
+                  </div>
+                ))
+              ) : (
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Complete simulations to earn badges!</p>
+              )}
+            </div>
+          </div>
+
           {status.message && (
             <div style={{ 
               padding: '1rem', 

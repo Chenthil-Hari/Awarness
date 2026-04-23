@@ -1,10 +1,13 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSimulation } from '../hooks/useSimulation';
 import { ChevronRight, RotateCcw, X, CheckCircle2, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { useSimulation } from '../hooks/useSimulation';
 
 export default function SimulationViewer({ scenario, onExit }) {
+  const { data: session } = useSession();
   const {
     currentStep,
     score,
@@ -13,6 +16,20 @@ export default function SimulationViewer({ scenario, onExit }) {
     makeDecision,
     reset
   } = useSimulation(scenario);
+
+  useEffect(() => {
+    if (isComplete && !currentStep.failed) {
+      // Award XP and Badge
+      const badge = scenario.id === 'phishing-1' ? 'Phishing Detective' : 
+                    scenario.id === 'finance-1' ? 'Budget Master' : null;
+      
+      fetch('/api/user/complete-simulation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ xpToAdd: score, badgeAwarded: badge }),
+      }).catch(err => console.error("Failed to save progress:", err));
+    }
+  }, [isComplete, currentStep.failed, score, scenario.id]);
 
   return (
     <div className="flex-center" style={{

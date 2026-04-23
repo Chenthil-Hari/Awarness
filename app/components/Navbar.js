@@ -1,6 +1,6 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, Wallet, Heart, LifeBuoy, Trophy, LogOut, User } from 'lucide-react';
+import { Shield, LogOut, User, Flame, Trophy } from 'lucide-react';
 
 export default function Navbar({ score = 0, level = 1 }) {
   const { data: session } = useSession();
@@ -52,6 +52,20 @@ export default function Navbar({ score = 0, level = 1 }) {
           <Trophy size={18} color="var(--accent-warning)" />
           <span style={{ fontWeight: 600 }}>Level {level}</span>
         </div>
+
+        {session && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginRight: '1rem' }}>
+            <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
+              <Trophy size={18} />
+              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Ranking</span>
+            </Link>
+            
+            <div title="Daily Streak" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.8rem', background: 'rgba(255, 120, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 120, 0, 0.2)' }}>
+              <Flame size={18} color="#FF7800" fill="#FF7800" />
+              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#FF7800' }}>{session.user.streak || 0}</span>
+            </div>
+          </div>
+        )}
 
         {session ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '1rem', paddingLeft: '1rem', borderLeft: '1px solid var(--glass-border)' }}>
