@@ -4,6 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
+import { sendStreakLostEmail } from "@/lib/mail";
 
 export const authOptions = {
   adapter: MongoDBAdapter(clientPromise),
@@ -66,7 +67,11 @@ export const authOptions = {
 
           if (diffInDays === 1) {
             newStreak += 1;
-          } else if (diffInDays > 1) {
+          } else if (diffInDays >= 2) {
+            // Trigger streak lost email
+            try {
+              sendStreakLostEmail(user.email, dbUser.name || 'User', dbUser.streak || 0);
+            } catch (err) { console.error("Streak mail error:", err); }
             newStreak = 1;
           }
         }
