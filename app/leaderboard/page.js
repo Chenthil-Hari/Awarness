@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { motion } from 'framer-motion';
 import { Trophy, Medal, Star, Target, Crown } from 'lucide-react';
 
@@ -43,7 +44,9 @@ export default function LeaderboardPage() {
 
         <div className="glass-card" style={{ maxWidth: '900px', margin: '0 auto', padding: '1rem' }}>
           {loading ? (
-            <div style={{ padding: '4rem', textAlign: 'center' }}>Loading elite rankings...</div>
+            <div style={{ padding: '4rem' }}>
+              <LoadingSpinner size={150} message="Calculating elite rankings..." />
+            </div>
           ) : (
             <div style={{ width: '100%' }}>
               {/* Header */}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Navbar from '../components/Navbar';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { motion } from 'framer-motion';
 import { User, Check, AlertCircle, Save } from 'lucide-react';
 
@@ -58,8 +59,8 @@ export default function ProfilePage() {
 
   if (!session) {
     return (
-      <div className="flex-center" style={{ height: '100vh' }}>
-        <p>Loading session...</p>
+      <div className="flex-center" style={{ height: '100vh', background: 'var(--bg-primary)' }}>
+        <LoadingSpinner size={180} message="Authenticating session..." />
       </div>
     );
   }
