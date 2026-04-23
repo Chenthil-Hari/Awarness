@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, RotateCcw, X, CheckCircle2, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { ChevronRight, RotateCcw, X, CheckCircle2, AlertTriangle, ArrowLeft, ShieldCheck, Heart, Waves, Disc, Usb, Zap } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useSimulation } from '../hooks/useSimulation';
 
@@ -107,7 +107,14 @@ export default function SimulationViewer({ scenario, onExit }) {
                       }}
                       onClick={() => makeDecision(option)}
                     >
-                      <span style={{ fontSize: '0.9rem', paddingRight: '0.5rem' }}>{option.text}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span style={{ fontSize: '0.9rem' }}>{option.text}</span>
+                        {option.requiresItem && (
+                          <span style={{ fontSize: '0.65rem', padding: '2px 6px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)', borderRadius: '4px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                            Needs {option.requiresItem}
+                          </span>
+                        )}
+                      </div>
                       <ChevronRight size={16} style={{ opacity: 0.5, flexShrink: 0 }} />
                     </button>
                   ))}
@@ -153,7 +160,7 @@ export default function SimulationViewer({ scenario, onExit }) {
               exit={{ opacity: 0, y: 20 }}
               style={{
                 position: 'absolute',
-                bottom: '4.5rem',
+                bottom: '6rem',
                 left: '1rem',
                 right: '1rem',
                 padding: '0.75rem 1rem',
@@ -172,6 +179,45 @@ export default function SimulationViewer({ scenario, onExit }) {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Inventory System Display */}
+        {inventory.length > 0 && (
+          <div style={{
+            padding: '0.5rem 1.25rem',
+            background: 'rgba(255, 255, 255, 0.03)',
+            borderTop: '1px solid var(--glass-border)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem'
+          }}>
+            <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Inventory</span>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <AnimatePresence>
+                {inventory.map((item, idx) => (
+                  <motion.div
+                    key={item}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    title={item}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: 'rgba(139, 92, 246, 0.15)',
+                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--accent-primary)'
+                    }}
+                  >
+                    {itemIcons[item] || <ShieldCheck size={18} />}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div style={{

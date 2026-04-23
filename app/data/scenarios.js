@@ -125,5 +125,82 @@ export const scenarios = [
       fail_payday: { text: "Scenario Complete: The payday loan led to a cycle of debt that took months to escape. Avoid these at all costs.", isFinal: true, failed: true },
       fail_debt_spiral: { text: "Scenario Complete: The credit card interest started compounding, making the $800 repair cost you over $1,200 in the long run.", isFinal: true, failed: true }
     }
+  },
+  {
+    id: 'fire-safety-kitchen',
+    title: 'Kitchen Crisis',
+    domain: 'Life Skills',
+    difficulty: 'Intermediate',
+    description: 'A pan on the stove catches fire while you are cooking. Do you have the right tools to stop it?',
+    icon: 'Zap',
+    steps: {
+      start: {
+        text: "You're frying some snacks when suddenly the oil in the pan ignites! Thick black smoke starts filling the room. What's your first move?",
+        options: [
+          {
+            text: "Turn off the heat and quickly find a Fire Extinguisher in the hallway.",
+            nextStep: 'have_extinguisher',
+            givesItem: 'Fire Extinguisher',
+            feedback: "Found it! You now have a Fire Extinguisher in your inventory.",
+            points: 50
+          },
+          {
+            text: "Grab a nearby Wet Towel from the sink.",
+            nextStep: 'have_towel',
+            givesItem: 'Wet Towel',
+            feedback: "You've dampened the towel. It might help smother small flames.",
+            points: 30
+          },
+          {
+            text: "Try to carry the burning pan to the sink to douse it with water.",
+            nextStep: 'fail_sink_explosion',
+            feedback: "CRITICAL ERROR! Moving a burning pan is extremely dangerous, and water on a grease fire causes a massive explosion.",
+            points: -200
+          }
+        ]
+      },
+      have_extinguisher: {
+        text: "The flames are getting higher and reaching the cabinets. You're standing 2 meters away with the extinguisher. What now?",
+        options: [
+          {
+            text: "Aim at the base of the fire and squeeze the handle.",
+            requiresItem: 'Fire Extinguisher',
+            nextStep: 'success_extinguished',
+            feedback: "PASS (Pull, Aim, Squeeze, Sweep) technique worked perfectly!",
+            points: 100
+          },
+          {
+            text: "Throw the extinguisher into the fire.",
+            nextStep: 'fail_kaboom',
+            feedback: "That's... not how extinguishers work. The pressure vessel could explode.",
+            points: -150
+          }
+        ]
+      },
+      have_towel: {
+        text: "The fire is localized to the pan. You have the wet towel. How do you use it?",
+        options: [
+          {
+            text: "Carefully place the towel over the pan to smother the flames.",
+            requiresItem: 'Wet Towel',
+            nextStep: 'success_smothered',
+            feedback: "Nice! By cutting off the oxygen, you've put out the fire.",
+            points: 80
+          },
+          {
+            text: "Wave the towel over the fire to blow it out.",
+            nextStep: 'fail_spread',
+            feedback: "Oxygen feeds fire! Waving the towel just fanned the flames onto the curtains.",
+            points: -100
+          }
+        ]
+      },
+      // Final states
+      success_extinguished: { text: "Scenario Complete: You acted quickly and used the right tool to prevent a house fire. Great job!", isFinal: true },
+      success_smothered: { text: "Scenario Complete: You successfully smothered the grease fire. Remember: Never use water on burning oil!", isFinal: true },
+      fail_sink_explosion: { text: "Scenario Complete: The fire exploded when it hit the water, causing severe burns and spreading the fire instantly. Never move a burning pan.", isFinal: true, failed: true },
+      fail_kaboom: { text: "Scenario Complete: The fire spread, and the extinguisher was wasted. Always use safety equipment as intended.", isFinal: true, failed: true },
+      fail_spread: { text: "Scenario Complete: The fire spread to the rest of the kitchen. You should have smothered it instead of fanning it.", isFinal: true, failed: true }
+    }
   }
 ];
