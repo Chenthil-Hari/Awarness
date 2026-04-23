@@ -84,7 +84,7 @@ export default function LoginPage() {
         )}
 
         <button 
-          onClick={() => signIn('google')}
+          onClick={() => signIn('google', { callbackUrl: '/' })}
           className="btn-secondary"
           style={{ width: '100%', marginBottom: '1.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem' }}
         >
