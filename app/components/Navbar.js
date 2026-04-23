@@ -61,6 +61,8 @@ export default function Navbar({ score = 0, level = 1 }) {
             <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>HOME</span>
           </Link>
         )}
+      </div>
+
       <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
         <div style={{ textAlign: 'right', display: 'none', md: 'block', marginRight: '0.25rem' }}>
           <p style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 700 }}>XP</p>
