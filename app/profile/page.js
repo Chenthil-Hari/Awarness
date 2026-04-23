@@ -5,8 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ProfileIcon from '../components/ProfileIcon';
 import { motion } from 'framer-motion';
-import { User, Check, AlertCircle, Save } from 'lucide-react';
+import { Check, AlertCircle, Save, Star } from 'lucide-react';
 
 export default function ProfilePage() {
   const { data: session, update } = useSession();
@@ -87,9 +88,10 @@ export default function ProfilePage() {
               alignItems: 'center',
               justifyContent: 'center',
               border: '2px solid var(--accent-primary)',
-              position: 'relative'
+              position: 'relative',
+              overflow: 'hidden'
             }}>
-              <User size={40} color="var(--accent-primary)" />
+              <ProfileIcon size={70} />
             </div>
             <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Account <span className="gradient-text">Settings</span></h1>
             <p style={{ color: 'var(--text-secondary)' }}>Manage your unique identity on the platform</p>

@@ -1,9 +1,10 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut, User, Trophy } from 'lucide-react';
+import { Shield, LogOut } from 'lucide-react';
 import StreakIcon from './StreakIcon';
 import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
+import ProfileIcon from './ProfileIcon';
 
 export default function Navbar({ score = 0, level = 1 }) {
   const { data: session } = useSession();
@@ -82,9 +83,9 @@ export default function Navbar({ score = 0, level = 1 }) {
                 <LogOut size={12} /> Sign Out
               </button>
             </div>
-            <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyCenter: 'center', border: '1px solid var(--glass-border)' }}>
-              <User size={20} style={{ margin: 'auto' }} />
-            </div>
+            <Link href="/profile" style={{ width: '35px', height: '35px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)', overflow: 'hidden' }}>
+              <ProfileIcon size={28} />
+            </Link>
           </div>
         ) : (
           <Link href="/auth/login" className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem' }}>
