@@ -197,7 +197,5 @@ export default function SimulationViewer({ scenario, onExit }) {
         </div>
       </motion.div>
     </div>
-      </motion.div>
-    </div>
   );
 }
