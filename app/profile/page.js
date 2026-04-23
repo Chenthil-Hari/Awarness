@@ -146,7 +146,7 @@ export default function ProfilePage() {
                     background: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid var(--glass-border)',
                     borderRadius: 'var(--radius-md)',
-                    color: 'white',
+                    color: 'var(--text-primary)',
                     fontSize: '1rem',
                     outline: 'none'
                   }}
