@@ -7,12 +7,10 @@ import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProfileIcon from '../components/ProfileIcon';
 import { motion } from 'framer-motion';
-import { Check, AlertCircle, Save, Star, Moon, Sun, Monitor } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
+import { Check, AlertCircle, Save, Star } from 'lucide-react';
 
 export default function ProfilePage() {
   const { data: session, update } = useSession();
-  const { theme, toggleTheme } = useTheme();
   const [username, setUsername] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
@@ -98,50 +96,6 @@ export default function ProfilePage() {
             <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Account <span className="gradient-text">Settings</span></h1>
             <p style={{ color: 'var(--text-secondary)' }}>Manage your unique identity on the platform</p>
           </div>
-
-            <div style={{ marginBottom: '2.5rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--text-secondary)' }}>APPEARANCE</h3>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button 
-                  onClick={() => theme === 'dark' && toggleTheme()}
-                  style={{
-                    flex: 1,
-                    padding: '1rem',
-                    borderRadius: 'var(--radius-md)',
-                    border: `2px solid ${theme === 'light' ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
-                    background: theme === 'light' ? 'rgba(124, 58, 237, 0.05)' : 'var(--bg-tertiary)',
-                    color: theme === 'light' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <Sun size={24} />
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Light</span>
-                </button>
-                <button 
-                  onClick={() => theme === 'light' && toggleTheme()}
-                  style={{
-                    flex: 1,
-                    padding: '1rem',
-                    borderRadius: 'var(--radius-md)',
-                    border: `2px solid ${theme === 'dark' ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
-                    background: theme === 'dark' ? 'rgba(139, 92, 246, 0.05)' : 'var(--bg-tertiary)',
-                    color: theme === 'dark' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <Moon size={24} />
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Dark</span>
-                </button>
-              </div>
-            </div>
 
             <div style={{ marginBottom: '2.5rem' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--text-secondary)' }}>YOUR ACHIEVEMENTS</h3>

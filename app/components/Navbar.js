@@ -85,7 +85,7 @@ export default function Navbar({ score = 0, level = 1 }) {
               <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Ranking</span>
             </Link>
 
-            <Link href="/profile" title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
+            <Link href="/settings" title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
               <Settings size={18} />
               <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Settings</span>
             </Link>
