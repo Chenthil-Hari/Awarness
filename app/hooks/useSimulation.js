@@ -5,6 +5,10 @@ import { useState, useCallback } from 'react';
 export function useSimulation(scenario) {
   const [currentStepId, setCurrentStepId] = useState('start');
   const [inventory, setInventory] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [score, setScore] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+  const [lastFeedback, setLastFeedback] = useState(null);
 
   const currentStep = scenario.steps[currentStepId];
 
