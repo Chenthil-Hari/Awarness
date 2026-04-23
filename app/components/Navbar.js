@@ -1,6 +1,6 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut, Sun, Moon } from 'lucide-react';
+import { Shield, LogOut, Sun, Moon, Settings } from 'lucide-react';
 import StreakIcon from './StreakIcon';
 import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
@@ -79,10 +79,15 @@ export default function Navbar({ score = 0, level = 1 }) {
         </div>
 
         {session && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginRight: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginRight: '1rem' }}>
             <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
               <TrophyIcon size={24} />
               <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Ranking</span>
+            </Link>
+
+            <Link href="/profile" title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
+              <Settings size={18} />
+              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Settings</span>
             </Link>
             
             <div title="Daily Streak" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', padding: '0.2rem 0.8rem 0.2rem 0.4rem', background: 'rgba(255, 120, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 120, 0, 0.2)' }}>
@@ -96,7 +101,7 @@ export default function Navbar({ score = 0, level = 1 }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '1rem', paddingLeft: '1rem', borderLeft: '1px solid var(--glass-border)' }}>
             <div style={{ textAlign: 'right' }}>
               <p style={{ fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>{session.user.name}</p>
-              <Link href="/profile" style={{ fontSize: '0.7rem', color: 'var(--accent-secondary)', margin: '0 0 0.25rem 0', display: 'block' }}>@{session.user.username || 'user'}</Link>
+              <span style={{ fontSize: '0.7rem', color: 'var(--accent-secondary)', margin: '0 0 0.25rem 0', display: 'block' }}>@{session.user.username || 'user'}</span>
               <button 
                 onClick={() => signOut()}
                 style={{ fontSize: '0.7rem', color: 'var(--accent-danger)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginLeft: 'auto' }}
@@ -104,9 +109,9 @@ export default function Navbar({ score = 0, level = 1 }) {
                 <LogOut size={12} /> Sign Out
               </button>
             </div>
-            <Link href="/profile" style={{ width: '35px', height: '35px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)', overflow: 'hidden' }}>
+            <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)', overflow: 'hidden' }}>
               <ProfileIcon size={28} />
-            </Link>
+            </div>
           </div>
         ) : (
           <Link href="/auth/login" className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem' }}>
