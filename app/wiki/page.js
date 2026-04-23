@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
+import SimulationLottie from '../components/SimulationLottie';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThumbsUp, Plus, Search, BookOpen, Send, X, MessageSquare, ShieldCheck, Trash2, Flag, AlertCircle } from 'lucide-react';
 
@@ -135,25 +136,18 @@ export default function WikiPage() {
     <main className="container">
       <Navbar />
       
-      <div style={{ marginTop: '3rem', paddingBottom: '5rem' }}>
+      <div style={{ marginTop: '2rem', paddingBottom: '5rem' }}>
         {/* Header Section */}
-        <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="flex-center" style={{ marginBottom: '1.5rem' }}>
-              <div style={{ 
-                width: '60px', height: '60px', borderRadius: '15px', 
-                background: 'var(--accent-primary)', display: 'flex', 
-                alignItems: 'center', justifyContent: 'center', color: 'white',
-                boxShadow: '0 10px 20px rgba(124, 58, 237, 0.3)'
-              }}>
-                <BookOpen size={32} />
-              </div>
+            <div className="flex-center" style={{ marginBottom: '1rem' }}>
+              <SimulationLottie width={220} height={220} />
             </div>
-            <h1 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>Learning <span className="gradient-text">Hub</span></h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
+            <h1 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-2px' }}>Learning <span className="gradient-text">Hub</span></h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto', fontWeight: 500 }}>
               Master the simulations with community-contributed strategies and survival guides.
             </p>
           </motion.div>
