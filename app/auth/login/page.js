@@ -34,12 +34,15 @@ export default function LoginPage() {
       password,
     });
 
-    if (res.error) {
+    if (res?.error) {
       setError('Invalid email or password');
       setLoading(false);
-    } else {
+    } else if (res?.ok) {
       router.push('/');
       router.refresh();
+    } else {
+      setError('An unexpected error occurred. Please try again.');
+      setLoading(false);
     }
   };
 
