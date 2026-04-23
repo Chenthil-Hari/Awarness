@@ -1,6 +1,6 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut, Home, BookOpen } from 'lucide-react';
+import { Shield, LogOut, Home, BookOpen, Mail } from 'lucide-react';
 import StreakIcon from './StreakIcon';
 import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
@@ -76,6 +76,27 @@ export default function Navbar({ score = 0, level = 1 }) {
         }} className="hover-lift">
           <BookOpen size={16} />
           <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>WIKI</span>
+        </Link>
+
+        <Link href="/inbox" title="Live Drills" style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '0.4rem', 
+          color: 'var(--text-secondary)', 
+          transition: 'all 0.3s ease', 
+          padding: '0.4rem 0.75rem', 
+          borderRadius: 'var(--radius-md)', 
+          background: 'rgba(255, 255, 255, 0.05)',
+          border: '1px solid var(--glass-border)',
+          position: 'relative'
+        }} className="hover-lift">
+          <Mail size={16} />
+          <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>INBOX</span>
+          <span className="pulse" style={{ 
+            position: 'absolute', top: '2px', right: '2px', 
+            width: '6px', height: '6px', background: '#ef4444', 
+            borderRadius: '50%' 
+          }}></span>
         </Link>
       </div>
 

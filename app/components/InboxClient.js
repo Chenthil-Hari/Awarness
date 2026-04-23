@@ -1,0 +1,240 @@
+'use client';
+
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, ShieldAlert, Trash2, Send, Inbox, Star, AlertCircle, CheckCircle2, ChevronRight, Search } from 'lucide-react';
+import { simulatedEmails } from '../data/emails';
+
+export default function InboxClient() {
+  const [emails, setEmails] = useState(simulatedEmails.map(e => ({ ...e, read: false, acted: false })));
+  const [selectedId, setSelectedId] = useState(simulatedEmails[0].id);
+  const [feedback, setFeedback] = useState(null);
+  const [score, setScore] = useState(0);
+
+  const selectedEmail = emails.find(e => e.id === selectedId);
+
+  const handleAction = (action) => {
+    if (selectedEmail.acted) return;
+
+    const isCorrect = action === selectedEmail.correctAction;
+    const pointsAwarded = isCorrect ? selectedEmail.points : -50;
+    
+    setScore(prev => prev + pointsAwarded);
+    setFeedback({
+      correct: isCorrect,
+      message: selectedEmail.feedback,
+      points: pointsAwarded
+    });
+
+    setEmails(prev => prev.map(e => 
+      e.id === selectedId ? { ...e, acted: true, read: true } : e
+    ));
+  };
+
+  return (
+    <div style={{ 
+      display: 'grid', 
+      gridTemplateColumns: '260px 1fr', 
+      height: '80vh',
+      background: 'rgba(255, 255, 255, 0.02)',
+      borderRadius: 'var(--radius-xl)',
+      border: '1px solid rgba(255, 255, 255, 0.05)',
+      overflow: 'hidden'
+    }}>
+      {/* Sidebar */}
+      <div style={{ 
+        background: 'rgba(255, 255, 255, 0.03)', 
+        padding: '1.5rem',
+        borderRight: '1px solid rgba(255, 255, 255, 0.05)'
+      }}>
+        <div style={{ marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>Live <span className="gradient-text">Drills</span></h2>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Score: {score} XP</div>
+        </div>
+
+        <div className="flex-col" style={{ gap: '0.5rem' }}>
+          <SidebarItem icon={<Inbox size={18}/>} label="Inbox" active count={emails.filter(e => !e.read).length} />
+          <SidebarItem icon={<Star size={18}/>} label="Flagged" />
+          <SidebarItem icon={<ShieldAlert size={18}/>} label="Security" />
+          <SidebarItem icon={<Trash2 size={18}/>} label="Trash" />
+        </div>
+      </div>
+
+      {/* Main Content: List + Detail */}
+      <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr' }}>
+        {/* Email List */}
+        <div style={{ borderRight: '1px solid rgba(255, 255, 255, 0.05)', overflowY: 'auto' }}>
+          <div style={{ padding: '1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <div style={{ position: 'relative' }}>
+              <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+              <input 
+                type="text" 
+                placeholder="Search drills..." 
+                style={{ 
+                  width: '100%', padding: '0.5rem 0.5rem 0.5rem 2rem', 
+                  background: 'rgba(255,255,255,0.05)', border: 'none', 
+                  borderRadius: '8px', color: 'white', fontSize: '0.85rem' 
+                }} 
+              />
+            </div>
+          </div>
+          {emails.map(email => (
+            <EmailListItem 
+              key={email.id} 
+              email={email} 
+              active={selectedId === email.id}
+              onClick={() => setSelectedId(email.id)}
+            />
+          ))}
+        </div>
+
+        {/* Email Detail */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {selectedEmail ? (
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              {/* Toolbar */}
+              <div style={{ 
+                padding: '1rem 2rem', 
+                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                display: 'flex',
+                gap: '1rem'
+              }}>
+                <ActionButton icon={<ShieldAlert size={18}/>} label="Report Phishing" color="#ef4444" onClick={() => handleAction('Report')} disabled={selectedEmail.acted} />
+                <ActionButton icon={<Trash2 size={18}/>} label="Delete" color="#6b7280" onClick={() => handleAction('Delete')} disabled={selectedEmail.acted} />
+                <ActionButton icon={<Send size={18}/>} label="Reply" color="#7c3aed" onClick={() => handleAction('Reply')} disabled={selectedEmail.acted} />
+              </div>
+
+              {/* Content Area */}
+              <div style={{ padding: '2rem', overflowY: 'auto', flex: 1 }}>
+                <div style={{ marginBottom: '2rem' }}>
+                  <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem' }}>{selectedEmail.subject}</h1>
+                  <div className="flex-center" style={{ justifyContent: 'flex-start', gap: '1rem' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                      {selectedEmail.sender[0]}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{selectedEmail.sender}</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>&lt;{selectedEmail.senderEmail}&gt;</div>
+                    </div>
+                    <div style={{ marginLeft: 'auto', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{selectedEmail.timestamp}</div>
+                  </div>
+                </div>
+
+                <div 
+                  style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}
+                  dangerouslySetInnerHTML={{ __html: selectedEmail.content }}
+                />
+              </div>
+
+              {/* Feedback Overlay */}
+              <AnimatePresence>
+                {feedback && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    style={{ 
+                      padding: '1.5rem 2rem',
+                      background: feedback.correct ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      borderTop: `1px solid ${feedback.correct ? '#22c55e' : '#ef4444'}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1.5rem'
+                    }}
+                  >
+                    {feedback.correct ? <CheckCircle2 color="#22c55e" size={32} /> : <AlertCircle color="#ef4444" size={32} />}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, color: feedback.correct ? '#22c55e' : '#ef4444', marginBottom: '0.25rem' }}>
+                        {feedback.correct ? 'Good Identification!' : 'Security Warning'}
+                      </div>
+                      <div style={{ fontSize: '0.9rem' }}>{feedback.message}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontWeight: 700, fontSize: '1.2rem' }}>{feedback.points > 0 ? `+${feedback.points}` : feedback.points} XP</div>
+                      <button 
+                        onClick={() => setFeedback(null)}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '0.8rem', cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <div className="flex-center" style={{ height: '100%', color: 'var(--text-secondary)' }}>
+              Select an email to start the drill
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SidebarItem({ icon, label, active, count }) {
+  return (
+    <div style={{ 
+      display: 'flex', alignItems: 'center', gap: '0.75rem', 
+      padding: '0.75rem 1rem', borderRadius: '10px',
+      background: active ? 'rgba(124, 58, 237, 0.1)' : 'transparent',
+      color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease'
+    }}>
+      {icon}
+      <span style={{ fontWeight: 500, flex: 1 }}>{label}</span>
+      {count > 0 && <span style={{ fontSize: '0.7rem', background: 'var(--accent-primary)', color: 'white', padding: '2px 6px', borderRadius: '10px' }}>{count}</span>}
+    </div>
+  );
+}
+
+function EmailListItem({ email, active, onClick }) {
+  return (
+    <div 
+      onClick={onClick}
+      style={{ 
+        padding: '1.25rem', borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+        background: active ? 'rgba(255, 255, 255, 0.02)' : 'transparent',
+        cursor: 'pointer',
+        position: 'relative',
+        transition: 'all 0.2s ease'
+      }}
+    >
+      {active && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: 'var(--accent-primary)' }} />}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+        <span style={{ fontWeight: email.read ? 400 : 700, fontSize: '0.95rem' }}>{email.sender}</span>
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{email.timestamp}</span>
+      </div>
+      <div style={{ fontWeight: email.read ? 400 : 600, fontSize: '0.85rem', marginBottom: '0.5rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {email.subject}
+      </div>
+      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+        {email.content.replace(/<[^>]*>/g, '')}
+      </div>
+      {!email.read && <div style={{ position: 'absolute', right: '1rem', top: '50%', width: '8px', height: '8px', background: 'var(--accent-primary)', borderRadius: '50%' }} />}
+    </div>
+  );
+}
+
+function ActionButton({ icon, label, color, onClick, disabled }) {
+  return (
+    <button 
+      onClick={onClick}
+      disabled={disabled}
+      style={{ 
+        display: 'flex', alignItems: 'center', gap: '0.5rem', 
+        padding: '0.5rem 1rem', borderRadius: '8px',
+        background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)',
+        color: disabled ? 'rgba(255,255,255,0.2)' : 'white', cursor: disabled ? 'default' : 'pointer',
+        transition: 'all 0.2s ease'
+      }}
+      onMouseEnter={(e) => !disabled && (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
+      onMouseLeave={(e) => !disabled && (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)')}
+    >
+      <span style={{ color: disabled ? 'inherit' : color }}>{icon}</span>
+      <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{label}</span>
+    </button>
+  );
+}
