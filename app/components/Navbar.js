@@ -1,6 +1,6 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut, Home } from 'lucide-react';
+import { Shield, LogOut, Home, BookOpen } from 'lucide-react';
 import StreakIcon from './StreakIcon';
 import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
@@ -62,6 +62,21 @@ export default function Navbar({ score = 0, level = 1 }) {
             <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>HOME</span>
           </Link>
         )}
+
+        <Link href="/wiki" title="Learning Hub" style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '0.4rem', 
+          color: 'var(--text-secondary)', 
+          transition: 'all 0.3s ease', 
+          padding: '0.4rem 0.75rem', 
+          borderRadius: 'var(--radius-md)', 
+          background: 'rgba(255, 255, 255, 0.05)',
+          border: '1px solid var(--glass-border)'
+        }} className="hover-lift">
+          <BookOpen size={16} />
+          <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>WIKI</span>
+        </Link>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1 }}>
