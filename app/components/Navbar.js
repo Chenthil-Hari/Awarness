@@ -1,7 +1,8 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut, User, Trophy } from 'lucide-react';
+import { Shield, LogOut, User } from 'lucide-react';
 import StreakIcon from './StreakIcon';
+import TrophyIcon from './TrophyIcon';
 
 export default function Navbar({ score = 0, level = 1 }) {
   const { data: session } = useSession();
@@ -56,8 +57,8 @@ export default function Navbar({ score = 0, level = 1 }) {
 
         {session && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginRight: '1rem' }}>
-            <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
-              <Trophy size={18} />
+            <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
+              <TrophyIcon size={24} />
               <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Ranking</span>
             </Link>
             

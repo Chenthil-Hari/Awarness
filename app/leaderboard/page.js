@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
+import TrophyIcon from '../components/TrophyIcon';
 import { motion } from 'framer-motion';
-import { Trophy, Medal, Star, Target, Crown } from 'lucide-react';
+import { Medal, Star, Target, Crown } from 'lucide-react';
 
 export default function LeaderboardPage() {
   const [users, setUsers] = useState([]);
@@ -35,9 +36,10 @@ export default function LeaderboardPage() {
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
           >
-            <Trophy size={60} color="var(--accent-primary)" style={{ marginBottom: '1.5rem' }} />
-            <h1 style={{ fontSize: '3.5rem', fontWeight: 900 }}>Global <span className="gradient-text">Leaderboard</span></h1>
+            <TrophyIcon size={120} />
+            <h1 style={{ fontSize: '3.5rem', fontWeight: 900, marginTop: '1rem' }}>Global <span className="gradient-text">Leaderboard</span></h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>The elite hall of awareness masters.</p>
           </motion.div>
         </div>
