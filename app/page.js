@@ -7,7 +7,7 @@ import ScenarioCard from './components/ScenarioCard';
 import SimulationViewer from './components/SimulationViewer';
 import { scenarios } from './data/scenarios';
 import { motion } from 'framer-motion';
-import { Shield, Lightbulb, TrendingUp, Users, Activity } from 'lucide-react';
+import { Shield, Lightbulb, TrendingUp, Users } from 'lucide-react';
 import { calculateLevel } from '../lib/game';
 import CommunityPoll from './components/CommunityPoll';
 
@@ -16,8 +16,6 @@ export default function Home() {
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [userXp, setUserXp] = useState(0);
 
-  const [globalStats, setGlobalStats] = useState({ activeUsers: 0, neutralizedThreats: 0 });
-
   // Initialize XP from session
   useEffect(() => {
     if (session?.user?.xp !== undefined) {
@@ -25,20 +23,8 @@ export default function Home() {
     }
   }, [session]);
 
-  // Fetch Global Stats
-  useEffect(() => {
-    fetch('/api/stats/global')
-      .then(res => res.json())
-      .then(data => setGlobalStats(data))
-      .catch(err => console.error("Stats fetch error:", err));
-  }, []);
-
   const handleScenarioComplete = () => {
     setSelectedScenario(null);
-    // Refresh stats after completion
-    fetch('/api/stats/global')
-      .then(res => res.json())
-      .then(data => setGlobalStats(data));
   };
 
   const level = calculateLevel(userXp);
@@ -131,24 +117,6 @@ export default function Home() {
           {/* Right Column: Community & Stats */}
           <aside style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
             <CommunityPoll />
-            
-            {/* Quick Stats Mini-Card */}
-            <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 'var(--radius-xl)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                <Activity size={18} color="var(--accent-primary)" />
-                <h3 style={{ fontSize: '0.9rem', fontWeight: 800, margin: 0 }}>Network Status</h3>
-              </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Active Users</span>
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{globalStats.activeUsers.toLocaleString()}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Threats Neutralized</span>
-                  <span style={{ color: '#10b981', fontWeight: 700 }}>{globalStats.neutralizedThreats.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
           </aside>
         </div>
 
