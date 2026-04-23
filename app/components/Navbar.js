@@ -1,13 +1,15 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut } from 'lucide-react';
+import { Shield, LogOut, Sun, Moon } from 'lucide-react';
 import StreakIcon from './StreakIcon';
 import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
 import ProfileIcon from './ProfileIcon';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar({ score = 0, level = 1 }) {
   const { data: session } = useSession();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <nav className="glass" style={{
@@ -43,6 +45,25 @@ export default function Navbar({ score = 0, level = 1 }) {
           <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>CURRENT SCORE</p>
           <p style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'var(--accent-secondary)' }}>{score} XP</p>
         </div>
+
+        <button 
+          onClick={toggleTheme}
+          style={{ 
+            width: '40px', 
+            height: '40px', 
+            borderRadius: '50%', 
+            background: 'var(--bg-tertiary)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            border: '1px solid var(--glass-border)',
+            color: 'var(--text-primary)',
+            transition: 'all 0.3s ease'
+          }}
+          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+        >
+          {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+        </button>
         
         <div style={{
           padding: '0.4rem 1rem',
