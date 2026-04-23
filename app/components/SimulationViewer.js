@@ -32,6 +32,16 @@ export default function SimulationViewer({ scenario, onExit }) {
     }
   }, [isComplete, currentStep.failed, score, scenario.id]);
 
+  // Map item names to icons
+  const itemIcons = {
+    'Fire Extinguisher': <ShieldCheck size={18} />,
+    'First Aid Kit': <Heart size={18} />,
+    'Wet Towel': <Waves size={18} />,
+    'Pot Lid': <Disc size={18} />,
+    'USB Drive': <Usb size={18} />,
+    'Flashlight': <Zap size={18} />
+  };
+
   return (
     <div className="flex-center" style={{
       position: 'fixed',
