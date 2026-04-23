@@ -76,8 +76,7 @@ export const authOptions = {
           { 
             $set: { 
               lastLoginDate: now.toISOString(),
-              streak: newStreak,
-              streakNudgeSent: false
+              streak: newStreak
             } 
           }
         );
