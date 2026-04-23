@@ -1,0 +1,26 @@
+{
+  "name": "awareness-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@auth/mongodb-adapter": "^3.11.2",
+    "bcryptjs": "^3.0.3",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^1.9.0",
+    "mongodb": "^6.21.0",
+    "next": "16.2.4",
+    "next-auth": "^4.24.14",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4"
+  }
+}
