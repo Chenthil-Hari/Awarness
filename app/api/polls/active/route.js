@@ -10,18 +10,21 @@ export async function GET(req) {
     const db = client.db();
     const pollsCollection = db.collection("polls");
 
+    // Temporary cleanup to ensure real data starts from 0
+    await pollsCollection.deleteMany({});
+
     // Fetch the most recent poll
     let activePoll = await pollsCollection.findOne({}, { sort: { createdAt: -1 } });
 
     // Seed a default poll if none exist
     if (!activePoll) {
       const defaultPoll = {
-        question: "Which of these phishing tactics is the scariest in 2026?",
+        question: "Which of these emerging threats is your top priority to master?",
         options: [
-          { id: 1, text: "AI-Generated Voice Clones", votes: 42 },
-          { id: 2, text: "Malicious QR Codes (Quishing)", votes: 28 },
-          { id: 3, text: "Urgent 'CEO' Direct Messages", votes: 35 },
-          { id: 4, text: "Fake Multi-Factor Prompts", votes: 51 }
+          { id: 1, text: "AI-Generated Voice Clones", votes: 0 },
+          { id: 2, text: "Malicious QR Codes (Quishing)", votes: 0 },
+          { id: 3, text: "Urgent 'CEO' Direct Messages", votes: 0 },
+          { id: 4, text: "Fake Multi-Factor Prompts", votes: 0 }
         ],
         votedBy: [],
         createdAt: new Date()
