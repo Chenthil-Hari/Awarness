@@ -105,7 +105,7 @@ export default function Navbar({ score = 0, level = 1 }) {
         {session ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '0.75rem', borderLeft: '1px solid var(--glass-border)' }}>
             <div style={{ textAlign: 'right' }} className="hide-mobile">
-              <p style={{ fontSize: '0.75rem', fontWeight: 600, margin: 0 }}>{session.user.name?.split(' ')[0]}</p>
+              <p style={{ fontSize: '0.7rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>@{session.user.username || 'user'}</p>
               <button 
                 onClick={() => signOut()}
                 style={{ fontSize: '0.65rem', color: 'var(--accent-danger)', display: 'flex', alignItems: 'center', gap: '0.2rem', marginLeft: 'auto' }}
