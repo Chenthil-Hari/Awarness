@@ -4,7 +4,8 @@ import { useSession } from 'next-auth/react';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Settings, Monitor, ChevronRight } from 'lucide-react';
+import { Sun, Moon, Monitor, ChevronRight } from 'lucide-react';
+import SettingsIcon from '../components/SettingsIcon';
 import { useTheme } from '../context/ThemeContext';
 import Link from 'next/link';
 
@@ -33,8 +34,8 @@ export default function SettingsPage() {
         >
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <div style={{ 
-              width: '70px', 
-              height: '70px', 
+              width: '80px', 
+              height: '80px', 
               borderRadius: '20px', 
               background: 'var(--bg-tertiary)', 
               margin: '0 auto 1.5rem',
@@ -42,9 +43,9 @@ export default function SettingsPage() {
               alignItems: 'center',
               justifyContent: 'center',
               border: '1px solid var(--glass-border)',
-              transform: 'rotate(-10deg)'
+              overflow: 'hidden'
             }}>
-              <Settings size={35} color="var(--accent-primary)" />
+              <SettingsIcon size={60} />
             </div>
             <h1 style={{ fontSize: '2.5rem', fontWeight: 800 }}>Platform <span className="gradient-text">Settings</span></h1>
             <p style={{ color: 'var(--text-secondary)' }}>Personalize your simulation experience</p>

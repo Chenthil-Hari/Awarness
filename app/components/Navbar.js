@@ -1,10 +1,11 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut, Sun, Moon, Settings } from 'lucide-react';
+import { Shield, LogOut, Sun, Moon } from 'lucide-react';
 import StreakIcon from './StreakIcon';
 import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
 import ProfileIcon from './ProfileIcon';
+import SettingsIcon from './SettingsIcon';
 import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar({ score = 0, level = 1 }) {
@@ -85,8 +86,8 @@ export default function Navbar({ score = 0, level = 1 }) {
               <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Ranking</span>
             </Link>
 
-            <Link href="/settings" title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
-              <Settings size={18} />
+            <Link href="/settings" title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
+              <SettingsIcon size={24} />
               <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Settings</span>
             </Link>
             
