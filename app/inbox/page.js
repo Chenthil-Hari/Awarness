@@ -1,21 +1,35 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import InboxClient from '../components/InboxClient';
 import LoadingSpinner from '../components/LoadingSpinner';
-
 import DrillLottie from '../components/DrillLottie';
+import { calculateLevel } from '../lib/game';
 
 export default function InboxPage() {
   const { data: session, status } = useSession();
+  const [totalXp, setTotalXp] = useState(0);
+
+  useEffect(() => {
+    if (session?.user?.xp !== undefined) {
+      setTotalXp(session.user.xp);
+    }
+  }, [session]);
+
+  const level = calculateLevel(totalXp);
+
+  const handleXpUpdate = (newXp) => {
+    setTotalXp(newXp);
+  };
 
   if (status === 'loading') return <LoadingSpinner />;
 
   return (
     <main className="container">
-      <Navbar />
+      <Navbar score={totalXp} level={level} />
       
       <div style={{ marginTop: '3rem', paddingBottom: '5rem' }}>
         {/* Page Header */}
@@ -46,7 +60,7 @@ export default function InboxPage() {
           transition={{ delay: 0.1 }}
         >
           {session ? (
-            <InboxClient />
+            <InboxClient onProgressUpdate={handleXpUpdate} initialXp={totalXp} />
           ) : (
             <div className="glass-card flex-center" style={{ padding: '5rem', flexDirection: 'column', gap: '1.5rem' }}>
               <div style={{ fontSize: '3rem' }}>🔒</div>

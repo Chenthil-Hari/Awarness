@@ -1,26 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Navbar from './components/Navbar';
 import ScenarioCard from './components/ScenarioCard';
 import SimulationViewer from './components/SimulationViewer';
 import { scenarios } from './data/scenarios';
 import { motion } from 'framer-motion';
 import { Shield, Lightbulb, TrendingUp, Users } from 'lucide-react';
+import { calculateLevel } from '../lib/game';
 
 export default function Home() {
+  const { data: session } = useSession();
   const [selectedScenario, setSelectedScenario] = useState(null);
-  const [totalScore, setTotalScore] = useState(1250);
-  const [level, setLevel] = useState(3);
+  const [userXp, setUserXp] = useState(0);
+
+  // Initialize XP from session
+  useEffect(() => {
+    if (session?.user?.xp !== undefined) {
+      setUserXp(session.user.xp);
+    }
+  }, [session]);
 
   const handleScenarioComplete = () => {
-    // In a real app, we'd update the global score here
     setSelectedScenario(null);
+    // Refresh XP would happen here, but for simplicity we rely on local state updates if needed
   };
+
+  const level = calculateLevel(userXp);
 
   return (
     <main style={{ minHeight: '100vh', paddingBottom: '5rem' }}>
-      <Navbar score={totalScore} level={level} />
+      <Navbar score={userXp} level={level} />
 
       <div className="container" style={{ padding: '0 1rem' }}>
         {/* Hero Section */}

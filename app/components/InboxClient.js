@@ -8,7 +8,7 @@ import { useTheme } from '../context/ThemeContext';
 import { simulatedEmails } from '../data/emails';
 import DrillLottie from './DrillLottie';
 
-export default function InboxClient() {
+export default function InboxClient({ onProgressUpdate, initialXp }) {
   const { data: session } = useSession();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -16,7 +16,7 @@ export default function InboxClient() {
   const [emails, setEmails] = useState(simulatedEmails.map(e => ({ ...e, read: false, acted: false })));
   const [selectedId, setSelectedId] = useState(simulatedEmails[0].id);
   const [feedback, setFeedback] = useState(null);
-  const [score, setScore] = useState(0);
+  const [sessionScore, setSessionScore] = useState(0);
 
   const selectedEmail = emails.find(e => e.id === selectedId);
 
@@ -61,7 +61,12 @@ export default function InboxClient() {
 
     const pointsAwarded = isCorrect ? selectedEmail.points : -100;
     
-    setScore(prev => prev + pointsAwarded);
+    setSessionScore(prev => prev + pointsAwarded);
+    
+    if (onProgressUpdate) {
+      onProgressUpdate(initialXp + pointsAwarded);
+    }
+
     setFeedback({
       correct: isCorrect,
       message: action === 'ClickLink' 
@@ -74,7 +79,7 @@ export default function InboxClient() {
       e.id === selectedId ? { ...e, acted: true, read: true } : e
     ));
 
-    if (session && isCorrect) {
+    if (session) {
       try {
         await fetch('/api/user/complete-simulation', {
           method: 'POST',
@@ -110,7 +115,7 @@ export default function InboxClient() {
             background: isDark ? 'rgba(124, 58, 237, 0.1)' : 'rgba(124, 58, 237, 0.05)', 
             padding: '0.4rem 0.8rem', borderRadius: '8px'
           }}>
-            Score: {score} XP
+            Total XP: {initialXp + sessionScore}
           </div>
         </div>
 
