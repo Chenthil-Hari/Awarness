@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { ObjectId } from 'mongodb';
 
 export async function DELETE(req, context) {
@@ -11,12 +11,9 @@ export async function DELETE(req, context) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Next.js sometimes fails to populate context.params in certain environments
-    // We'll use context.params.id with a fallback to the URL itself
     let id = context.params?.id;
     
     if (!id) {
-      // Fallback: Extract from URL (e.g., /api/guides/123 -> 123)
       const urlParts = req.url.split('/');
       id = urlParts[urlParts.length - 1];
     }
@@ -28,7 +25,6 @@ export async function DELETE(req, context) {
     const client = await clientPromise;
     const db = client.db();
 
-    // Determine if we should use ObjectId or string ID
     let query;
     try {
       query = (typeof id === 'string' && id.length === 24 && /^[0-9a-fA-F]{24}$/.test(id)) 
@@ -44,7 +40,6 @@ export async function DELETE(req, context) {
       return NextResponse.json({ error: 'Guide not found' }, { status: 404 });
     }
 
-    // Ownership check (String-safe)
     const isOwner = guide.authorId?.toString() === session.user.id?.toString();
     const isSystem = session.user.id === 'official' || session.user.role === 'admin';
 

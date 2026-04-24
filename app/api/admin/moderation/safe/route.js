@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { authOptions } from "@/app/api/auth/[...nextauth]/route.js";
 import { ObjectId } from 'mongodb';
 
 export async function POST(req) {
