@@ -5,9 +5,9 @@ import { sendWelcomeEmail } from "@/lib/mail";
 
 export async function POST(req) {
   try {
-    const { name, email, password, username } = await req.json();
+    const { name, email, password } = await req.json();
 
-    if (!name || !email || !password || !username) {
+    if (!name || !email || !password) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
@@ -21,15 +21,13 @@ export async function POST(req) {
       return NextResponse.json({ error: "User already exists" }, { status: 400 });
     }
 
-    // Sanitize and check username
-    const sanitizedUsername = username.toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '');
-    if (sanitizedUsername.length < 3) {
-      return NextResponse.json({ error: "Username too short" }, { status: 400 });
-    }
-
-    const usernameExists = await usersCollection.findOne({ username: sanitizedUsername });
-    if (usernameExists) {
-      return NextResponse.json({ error: "Username already taken" }, { status: 400 });
+    // Generate unique username AUTOMATICALLY
+    let baseUsername = name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '');
+    let username = baseUsername;
+    let count = 0;
+    while (await usersCollection.findOne({ username }) && count < 10) {
+      username = `${baseUsername}_${Math.floor(Math.random() * 1000)}`;
+      count++;
     }
 
     // Hash password
@@ -39,7 +37,7 @@ export async function POST(req) {
     await usersCollection.insertOne({
       name,
       email,
-      username: sanitizedUsername,
+      username,
       password: hashedPassword,
       createdAt: new Date(),
     });
@@ -49,24 +47,11 @@ export async function POST(req) {
       await sendWelcomeEmail(email, name);
     } catch (mailError) {
       console.error("Failed to send welcome email:", mailError);
-      // We don't fail the signup if the email fails, but we log it
     }
 
     return NextResponse.json({ message: "User created successfully" }, { status: 201 });
   } catch (error) {
-    console.error("Signup error details:", {
-      message: error.message,
-      name: error.name,
-      code: error.code
-    });
-    
-    // Check for common MongoDB connection errors
-    if (error.name === 'MongoServerSelectionError' || error.name === 'MongoNetworkError') {
-      return NextResponse.json({ 
-        error: "Database connection failed. Ensure your IP is whitelisted in MongoDB Atlas." 
-      }, { status: 500 });
-    }
-
+    console.error("Signup error details:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
