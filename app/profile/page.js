@@ -7,7 +7,8 @@ import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProfileIcon from '../components/ProfileIcon';
 import { motion } from 'framer-motion';
-import { Check, AlertCircle, Save, Star } from 'lucide-react';
+import { Check, AlertCircle, Save, Star, Mail, Shield, Zap, Calendar } from 'lucide-react';
+import { calculateLevel } from '../../lib/game';
 import Link from 'next/link';
 
 export default function ProfilePage() {
@@ -67,9 +68,12 @@ export default function ProfilePage() {
     );
   }
 
+  const userXp = session?.user?.xp || 0;
+  const level = calculateLevel(userXp);
+
   return (
     <main className="container">
-      <Navbar score={1200} level={4} />
+      <Navbar score={userXp} level={level} />
       
       <div className="flex-center" style={{ marginTop: '2rem' }}>
         <motion.div 
@@ -95,8 +99,24 @@ export default function ProfilePage() {
               <ProfileIcon size={56} />
             </div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>{session.user.name}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+              <Mail size={14} /> {session.user.email}
+            </div>
             <h1 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0, color: 'var(--text-secondary)' }}>Account <span className="gradient-text">Identity</span></h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>Manage your unique platform presence</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2.5rem' }}>
+            <div className="glass" style={{ padding: '1rem', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
+              <div style={{ color: 'var(--accent-primary)', marginBottom: '0.4rem' }}><Zap size={18} style={{ margin: '0 auto' }} /></div>
+              <p style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>{level}</p>
+              <p style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Current Level</p>
+            </div>
+            <div className="glass" style={{ padding: '1rem', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
+              <div style={{ color: 'var(--accent-secondary)', marginBottom: '0.4rem' }}><Shield size={18} style={{ margin: '0 auto' }} /></div>
+              <p style={{ fontSize: '0.8rem', fontWeight: 800, margin: '0.3rem 0', textTransform: 'capitalize' }}>{session.user.role || 'Citizen'}</p>
+              <p style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Account Type</p>
+            </div>
           </div>
 
             <div style={{ marginBottom: '2.5rem' }}>
