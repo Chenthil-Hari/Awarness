@@ -59,11 +59,6 @@ export default function Home() {
     if (status === 'authenticated') {
       checkGhost();
       fetchScenarios();
-      
-      // Redirect to onboarding if username is missing
-      if (!session.user.username) {
-        router.push('/onboarding');
-      }
     }
   }, [session, status, router]);
 
