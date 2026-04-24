@@ -7,7 +7,7 @@ import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SimulationLottie from '../components/SimulationLottie';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ThumbsUp, Plus, Search, Send, X, MessageSquare, Trash2, Flag, AlertCircle, Award, Video, PlayCircle, CornerDownRight, User } from 'lucide-react';
+import { ThumbsUp, Plus, Search, Send, X, MessageSquare, Trash2, Flag, AlertCircle, Award, Video, PlayCircle, CornerDownRight, User, Loader2 } from 'lucide-react';
 
 function CommentItem({ comment, onReply, isReply = false }) {
   return (
@@ -140,7 +140,7 @@ function CommentSection({ guideId, comments = [], onCommentAdded }) {
               className="btn-primary" 
               style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)' }}
             >
-              <Send size={18} />
+              {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
             </button>
           </div>
         </form>
@@ -162,6 +162,7 @@ function WikiContent() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedGuide, setExpandedGuide] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   
   // Form State
   const [title, setTitle] = useState('');
@@ -218,11 +219,19 @@ function WikiContent() {
 
   const handleDelete = async (guideId) => {
     if (!confirm('Are you sure you want to delete this guide?')) return;
+    setDeletingId(guideId);
     try {
       const res = await fetch(`/api/guides/${guideId}`, { method: 'DELETE' });
-      if (res.ok) setGuides(guides.filter(g => g._id !== guideId));
+      if (res.ok) {
+        setGuides(prev => prev.filter(g => g._id !== guideId));
+      } else {
+        const err = await res.json();
+        alert(`Delete Error: ${err.error || 'Failed to delete'}`);
+      }
     } catch (error) {
-      console.error('Failed to delete guide');
+      alert('Network error while deleting. Please try again.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -317,13 +326,15 @@ function WikiContent() {
             const isHighlighted = guide._id === highlightId;
             const youtubeId = getYouTubeId(guide.videoUrl);
             const isExpanded = expandedGuide === guide._id;
+            const isDeleting = deletingId === guide._id;
             
             return (
               <motion.div
                 key={guide._id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ 
-                  opacity: 1, scale: 1,
+                  opacity: isDeleting ? 0.5 : 1, 
+                  scale: isDeleting ? 0.98 : 1,
                   borderColor: isHighlighted ? 'var(--accent-primary)' : 'var(--glass-border)',
                   boxShadow: isHighlighted ? '0 0 20px rgba(139, 92, 246, 0.3)' : 'none'
                 }}
@@ -347,8 +358,14 @@ function WikiContent() {
                   </div>
                   
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    {session?.user?.id === guide.authorId ? (
-                      <button onClick={() => handleDelete(guide._id)} style={{ color: 'var(--accent-danger)', opacity: 0.7 }}><Trash2 size={18} /></button>
+                    {(session?.user?.id === guide.authorId || session?.user?.role === 'admin') ? (
+                      <button 
+                        disabled={isDeleting}
+                        onClick={() => handleDelete(guide._id)} 
+                        style={{ color: 'var(--accent-danger)', opacity: isDeleting ? 0.3 : 0.7 }}
+                      >
+                        {isDeleting ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
+                      </button>
                     ) : (
                       <button onClick={() => { setReportingGuide(guide); setShowReportModal(true); }} style={{ color: 'var(--text-muted)' }}><Flag size={18} /></button>
                     )}
@@ -424,7 +441,7 @@ function WikiContent() {
         </div>
       )}
 
-      {/* Modal Forms (Submission & Report) - Omitted for brevity, kept from original code */}
+      {/* Modal Forms */}
       <AnimatePresence>
         {showForm && (
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
@@ -475,7 +492,7 @@ function WikiContent() {
                 </div>
 
                 <button disabled={isSubmitting} className="btn-primary" style={{ width: '100%', padding: '1rem', marginTop: '0.5rem' }}>
-                  {isSubmitting ? 'Publishing...' : <><Send size={20} /> Publish Strategy</>}
+                  {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <><Send size={20} /> Publish Strategy</>}
                 </button>
               </form>
             </motion.div>
@@ -505,7 +522,7 @@ function WikiContent() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>DETAILS</label>
-                  <textarea rows={4} placeholder="Help us understand..." value={reportDetails} onChange={(e) => setReportDetails(e.target.value)} style={{ padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none', resize: 'none' }} />
+                  <textarea rows={4} placeholder="Help us understand..." value={reportDetails} onChange={(e) => setContent(e.target.value)} style={{ padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none', resize: 'none' }} />
                 </div>
                 <button className="btn-primary" style={{ width: '100%', padding: '1rem', background: 'var(--accent-warning)' }}>Submit Report</button>
               </form>
