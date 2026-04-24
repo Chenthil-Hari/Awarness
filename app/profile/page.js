@@ -7,13 +7,14 @@ import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProfileIcon from '../components/ProfileIcon';
 import { motion } from 'framer-motion';
-import { Check, AlertCircle, Save, Star, Mail, Shield, Zap, Calendar } from 'lucide-react';
+import { Check, AlertCircle, Save, Star, Mail, Shield, Zap, Edit2, X } from 'lucide-react';
 import { calculateLevel } from '../../lib/game';
 import Link from 'next/link';
 
 export default function ProfilePage() {
   const { data: session, update } = useSession();
   const [username, setUsername] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -50,6 +51,7 @@ export default function ProfilePage() {
       });
 
       setStatus({ type: 'success', message: 'Username updated successfully!' });
+      setIsEditing(false);
       
       // Force refresh to update Navbar
       router.refresh();
@@ -154,39 +156,72 @@ export default function ProfilePage() {
 
           <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>UNIQUE USERNAME</label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-primary)', fontWeight: 700 }}>@</span>
-                <input 
-                  type="text" 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="your_handle"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 0.75rem 0.75rem 2.2rem',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid var(--glass-border)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)',
-                    fontSize: '0.9rem',
-                    outline: 'none'
-                  }}
-                />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>UNIQUE USERNAME</label>
+                {!isEditing && (
+                  <button 
+                    type="button"
+                    onClick={() => setIsEditing(true)}
+                    style={{ color: 'var(--accent-secondary)', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    <Edit2 size={12} /> Edit
+                  </button>
+                )}
+                {isEditing && (
+                  <button 
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    <X size={12} /> Cancel
+                  </button>
+                )}
               </div>
-              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                Letters, numbers, and underscores only.
-              </p>
+
+              {!isEditing ? (
+                <div className="glass" style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ color: 'var(--accent-primary)', fontWeight: 800 }}>@</span>
+                  <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>{session.user.username || 'user'}</span>
+                </div>
+              ) : (
+                <>
+                  <div style={{ position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-primary)', fontWeight: 700 }}>@</span>
+                    <input 
+                      type="text" 
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                      placeholder="your_handle"
+                      autoFocus
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 0.75rem 0.75rem 2.2rem',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid var(--accent-secondary)',
+                        borderRadius: 'var(--radius-md)',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.9rem',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                    Letters, numbers, and underscores only.
+                  </p>
+                </>
+              )}
             </div>
 
-            <button 
-              type="submit" 
-              className="btn-primary" 
-              disabled={loading}
-              style={{ marginTop: '0.5rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
-            >
-              {loading ? 'Saving...' : <><Save size={18} /> Save Changes</>}
-            </button>
+            {isEditing && (
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                disabled={loading}
+                style={{ marginTop: '0.5rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-secondary)', boxShadow: '0 4px 14px 0 rgba(6, 182, 212, 0.39)' }}
+              >
+                {loading ? 'Saving...' : <><Save size={18} /> Save Changes</>}
+              </button>
+            )}
           </form>
         </motion.div>
       </div>
