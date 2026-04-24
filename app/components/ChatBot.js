@@ -164,7 +164,7 @@ export default function ChatBot() {
                     border: '1px solid rgba(255,255,255,0.1)',
                     borderRadius: '14px',
                     padding: '0.8rem 1rem',
-                    color: 'white',
+                    color: 'var(--text-primary)',
                     fontSize: '0.9rem'
                   }}
                 />

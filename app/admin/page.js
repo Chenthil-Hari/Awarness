@@ -777,7 +777,7 @@ export default function AdminPage() {
                         value={broadcastSubject}
                         onChange={(e) => setBroadcastSubject(e.target.value)}
                         placeholder="e.g. Scheduled System Maintenance"
-                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }}
+                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-primary)' }}
                       />
                     </div>
 
@@ -813,7 +813,7 @@ export default function AdminPage() {
                         value={broadcastMessage}
                         onChange={(e) => setBroadcastMessage(e.target.value)}
                         placeholder="Type your official announcement here..."
-                        style={{ width: '100%', height: '200px', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: isDark ? 'white' : '#0f172a', resize: 'none', lineHeight: 1.6 }}
+                        style={{ width: '100%', height: '200px', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'var(--text-primary)', resize: 'none', lineHeight: 1.6 }}
                       />
                     </div>
 

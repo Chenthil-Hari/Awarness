@@ -65,7 +65,7 @@ export default function SupportSection() {
             style={{
               width: '100%', height: '120px', padding: '0.8rem', 
               background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)',
-              borderRadius: '12px', color: 'white', fontSize: '0.85rem', outline: 'none',
+              borderRadius: '12px', color: 'var(--text-primary)', fontSize: '0.85rem', outline: 'none',
               resize: 'none'
             }}
           />
