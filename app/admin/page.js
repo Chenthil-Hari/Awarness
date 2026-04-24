@@ -15,6 +15,9 @@ export default function AdminPage() {
   const [users, setUsers] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const [broadcastSubject, setBroadcastSubject] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [broadcastType, setBroadcastType] = useState('announcement');
   const [theme, setTheme] = useState('dark');
   const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
   const [newScenario, setNewScenario] = useState({
@@ -771,7 +774,8 @@ export default function AdminPage() {
                     <div>
                       <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>DISPATCH SUBJECT</label>
                       <input 
-                        id="broadcast-subject"
+                        value={broadcastSubject}
+                        onChange={(e) => setBroadcastSubject(e.target.value)}
                         placeholder="e.g. Scheduled System Maintenance"
                         style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }}
                       />
@@ -781,30 +785,22 @@ export default function AdminPage() {
                       <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>ANNOUNCEMENT TYPE</label>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button 
-                          id="btn-type-announcement"
                           onClick={() => {
-                            document.getElementById('btn-type-announcement').style.background = 'var(--accent-primary)';
-                            document.getElementById('btn-type-maintenance').style.background = 'rgba(255,255,255,0.05)';
-                            window.broadcastType = 'announcement';
-                            // Pre-fill News Template
-                            document.getElementById('broadcast-subject').value = '📢 New Mission Briefing: Security Intel Update';
-                            document.getElementById('broadcast-message').value = 'A new simulation has just been deployed to your dashboard. Stay ahead of the latest threats by completing your daily drill and claiming your XP bonus!\n\nSee you in the Command Center.';
+                            setBroadcastType('announcement');
+                            setBroadcastSubject('📢 New Mission Briefing: Security Intel Update');
+                            setBroadcastMessage('A new simulation has just been deployed to your dashboard. Stay ahead of the latest threats by completing your daily drill and claiming your XP bonus!\n\nSee you in the Command Center.');
                           }}
-                          style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--accent-primary)', color: 'white', fontWeight: 700, cursor: 'pointer' }}
+                          style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: broadcastType === 'announcement' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)', color: broadcastType === 'announcement' ? 'white' : (isDark ? 'white' : '#0f172a'), fontWeight: 700, cursor: 'pointer' }}
                         >
                           📢 News
                         </button>
                         <button 
-                          id="btn-type-maintenance"
                           onClick={() => {
-                            document.getElementById('btn-type-maintenance').style.background = '#f59e0b';
-                            document.getElementById('btn-type-announcement').style.background = 'rgba(255,255,255,0.05)';
-                            window.broadcastType = 'maintenance';
-                            // Pre-fill Maintenance Template
-                            document.getElementById('broadcast-subject').value = '⚠️ Scheduled System Maintenance & Security Upgrades';
-                            document.getElementById('broadcast-message').value = 'Our engineers are performing a scheduled security upgrade to keep your awareness journey bulletproof. The platform will be temporarily offline for approximately 30 minutes.\n\nWe appreciate your patience as we harden our defenses.';
+                            setBroadcastType('maintenance');
+                            setBroadcastSubject('⚠️ Scheduled System Maintenance & Security Upgrades');
+                            setBroadcastMessage('Our engineers are performing a scheduled security upgrade to keep your awareness journey bulletproof. The platform will be temporarily offline for approximately 30 minutes.\n\nWe appreciate your patience as we harden our defenses.');
                           }}
-                          style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: isDark ? 'white' : '#0f172a', fontWeight: 700, cursor: 'pointer' }}
+                          style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: broadcastType === 'maintenance' ? '#f59e0b' : 'rgba(255,255,255,0.05)', color: broadcastType === 'maintenance' ? 'white' : (isDark ? 'white' : '#0f172a'), fontWeight: 700, cursor: 'pointer' }}
                         >
                           ⚙️ Maintenance
                         </button>
@@ -814,7 +810,8 @@ export default function AdminPage() {
                     <div>
                       <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>DETAILED MESSAGE</label>
                       <textarea 
-                        id="broadcast-message"
+                        value={broadcastMessage}
+                        onChange={(e) => setBroadcastMessage(e.target.value)}
                         placeholder="Type your official announcement here..."
                         style={{ width: '100%', height: '200px', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: isDark ? 'white' : '#0f172a', resize: 'none', lineHeight: 1.6 }}
                       />
@@ -823,12 +820,9 @@ export default function AdminPage() {
                     <button 
                       id="btn-send-broadcast"
                       onClick={async () => {
-                        const subject = document.getElementById('broadcast-subject').value;
-                        const message = document.getElementById('broadcast-message').value;
-                        const type = window.broadcastType || 'announcement';
                         const btn = document.getElementById('btn-send-broadcast');
 
-                        if (!subject || !message) return alert('Please fill all fields');
+                        if (!broadcastSubject || !broadcastMessage) return alert('Please fill all fields');
                         
                         if (!confirm(`Are you sure you want to send this broadcast to ALL users?`)) return;
 
@@ -839,13 +833,13 @@ export default function AdminPage() {
                           const res = await fetch('/api/admin/broadcast', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ subject, message, type })
+                            body: JSON.stringify({ subject: broadcastSubject, message: broadcastMessage, type: broadcastType })
                           });
                           const data = await res.json();
                           if (res.ok) {
                             alert(data.message);
-                            document.getElementById('broadcast-subject').value = '';
-                            document.getElementById('broadcast-message').value = '';
+                            setBroadcastSubject('');
+                            setBroadcastMessage('');
                           } else {
                             alert(data.error);
                           }
