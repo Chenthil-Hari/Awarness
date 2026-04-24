@@ -323,7 +323,7 @@ export default function AdminPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem', overflowX: 'auto' }}>
-          {['overview', 'reports', 'users', 'sandbox', 'support'].map(tab => (
+          {['overview', 'reports', 'users', 'sandbox', 'support', 'broadcast'].map(tab => (
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -749,6 +749,132 @@ export default function AdminPage() {
                     </motion.div>
                   ))
                 )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'broadcast' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
+                    <Globe size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>Global <span className="gradient-text">Broadcast</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Send high-priority dispatches to all platform citizens</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>DISPATCH SUBJECT</label>
+                      <input 
+                        id="broadcast-subject"
+                        placeholder="e.g. Scheduled System Maintenance"
+                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>ANNOUNCEMENT TYPE</label>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button 
+                          id="btn-type-announcement"
+                          onClick={() => {
+                            document.getElementById('btn-type-announcement').style.background = 'var(--accent-primary)';
+                            document.getElementById('btn-type-maintenance').style.background = 'rgba(255,255,255,0.05)';
+                            window.broadcastType = 'announcement';
+                          }}
+                          style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--accent-primary)', color: 'white', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          📢 News
+                        </button>
+                        <button 
+                          id="btn-type-maintenance"
+                          onClick={() => {
+                            document.getElementById('btn-type-maintenance').style.background = '#f59e0b';
+                            document.getElementById('btn-type-announcement').style.background = 'rgba(255,255,255,0.05)';
+                            window.broadcastType = 'maintenance';
+                          }}
+                          style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: isDark ? 'white' : '#0f172a', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          ⚙️ Maintenance
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>DETAILED MESSAGE</label>
+                      <textarea 
+                        id="broadcast-message"
+                        placeholder="Type your official announcement here..."
+                        style={{ width: '100%', height: '200px', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: isDark ? 'white' : '#0f172a', resize: 'none', lineHeight: 1.6 }}
+                      />
+                    </div>
+
+                    <button 
+                      id="btn-send-broadcast"
+                      onClick={async () => {
+                        const subject = document.getElementById('broadcast-subject').value;
+                        const message = document.getElementById('broadcast-message').value;
+                        const type = window.broadcastType || 'announcement';
+                        const btn = document.getElementById('btn-send-broadcast');
+
+                        if (!subject || !message) return alert('Please fill all fields');
+                        
+                        if (!confirm(`Are you sure you want to send this broadcast to ALL users?`)) return;
+
+                        btn.innerText = 'DEPLOYING...';
+                        btn.disabled = true;
+
+                        try {
+                          const res = await fetch('/api/admin/broadcast', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ subject, message, type })
+                          });
+                          const data = await res.json();
+                          if (res.ok) {
+                            alert(data.message);
+                            document.getElementById('broadcast-subject').value = '';
+                            document.getElementById('broadcast-message').value = '';
+                          } else {
+                            alert(data.error);
+                          }
+                        } catch (err) {
+                          alert('Failed to send broadcast');
+                        } finally {
+                          btn.innerText = 'DEPLOY BROADCAST';
+                          btn.disabled = false;
+                        }
+                      }}
+                      className="btn-primary" 
+                      style={{ width: '100%', padding: '1.2rem', gap: '0.75rem', fontSize: '1rem', boxShadow: '0 4px 20px rgba(124, 58, 237, 0.3)' }}
+                    >
+                      <Zap size={20} /> DEPLOY BROADCAST
+                    </button>
+                  </div>
+
+                  <div style={{ padding: '2rem', background: 'rgba(124, 58, 237, 0.03)', borderRadius: '16px', border: '1px dashed var(--accent-primary)' }}>
+                    <h4 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Shield size={18} color="var(--accent-primary)" /> Dispatch Guidelines
+                    </h4>
+                    <ul style={{ paddingLeft: '1.2rem', margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 2 }}>
+                      <li>Broadcasts are sent to <strong>ALL</strong> registered citizens instantly.</li>
+                      <li>Use <strong>Maintenance</strong> type for server downtimes or updates.</li>
+                      <li>HTML is not supported in the message box, but line breaks are preserved.</li>
+                      <li>Avoid sending more than one broadcast per 24 hours to prevent spam filters.</li>
+                      <li>Subject lines should be clear and professional.</li>
+                    </ul>
+                    
+                    <div style={{ marginTop: '2rem', padding: '1.5rem', background: isDark ? 'rgba(255,255,255,0.02)' : 'white', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                       <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>NETWORK REACH</p>
+                       <p style={{ margin: '0.25rem 0 0', fontSize: '1.5rem', fontWeight: 900 }}>{stats.users} <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-success)' }}>Active Citizens</span></p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
