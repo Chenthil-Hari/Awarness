@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut } from 'lucide-react';
+import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon } from 'lucide-react';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -13,14 +13,25 @@ export default function AdminPage() {
   const [reports, setReports] = useState([]);
   const [users, setUsers] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
+    // Load theme from localStorage
+    const savedTheme = localStorage.getItem('admin-theme') || 'dark';
+    setTheme(savedTheme);
+
     if (session?.user?.role === 'admin') {
       fetchAdminData();
     } else if (status !== 'loading') {
       setLoading(false);
     }
   }, [session, status]);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('admin-theme', newTheme);
+  };
 
   const fetchAdminData = async () => {
     try {
@@ -80,31 +91,63 @@ export default function AdminPage() {
     );
   }
 
+  const isDark = theme === 'dark';
+
   return (
-    <main style={{ minHeight: '100vh', background: '#0a0a0b', color: 'white', padding: '2rem' }}>
+    <main style={{ 
+      minHeight: '100vh', 
+      background: isDark ? '#0a0a0b' : '#f8fafc', 
+      color: isDark ? 'white' : '#0f172a', 
+      padding: '2rem',
+      transition: 'background 0.3s ease, color 0.3s ease'
+    }}>
       <div className="container">
         {/* Isolated Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '2rem' }}>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          marginBottom: '4rem', 
+          borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)', 
+          paddingBottom: '2rem' 
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ padding: '0.6rem', background: 'var(--accent-primary)', borderRadius: 'var(--radius-lg)', color: 'white' }}>
               <Shield size={24} />
             </div>
             <div>
               <h1 style={{ fontSize: '1.8rem', fontWeight: 900, letterSpacing: '-1px', margin: 0 }}>Admin <span className="gradient-text">Command</span></h1>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>SECURE SYSTEM OVERRIDE</p>
+              <p style={{ color: isDark ? 'var(--text-muted)' : 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>SECURE SYSTEM OVERRIDE</p>
             </div>
           </div>
-          <button 
-            onClick={() => signOut({ callbackUrl: '/admin/login' })}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', 
-              color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.2)',
-              padding: '0.6rem 1.2rem', borderRadius: 'var(--radius-md)', fontWeight: 700, fontSize: '0.9rem',
-              cursor: 'pointer'
-            }}
-          >
-            <LogOut size={18} /> System Exit
-          </button>
+          
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button 
+              onClick={toggleTheme}
+              style={{ 
+                padding: '0.6rem', borderRadius: 'var(--radius-md)', 
+                background: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+                border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
+                color: isDark ? 'white' : '#0f172a',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+
+            <button 
+              onClick={() => signOut({ callbackUrl: '/admin/login' })}
+              style={{ 
+                display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', 
+                color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.2)',
+                padding: '0.6rem 1.2rem', borderRadius: 'var(--radius-md)', fontWeight: 700, fontSize: '0.9rem',
+                cursor: 'pointer'
+              }}
+            >
+              <LogOut size={18} /> System Exit
+            </button>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -121,26 +164,31 @@ export default function AdminPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               className="glass-card" 
-              style={{ padding: '1.5rem', borderRadius: 'var(--radius-xl)', borderLeft: `4px solid ${stat.color}` }}
+              style={{ 
+                padding: '1.5rem', borderRadius: 'var(--radius-xl)', 
+                borderLeft: `4px solid ${stat.color}`,
+                background: isDark ? 'var(--glass-bg)' : 'white',
+                boxShadow: isDark ? 'none' : '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+              }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                 <div style={{ color: stat.color }}>{stat.icon}</div>
                 <BarChart3 size={16} style={{ opacity: 0.3 }} />
               </div>
-              <h3 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>{stat.value}</h3>
+              <h3 style={{ fontSize: '2rem', fontWeight: 900, margin: 0, color: isDark ? 'white' : '#0f172a' }}>{stat.value}</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', marginTop: '0.4rem' }}>{stat.label}</p>
             </motion.div>
           ))}
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem' }}>
           {['overview', 'reports', 'users'].map(tab => (
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
               style={{ 
-                background: 'none', border: 'none', color: activeTab === tab ? 'var(--text-primary)' : 'var(--text-muted)',
+                background: 'none', border: 'none', color: activeTab === tab ? (isDark ? 'var(--text-primary)' : '#7c3aed') : 'var(--text-muted)',
                 fontWeight: 700, fontSize: '1rem', cursor: 'pointer', position: 'relative', padding: '0.5rem 1rem',
                 textTransform: 'capitalize'
               }}
@@ -156,38 +204,38 @@ export default function AdminPage() {
             <AnimatePresence mode="wait">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 {reports.length === 0 ? (
-                  <div className="glass-card flex-center" style={{ padding: '4rem', flexDirection: 'column', gap: '1rem' }}>
+                  <div className="glass-card flex-center" style={{ padding: '4rem', flexDirection: 'column', gap: '1rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
                     <Shield size={48} style={{ opacity: 0.2 }} />
                     <p style={{ color: 'var(--text-muted)' }}>Community is safe. No pending reports.</p>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {reports.map(report => (
-                      <div key={report._id} className="glass-card" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div key={report._id} className="glass-card" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isDark ? 'var(--glass-bg)' : 'white' }}>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                             <span style={{ background: 'var(--accent-danger)', color: 'white', padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-full)', fontSize: '0.7rem', fontWeight: 800 }}>{report.reason}</span>
                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reported {new Date(report.createdAt).toLocaleDateString()}</span>
                           </div>
-                          <h4 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{report.guideTitle}</h4>
-                          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>"{report.details}"</p>
+                          <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: isDark ? 'white' : '#0f172a' }}>{report.guideTitle}</h4>
+                          <p style={{ fontSize: '0.9rem', color: isDark ? 'var(--text-secondary)' : '#475569', marginTop: '0.4rem' }}>"{report.details}"</p>
                         </div>
                         <div style={{ display: 'flex', gap: '0.8rem' }}>
                           <button 
                             onClick={() => window.open(`/wiki?id=${report.guideId}`, '_blank')}
-                            className="btn-secondary" style={{ padding: '0.6rem' }}
+                            className="btn-secondary" style={{ padding: '0.6rem', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}
                           >
                             <ExternalLink size={18} />
                           </button>
                           <button 
                             onClick={() => handleDismissReport(report._id)}
-                            className="btn-secondary" style={{ padding: '0.6rem', color: 'var(--accent-success)' }}
+                            className="btn-secondary" style={{ padding: '0.6rem', color: 'var(--accent-success)', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}
                           >
                             <CheckCircle size={18} />
                           </button>
                           <button 
                             onClick={() => handleDeleteGuide(report.guideId, report._id)}
-                            className="btn-secondary" style={{ padding: '0.6rem', color: 'var(--accent-danger)' }}
+                            className="btn-secondary" style={{ padding: '0.6rem', color: 'var(--accent-danger)', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}
                           >
                             <Trash2 size={18} />
                           </button>
@@ -201,10 +249,10 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'users' && (
-            <div className="glass-card" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <div className="glass-card" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+              <table style={{ width: '100%', borderCollapse: collapse, textAlign: 'left' }}>
                 <thead>
-                  <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--glass-border)' }}>
+                  <tr style={{ background: isDark ? 'var(--bg-tertiary)' : '#f1f5f9', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.05)' }}>
                     <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>CITIZEN</th>
                     <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>USERNAME</th>
                     <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>EXPERIENCE (XP)</th>
@@ -213,21 +261,21 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   {users.map(user => (
-                    <tr key={user._id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                    <tr key={user._id} style={{ borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.05)' }}>
                       <td style={{ padding: '1.2rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isDark ? 'var(--bg-tertiary)' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <User size={16} />
                           </div>
                           <div>
-                            <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem' }}>{user.name}</p>
+                            <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: isDark ? 'white' : '#0f172a' }}>{user.name}</p>
                             <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: '1.2rem', fontWeight: 600 }}>@{user.username}</td>
+                      <td style={{ padding: '1.2rem', fontWeight: 600, color: isDark ? 'white' : '#475569' }}>@{user.username}</td>
                       <td style={{ padding: '1.2rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, color: isDark ? 'white' : '#0f172a' }}>
                           <ArrowUpRight size={16} color="var(--accent-success)" />
                           {user.xp} XP
                         </div>
@@ -235,7 +283,7 @@ export default function AdminPage() {
                       <td style={{ padding: '1.2rem' }}>
                         <span style={{ 
                           padding: '0.3rem 0.8rem', borderRadius: 'var(--radius-full)', fontSize: '0.7rem', fontWeight: 800,
-                          background: user.role === 'admin' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                          background: user.role === 'admin' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(0, 0, 0, 0.05)',
                           color: user.role === 'admin' ? 'var(--accent-primary)' : 'var(--text-muted)'
                         }}>
                           {user.role?.toUpperCase() || 'USER'}
@@ -250,23 +298,27 @@ export default function AdminPage() {
 
           {activeTab === 'overview' && (
              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-                <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem' }}>Active Notifications</h3>
+                <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Active Notifications</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div style={{ display: 'flex', gap: '1rem', padding: '1rem', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 'var(--radius-lg)' }}>
+                    <div style={{ display: 'flex', gap: '1rem', padding: '1rem', background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderRadius: 'var(--radius-lg)' }}>
                        <ShieldAlert color="var(--accent-primary)" />
                        <div>
-                         <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem' }}>Security Patch Deployed</p>
+                         <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: isDark ? 'white' : '#0f172a' }}>Security Patch Deployed</p>
                          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Threaded comments and guide deletion APIs secured.</p>
                        </div>
                     </div>
                   </div>
                 </div>
-                <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem' }}>Quick Actions</h3>
+                <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Quick Actions</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                    <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start' }}><Shield size={18} /> Clear Audit Logs</button>
-                    <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start' }}><Users size={18} /> Export User Data</button>
+                    <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
+                      <Shield size={18} /> Clear Audit Logs
+                    </button>
+                    <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
+                      <Users size={18} /> Export User Data
+                    </button>
                   </div>
                 </div>
              </div>
