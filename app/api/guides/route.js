@@ -25,7 +25,7 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { title, content, scenarioId, domain } = await req.json();
+    const { title, content, scenarioId, domain, videoUrl } = await req.json();
 
     if (!title || !content) {
       return NextResponse.json({ error: 'Missing title or content' }, { status: 400 });
@@ -37,6 +37,7 @@ export async function POST(req) {
     const newGuide = {
       title,
       content,
+      videoUrl: videoUrl || null,
       scenarioId: scenarioId || null,
       domain: domain || 'General',
       author: session.user.name,
