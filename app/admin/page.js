@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import Navbar from '../components/Navbar';
+import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert } from 'lucide-react';
+import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut } from 'lucide-react';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -50,7 +49,6 @@ export default function AdminPage() {
     try {
       const res = await fetch(`/api/guides/${guideId}`, { method: 'DELETE' });
       if (res.ok) {
-        // Also dismiss the report
         await fetch(`/api/admin/reports/${reportId}`, { method: 'DELETE' });
         fetchAdminData();
       }
@@ -72,7 +70,6 @@ export default function AdminPage() {
     return <LoadingSpinner message="Authenticating Admin Access..." />;
   }
 
-  // HIDDEN PAGE: If not admin, show a "404 Not Found" style UI
   if (session?.user?.role !== 'admin') {
     return (
       <div className="flex-center" style={{ height: '100vh', flexDirection: 'column', gap: '1rem' }}>
@@ -84,24 +81,34 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="container" style={{ paddingBottom: '5rem' }}>
-      <Navbar />
-      
-      <div style={{ marginTop: '3rem' }}>
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-            <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', borderRadius: 'var(--radius-lg)', color: 'white' }}>
-              <Shield size={28} />
+    <main style={{ minHeight: '100vh', background: '#0a0a0b', color: 'white', padding: '2rem' }}>
+      <div className="container">
+        {/* Isolated Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ padding: '0.6rem', background: 'var(--accent-primary)', borderRadius: 'var(--radius-lg)', color: 'white' }}>
+              <Shield size={24} />
             </div>
             <div>
-              <h1 style={{ fontSize: '2.5rem', fontWeight: 900, letterSpacing: '-1px' }}>Admin <span className="gradient-text">Command</span></h1>
-              <p style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Secure Management Interface v2.0</p>
+              <h1 style={{ fontSize: '1.8rem', fontWeight: 900, letterSpacing: '-1px', margin: 0 }}>Admin <span className="gradient-text">Command</span></h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>SECURE SYSTEM OVERRIDE</p>
             </div>
           </div>
-        </motion.div>
+          <button 
+            onClick={() => signOut({ callbackUrl: '/admin/login' })}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', 
+              color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.2)',
+              padding: '0.6rem 1.2rem', borderRadius: 'var(--radius-md)', fontWeight: 700, fontSize: '0.9rem',
+              cursor: 'pointer'
+            }}
+          >
+            <LogOut size={18} /> System Exit
+          </button>
+        </div>
 
         {/* Stats Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginTop: '2.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
           {[
             { label: 'Total Citizens', value: stats.users, icon: <Users />, color: 'var(--accent-primary)' },
             { label: 'Strategies Shared', value: stats.guides, icon: <BookOpen />, color: 'var(--accent-secondary)' },
