@@ -1,15 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SimulationLottie from '../components/SimulationLottie';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ThumbsUp, Plus, Search, BookOpen, Send, X, MessageSquare, ShieldCheck, Trash2, Flag, AlertCircle } from 'lucide-react';
+import { ThumbsUp, Plus, Search, BookOpen, Send, X, MessageSquare, ShieldCheck, Trash2, Flag, AlertCircle, Award } from 'lucide-react';
 
-export default function WikiPage() {
+function WikiContent() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get('id');
+  
   const [guides, setGuides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -36,6 +40,11 @@ export default function WikiPage() {
       const res = await fetch('/api/guides');
       const data = await res.json();
       setGuides(data);
+      
+      // If we have a highlight ID, clear search to make it visible
+      if (highlightId) {
+        setSearchQuery('');
+      }
     } catch (error) {
       console.error('Failed to fetch guides');
     } finally {
@@ -129,100 +138,130 @@ export default function WikiPage() {
 
   const filteredGuides = guides.filter(guide => 
     guide.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    guide.domain.toLowerCase().includes(searchQuery.toLowerCase())
+    guide.domain.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    guide._id === highlightId
   );
 
   return (
-    <main className="container">
-      <Navbar />
-      
-      <div style={{ marginTop: '2rem', paddingBottom: '5rem' }}>
-        {/* Header Section */}
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex-center" style={{ marginBottom: '1rem' }}>
-              <SimulationLottie width={220} height={220} />
-            </div>
-            <h1 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-2px' }}>Learning <span className="gradient-text">Hub</span></h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto', fontWeight: 500 }}>
-              Master the simulations with community-contributed strategies and survival guides.
-            </p>
-          </motion.div>
-        </div>
+    <div style={{ marginTop: '2rem', paddingBottom: '5rem' }}>
+      {/* Header Section */}
+      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex-center" style={{ marginBottom: '1rem' }}>
+            <SimulationLottie width={220} height={220} />
+          </div>
+          <h1 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-2px' }}>Learning <span className="gradient-text">Hub</span></h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto', fontWeight: 500 }}>
+            Master the simulations with community-contributed strategies and survival guides.
+          </p>
+        </motion.div>
+      </div>
 
-        {/* Action Bar */}
+      {/* Action Bar */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        gap: '1.5rem', 
+        marginBottom: '3rem',
+        flexWrap: 'wrap'
+      }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: '300px' }}>
+          <Search size={20} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <input 
+            type="text" 
+            placeholder="Search strategies or domains..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '1rem 1rem 1rem 3.5rem',
+              background: 'var(--bg-tertiary)',
+              border: '1px solid var(--glass-border)',
+              borderRadius: 'var(--radius-lg)',
+              color: 'var(--text-primary)',
+              fontSize: '1rem',
+              outline: 'none'
+            }}
+          />
+        </div>
+        
+        <button 
+          onClick={() => session ? setShowForm(true) : window.location.href='/auth/login'}
+          className="btn-primary" 
+          style={{ padding: '1rem 2rem' }}
+        >
+          <Plus size={20} /> Share Strategy
+        </button>
+      </div>
+
+      {/* Content Grid */}
+      {loading ? (
+        <div style={{ padding: '4rem' }}>
+          <LoadingSpinner size={100} message="Syncing with the hive mind..." />
+        </div>
+      ) : (
         <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          gap: '1.5rem', 
-          marginBottom: '3rem',
-          flexWrap: 'wrap'
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', 
+          gap: '2rem' 
         }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: '300px' }}>
-            <Search size={20} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input 
-              type="text" 
-              placeholder="Search strategies or domains..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '1rem 1rem 1rem 3.5rem',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--glass-border)',
-                borderRadius: 'var(--radius-lg)',
-                color: 'var(--text-primary)',
-                fontSize: '1rem',
-                outline: 'none'
-              }}
-            />
-          </div>
-          
-          <button 
-            onClick={() => session ? setShowForm(true) : window.location.href='/auth/login'}
-            className="btn-primary" 
-            style={{ padding: '1rem 2rem' }}
-          >
-            <Plus size={20} /> Share Strategy
-          </button>
-        </div>
-
-        {/* Content Grid */}
-        {loading ? (
-          <div style={{ padding: '4rem' }}>
-            <LoadingSpinner size={100} message="Syncing with the hive mind..." />
-          </div>
-        ) : (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', 
-            gap: '2rem' 
-          }}>
-            {filteredGuides.map((guide, idx) => (
+          {filteredGuides.map((guide, idx) => {
+            const isHighlighted = guide._id === highlightId;
+            return (
               <motion.div
                 key={guide._id}
                 initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: 1,
+                  borderColor: isHighlighted ? 'var(--accent-primary)' : 'var(--glass-border)',
+                  boxShadow: isHighlighted ? '0 0 20px rgba(139, 92, 246, 0.3)' : 'none'
+                }}
                 transition={{ delay: idx * 0.05 }}
                 className="glass-card"
-                style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', display: 'flex', flexDirection: 'column', position: 'relative' }}
+                style={{ 
+                  padding: '2rem', 
+                  borderRadius: 'var(--radius-xl)', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  position: 'relative',
+                  border: isHighlighted ? '2px solid var(--accent-primary)' : '1px solid var(--glass-border)'
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                  <span style={{ 
-                    fontSize: '0.7rem', 
-                    fontWeight: 800, 
-                    color: 'var(--accent-secondary)', 
-                    background: 'rgba(6, 182, 212, 0.1)', 
-                    padding: '0.4rem 0.8rem', 
-                    borderRadius: 'var(--radius-full)',
-                    textTransform: 'uppercase'
+                {isHighlighted && (
+                  <div style={{ 
+                    position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)',
+                    background: 'var(--accent-primary)', color: 'white', padding: '2px 12px',
+                    borderRadius: 'var(--radius-full)', fontSize: '0.7rem', fontWeight: 800,
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
                   }}>
-                    {guide.domain}
-                  </span>
+                    RECOMMENDED DEEP DIVE
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <span style={{ 
+                      fontSize: '0.7rem', 
+                      fontWeight: 800, 
+                      color: 'var(--accent-secondary)', 
+                      background: 'rgba(6, 182, 212, 0.1)', 
+                      padding: '0.4rem 0.8rem', 
+                      borderRadius: 'var(--radius-full)',
+                      textTransform: 'uppercase'
+                    }}>
+                      {guide.domain}
+                    </span>
+                    {guide.isOfficial && (
+                      <div title="Official Team Guide" style={{ color: 'var(--accent-primary)' }}>
+                        <Award size={18} />
+                      </div>
+                    )}
+                  </div>
                   
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     {session?.user?.id === guide.authorId ? (
@@ -274,177 +313,188 @@ export default function WikiPage() {
                   gap: '0.75rem'
                 }}>
                   <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>{guide.username?.charAt(0).toUpperCase()}</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>{guide.username?.charAt(0).toUpperCase() || 'S'}</span>
                   </div>
                   <div>
-                    <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700 }}>@{guide.username}</p>
+                    <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700 }}>@{guide.username || 'system'}</p>
                     <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(guide.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
               </motion.div>
-            ))}
+            );
+          })}
+        </div>
+      )}
+
+      {/* Modal Form */}
+      <AnimatePresence>
+        {showForm && (
+          <div style={{ 
+            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
+            background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', 
+            alignItems: 'center', justifyContent: 'center', padding: '1rem'
+          }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="glass-card"
+              style={{ width: '100%', maxWidth: '600px', padding: '2.5rem', borderRadius: 'var(--radius-xl)' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Share Your <span className="gradient-text">Wisdom</span></h2>
+                <button onClick={() => setShowForm(false)} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
+              </div>
+
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>DOMAIN</label>
+                  <select 
+                    value={domain}
+                    onChange={(e) => setDomain(e.target.value)}
+                    style={{
+                      padding: '1rem', background: 'var(--bg-tertiary)', 
+                      border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)', outline: 'none'
+                    }}
+                  >
+                    <option>Cybersecurity</option>
+                    <option>Financial Literacy</option>
+                    <option>Mental Health</option>
+                    <option>Life Skills</option>
+                    <option>General</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>STRATEGY TITLE</label>
+                  <input 
+                    required
+                    type="text" 
+                    placeholder="e.g., How to spot a fake bank URL"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    style={{
+                      padding: '1rem', background: 'var(--bg-tertiary)', 
+                      border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)', outline: 'none'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>CONTENT</label>
+                  <textarea 
+                    required
+                    rows={6}
+                    placeholder="Explain your strategy in detail..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    style={{
+                      padding: '1rem', background: 'var(--bg-tertiary)', 
+                      border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)', outline: 'none', resize: 'none'
+                    }}
+                  />
+                </div>
+
+                <button 
+                  disabled={isSubmitting}
+                  className="btn-primary" 
+                  style={{ width: '100%', padding: '1rem', marginTop: '1rem' }}
+                >
+                  {isSubmitting ? 'Publishing...' : <><Send size={20} /> Publish Guide</>}
+                </button>
+              </form>
+            </motion.div>
           </div>
         )}
+      </AnimatePresence>
 
-        {/* Modal Form */}
-        <AnimatePresence>
-          {showForm && (
-            <div style={{ 
-              position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
-              background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', 
-              alignItems: 'center', justifyContent: 'center', padding: '1rem'
-            }}>
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="glass-card"
-                style={{ width: '100%', maxWidth: '600px', padding: '2.5rem', borderRadius: 'var(--radius-xl)' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Share Your <span className="gradient-text">Wisdom</span></h2>
-                  <button onClick={() => setShowForm(false)} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
+      {/* Report Modal */}
+      <AnimatePresence>
+        {showReportModal && (
+          <div style={{ 
+            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
+            background: 'rgba(0,0,0,0.85)', zIndex: 1100, display: 'flex', 
+            alignItems: 'center', justifyContent: 'center', padding: '1rem'
+          }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="glass-card"
+              style={{ width: '100%', maxWidth: '500px', padding: '2.5rem', borderRadius: 'var(--radius-xl)' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <AlertCircle size={24} color="var(--accent-warning)" />
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Report <span className="gradient-text">Strategy</span></h2>
+                </div>
+                <button onClick={() => setShowReportModal(false)} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
+              </div>
+
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                Help us keep the hub safe and accurate. Why are you reporting <strong>{reportingGuide?.title}</strong>?
+              </p>
+
+              <form onSubmit={handleReport} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>REASON</label>
+                  <select 
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    style={{
+                      padding: '1rem', background: 'var(--bg-tertiary)', 
+                      border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)', outline: 'none'
+                    }}
+                  >
+                    <option>Inaccurate Information</option>
+                    <option>Inappropriate Content</option>
+                    <option>Spam or Scams</option>
+                    <option>Incorrect Category</option>
+                    <option>Other</option>
+                  </select>
                 </div>
 
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>DOMAIN</label>
-                    <select 
-                      value={domain}
-                      onChange={(e) => setDomain(e.target.value)}
-                      style={{
-                        padding: '1rem', background: 'var(--bg-tertiary)', 
-                        border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-primary)', outline: 'none'
-                      }}
-                    >
-                      <option>Cybersecurity</option>
-                      <option>Financial Literacy</option>
-                      <option>Mental Health</option>
-                      <option>Life Skills</option>
-                      <option>General</option>
-                    </select>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>STRATEGY TITLE</label>
-                    <input 
-                      required
-                      type="text" 
-                      placeholder="e.g., How to spot a fake bank URL"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      style={{
-                        padding: '1rem', background: 'var(--bg-tertiary)', 
-                        border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-primary)', outline: 'none'
-                      }}
-                    />
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>CONTENT</label>
-                    <textarea 
-                      required
-                      rows={6}
-                      placeholder="Explain your strategy in detail..."
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      style={{
-                        padding: '1rem', background: 'var(--bg-tertiary)', 
-                        border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-primary)', outline: 'none', resize: 'none'
-                      }}
-                    />
-                  </div>
-
-                  <button 
-                    disabled={isSubmitting}
-                    className="btn-primary" 
-                    style={{ width: '100%', padding: '1rem', marginTop: '1rem' }}
-                  >
-                    {isSubmitting ? 'Publishing...' : <><Send size={20} /> Publish Guide</>}
-                  </button>
-                </form>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
-        {/* Report Modal */}
-        <AnimatePresence>
-          {showReportModal && (
-            <div style={{ 
-              position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
-              background: 'rgba(0,0,0,0.85)', zIndex: 1100, display: 'flex', 
-              alignItems: 'center', justifyContent: 'center', padding: '1rem'
-            }}>
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="glass-card"
-                style={{ width: '100%', maxWidth: '500px', padding: '2.5rem', borderRadius: 'var(--radius-xl)' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <AlertCircle size={24} color="var(--accent-warning)" />
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Report <span className="gradient-text">Strategy</span></h2>
-                  </div>
-                  <button onClick={() => setShowReportModal(false)} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>ADDITIONAL DETAILS</label>
+                  <textarea 
+                    rows={4}
+                    placeholder="Help us understand the issue..."
+                    value={reportDetails}
+                    onChange={(e) => setReportDetails(e.target.value)}
+                    style={{
+                      padding: '1rem', background: 'var(--bg-tertiary)', 
+                      border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)', outline: 'none', resize: 'none'
+                    }}
+                  />
                 </div>
 
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-                  Help us keep the hub safe and accurate. Why are you reporting <strong>{reportingGuide?.title}</strong>?
-                </p>
+                <button 
+                  className="btn-primary" 
+                  style={{ width: '100%', padding: '1rem', background: 'var(--accent-warning)', boxShadow: '0 4px 14px 0 rgba(217, 119, 6, 0.3)' }}
+                >
+                  Submit Report
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
-                <form onSubmit={handleReport} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>REASON</label>
-                    <select 
-                      value={reportReason}
-                      onChange={(e) => setReportReason(e.target.value)}
-                      style={{
-                        padding: '1rem', background: 'var(--bg-tertiary)', 
-                        border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-primary)', outline: 'none'
-                      }}
-                    >
-                      <option>Inaccurate Information</option>
-                      <option>Inappropriate Content</option>
-                      <option>Spam or Scams</option>
-                      <option>Incorrect Category</option>
-                      <option>Other</option>
-                    </select>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>ADDITIONAL DETAILS</label>
-                    <textarea 
-                      rows={4}
-                      placeholder="Help us understand the issue..."
-                      value={reportDetails}
-                      onChange={(e) => setReportDetails(e.target.value)}
-                      style={{
-                        padding: '1rem', background: 'var(--bg-tertiary)', 
-                        border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-primary)', outline: 'none', resize: 'none'
-                      }}
-                    />
-                  </div>
-
-                  <button 
-                    className="btn-primary" 
-                    style={{ width: '100%', padding: '1rem', background: 'var(--accent-warning)', boxShadow: '0 4px 14px 0 rgba(217, 119, 6, 0.3)' }}
-                  >
-                    Submit Report
-                  </button>
-                </form>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-      </div>
+export default function WikiPage() {
+  return (
+    <main className="container">
+      <Navbar />
+      <Suspense fallback={<LoadingSpinner />}>
+        <WikiContent />
+      </Suspense>
     </main>
   );
 }

@@ -6,6 +6,7 @@ export const scenarios = [
     difficulty: 'Beginner',
     description: 'You receive an urgent email regarding a payment you don\'t remember making.',
     icon: 'ShieldAlert',
+    relatedGuideId: 'deep-dive-phishing',
     steps: {
       start: {
         text: "You open your inbox and see an email from 'Account Services (billing@pay-pal-secure.com)' with the subject: 'URGENT: Suspicious activity on your account - Action Required'. What do you do?",
@@ -78,6 +79,7 @@ export const scenarios = [
     difficulty: 'Intermediate',
     description: 'Your car breaks down, and you need $800 for repairs. How do you handle it?',
     icon: 'Wallet',
+    relatedGuideId: 'deep-dive-emergency-fund',
     steps: {
       start: {
         text: "The mechanic says it's $800. You have $500 in your checking account and $2,000 in your Emergency Fund. What do you do?",
@@ -133,6 +135,7 @@ export const scenarios = [
     difficulty: 'Intermediate',
     description: 'A pan on the stove catches fire while you are cooking. Do you have the right tools to stop it?',
     icon: 'Zap',
+    relatedGuideId: 'deep-dive-fire-safety',
     steps: {
       start: {
         text: "You're frying some snacks when suddenly the oil in the pan ignites! Thick black smoke starts filling the room. What's your first move?",

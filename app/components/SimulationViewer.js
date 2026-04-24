@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, RotateCcw, X, CheckCircle2, AlertTriangle, ArrowLeft, ShieldCheck, Heart, Waves, Disc, Usb, Zap } from 'lucide-react';
+import { ChevronRight, RotateCcw, X, CheckCircle2, AlertTriangle, ArrowLeft, ShieldCheck, Heart, Waves, Disc, Usb, Zap, BookOpen } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useSimulation } from '../hooks/useSimulation';
+import Link from 'next/link';
 
 export default function SimulationViewer({ scenario, onExit }) {
   const { data: session } = useSession();
@@ -152,6 +153,15 @@ export default function SimulationViewer({ scenario, onExit }) {
                     <button className="btn-secondary" onClick={reset} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
                       <RotateCcw size={16} /> Try Again
                     </button>
+                    {currentStep.failed && scenario.relatedGuideId && (
+                      <Link 
+                        href={`/wiki?id=${scenario.relatedGuideId}`}
+                        className="btn-secondary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', background: 'rgba(6, 182, 212, 0.1)', borderColor: 'var(--accent-secondary)', color: 'var(--accent-secondary)' }}
+                      >
+                        <BookOpen size={16} /> Deep Dive
+                      </Link>
+                    )}
                     <button className="btn-primary" onClick={onExit} style={{ fontSize: '0.9rem' }}>
                       Complete
                     </button>
