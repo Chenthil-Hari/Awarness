@@ -13,6 +13,7 @@ export default function AdminPage() {
   const [stats, setStats] = useState({ users: 0, guides: 0, reports: 0 });
   const [reports, setReports] = useState([]);
   const [users, setUsers] = useState([]);
+  const [tickets, setTickets] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [theme, setTheme] = useState('dark');
   const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
@@ -82,19 +83,22 @@ export default function AdminPage() {
 
   const fetchAdminData = async () => {
     try {
-      const [statsRes, reportsRes, usersRes] = await Promise.all([
+      const [statsRes, reportsRes, usersRes, ticketsRes] = await Promise.all([
         fetch('/api/admin/stats'),
         fetch('/api/admin/reports'),
-        fetch('/api/admin/users')
+        fetch('/api/admin/users'),
+        fetch('/api/admin/support')
       ]);
       
       const statsData = await statsRes.json();
       const reportsData = await reportsRes.json();
       const usersData = await usersRes.json();
+      const ticketsData = await ticketsRes.json();
       
       setStats(statsData);
       setReports(reportsData);
       setUsers(usersData);
+      setTickets(ticketsData);
     } catch (error) {
       console.error('Failed to fetch admin data');
     } finally {
@@ -192,6 +196,25 @@ export default function AdminPage() {
       }
     } catch (error) {
       alert('Failed to authorize content');
+    }
+  };
+
+  const handleReplyTicket = async (ticketId) => {
+    const reply = prompt("Enter your reply to the user:");
+    if (!reply) return;
+
+    try {
+      const res = await fetch('/api/admin/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId, reply })
+      });
+      if (res.ok) {
+        alert('Reply sent successfully!');
+        fetchAdminData();
+      }
+    } catch (error) {
+      alert('Failed to send reply');
     }
   };
 
@@ -300,7 +323,7 @@ export default function AdminPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem', overflowX: 'auto' }}>
-          {['overview', 'reports', 'users', 'sandbox'].map(tab => (
+          {['overview', 'reports', 'users', 'sandbox', 'support'].map(tab => (
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -310,7 +333,7 @@ export default function AdminPage() {
                 textTransform: 'capitalize', whiteSpace: 'nowrap'
               }}
             >
-              {tab === 'sandbox' ? 'Sandbox 🏗️' : tab}
+              {tab === 'sandbox' ? 'Sandbox 🏗️' : (tab === 'support' ? 'Support 💬' : tab)}
               {activeTab === tab && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1rem', left: 0, right: 0, height: '3px', background: 'var(--accent-primary)' }} />}
             </button>
           ))}
@@ -643,6 +666,82 @@ export default function AdminPage() {
                           style={{ flex: 1, fontSize: '0.8rem', gap: '0.4rem', border: '1px solid var(--accent-danger)', color: 'var(--accent-danger)' }}
                         >
                           <Trash2 size={16} /> Vanish
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+          {activeTab === 'support' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
+                    <Mail size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>Guardian <span className="gradient-text">Inbox</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Communicate directly with your community citizens</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {tickets.length === 0 ? (
+                  <div className="glass-card flex-center" style={{ padding: '4rem', flexDirection: 'column', gap: '1rem' }}>
+                    <CheckCircle size={48} style={{ opacity: 0.2 }} />
+                    <p style={{ color: 'var(--text-muted)' }}>No pending support tickets. Great work!</p>
+                  </div>
+                ) : (
+                  tickets.map(ticket => (
+                    <motion.div 
+                      key={ticket._id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="glass-card"
+                      style={{ 
+                        padding: '1.5rem', borderRadius: 'var(--radius-xl)', 
+                        borderLeft: `6px solid ${ticket.status === 'pending' ? '#ef4444' : '#10b981'}`,
+                        background: isDark ? 'var(--glass-bg)' : 'white'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <div>
+                          <span style={{ 
+                            fontSize: '0.65rem', fontWeight: 900, padding: '4px 8px', borderRadius: '6px',
+                            background: ticket.status === 'pending' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                            color: ticket.status === 'pending' ? '#ef4444' : '#10b981',
+                            textTransform: 'uppercase', marginRight: '0.5rem'
+                          }}>
+                            {ticket.status}
+                          </span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>From @{ticket.userName}</span>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(ticket.createdAt).toLocaleString()}</span>
+                      </div>
+                      
+                      <p style={{ fontSize: '1rem', fontWeight: 600, color: isDark ? 'white' : '#0f172a', marginBottom: '1rem' }}>
+                        "{ticket.message}"
+                      </p>
+
+                      {ticket.replies && ticket.replies.length > 0 && (
+                        <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(124, 58, 237, 0.05)', borderRadius: '10px', border: '1px solid rgba(124, 58, 237, 0.1)' }}>
+                          <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-primary)', marginBottom: '0.3rem' }}>YOUR RESPONSE:</p>
+                          <p style={{ margin: 0, fontSize: '0.85rem', color: isDark ? 'var(--text-secondary)' : '#475569' }}>
+                            {ticket.replies[ticket.replies.length - 1].message}
+                          </p>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+                        <button 
+                          onClick={() => handleReplyTicket(ticket._id)}
+                          className="btn-primary" 
+                          style={{ flex: 1, fontSize: '0.8rem', gap: '0.4rem', padding: '0.6rem' }}
+                        >
+                          <Send size={16} /> {ticket.status === 'pending' ? 'Send Reply' : 'Send Another Reply'}
                         </button>
                       </div>
                     </motion.div>

@@ -19,6 +19,7 @@ export const metadata = {
 import { Providers } from "./providers";
 import ChatBot from "./components/ChatBot";
 import GhostBanner from "./components/GhostBanner";
+import SupportWidget from "./components/SupportWidget";
 
 export default function RootLayout({ children }) {
   return (
@@ -26,6 +27,7 @@ export default function RootLayout({ children }) {
       <body>
         <Providers>
           <GhostBanner />
+          <SupportWidget />
           {children}
           <ChatBot />
         </Providers>
