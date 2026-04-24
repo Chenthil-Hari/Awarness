@@ -557,35 +557,35 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
-          )}
-             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-                <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Active Notifications</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div style={{ display: 'flex', gap: '1rem', padding: '1rem', background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderRadius: 'var(--radius-lg)' }}>
-                       <ShieldAlert color="var(--accent-primary)" />
-                       <div>
-                         <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: isDark ? 'white' : '#0f172a' }}>Security Patch Deployed</p>
-                         <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Threaded comments and guide deletion APIs secured.</p>
-                       </div>
-                    </div>
+          {activeTab === 'overview' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Active Notifications</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '1rem', padding: '1rem', background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderRadius: 'var(--radius-lg)' }}>
+                     <ShieldAlert color="var(--accent-primary)" />
+                     <div>
+                       <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: isDark ? 'white' : '#0f172a' }}>Security Patch Deployed</p>
+                       <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Threaded comments and guide deletion APIs secured.</p>
+                     </div>
                   </div>
                 </div>
-                <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Quick Actions</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                    <button onClick={handleTestEmail} className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--accent-primary)' }}>
-                      <Mail size={18} /> Test Email System
-                    </button>
-                    <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
-                      <Shield size={18} /> Clear Audit Logs
-                    </button>
-                    <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
-                      <Users size={18} /> Export User Data
-                    </button>
-                  </div>
+              </div>
+              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Quick Actions</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  <button onClick={handleTestEmail} className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--accent-primary)' }}>
+                    <Mail size={18} /> Test Email System
+                  </button>
+                  <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
+                    <Shield size={18} /> Clear Audit Logs
+                  </button>
+                  <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
+                    <Users size={18} /> Export User Data
+                  </button>
                 </div>
-             </div>
+              </div>
+            </div>
           )}
 
           {activeTab === 'sentinel' && (
