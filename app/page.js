@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Navbar from './components/Navbar';
 import ScenarioCard from './components/ScenarioCard';
 import SimulationViewer from './components/SimulationViewer';
@@ -14,6 +15,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 
 export default function Home() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [scenarios, setScenarios] = useState([]);
   const [loadingScenarios, setLoadingScenarios] = useState(true);

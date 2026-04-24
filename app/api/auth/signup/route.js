@@ -33,12 +33,15 @@ export async function POST(req) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with full defaults
     await usersCollection.insertOne({
       name,
       email,
       username,
       password: hashedPassword,
+      xp: 0,
+      streak: 1,
+      role: 'user',
       createdAt: new Date(),
     });
 
