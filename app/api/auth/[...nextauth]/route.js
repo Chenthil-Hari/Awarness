@@ -25,7 +25,12 @@ export const authOptions = {
         const user = await usersCollection.findOne({ email: credentials.email });
 
         if (user && bcrypt.compareSync(credentials.password, user.password)) {
-          return { id: user._id.toString(), name: user.name, email: user.email };
+          return { 
+            id: user._id.toString(), 
+            name: user.name, 
+            email: user.email,
+            role: user.role || 'user'
+          };
         }
 
         return null;
@@ -50,6 +55,7 @@ export const authOptions = {
         user.username = existingUser.username;
         user.xp = existingUser.xp || 0;
         user.streak = existingUser.streak || 0;
+        user.role = existingUser.role || 'user'; // Sync role from DB
       }
 
       // STREAK LOGIC
@@ -81,20 +87,21 @@ export const authOptions = {
           }
         );
         user.streak = newStreak;
+        user.role = dbUser.role || 'user';
       }
 
       return true;
     },
-    async jwt({ token, user, trigger, session }) {
-      if (trigger === "update" && session?.user?.username) {
-        token.username = session.user.username;
-      }
-      
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.username = user.username;
         token.xp = user.xp || 0;
         token.streak = user.streak || 0;
+        token.role = user.role || 'user';
+      } else {
+        // If it's a subsequent call, we might want to refresh the role from DB
+        // But for now, we'll rely on sign-in sync
       }
       return token;
     },
@@ -104,6 +111,7 @@ export const authOptions = {
         session.user.username = token.username;
         session.user.xp = token.xp || 0;
         session.user.streak = token.streak || 0;
+        session.user.role = token.role || 'user';
       }
       return session;
     }
