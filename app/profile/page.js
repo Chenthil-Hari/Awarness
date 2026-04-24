@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Navbar from '../components/Navbar';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ProfileIcon from '../components/ProfileIcon';
+import Navbar from '@/app/components/Navbar';
+import LoadingSpinner from '@/app/components/LoadingSpinner';
+import ProfileIcon from '@/app/components/ProfileIcon';
 import { motion } from 'framer-motion';
 import { Check, AlertCircle, Save, Star, Mail, Shield, Zap, Edit2, X } from 'lucide-react';
-import { calculateLevel } from '../../lib/game';
+import { calculateLevel } from '@/lib/game';
 import Link from 'next/link';
 
 export default function ProfilePage() {
