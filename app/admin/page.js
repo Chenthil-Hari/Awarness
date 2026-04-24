@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save } from 'lucide-react';
+import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save, Globe, Send } from 'lucide-react';
 import AdminCommandBar from '../components/AdminCommandBar';
 
 export default function AdminPage() {
