@@ -1,15 +1,18 @@
+import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut, Home, BookOpen, Mail } from 'lucide-react';
+import { Shield, LogOut, Home, BookOpen, Mail, Bell, AlertCircle } from 'lucide-react';
 import StreakIcon from './StreakIcon';
 import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
 import ProfileIcon from './ProfileIcon';
 import SettingsIcon from './SettingsIcon';
-import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar({ score = 0, level = 1 }) {
   const { data: session } = useSession();
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const needsUsername = session && !session.user.username;
 
   return (
     <nav className="glass navbar-responsive" style={{
@@ -77,6 +80,55 @@ export default function Navbar({ score = 0, level = 1 }) {
           <BookOpen size={16} />
           <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>WIKI</span>
         </Link>
+
+        <div style={{ position: 'relative' }}>
+          <button 
+            onClick={() => setShowNotifications(!showNotifications)}
+            title="Notifications" 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.4rem', 
+              color: needsUsername ? '#f59e0b' : 'var(--text-secondary)', 
+              transition: 'all 0.3s ease', 
+              padding: '0.4rem 0.75rem', 
+              borderRadius: 'var(--radius-md)', 
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${needsUsername ? 'rgba(245, 158, 11, 0.3)' : 'var(--glass-border)'}`,
+              cursor: 'pointer'
+            }} className="hover-lift">
+            <Bell size={16} />
+            {needsUsername && (
+              <span style={{ 
+                position: 'absolute', top: '4px', right: '4px', 
+                width: '8px', height: '8px', background: '#f59e0b', 
+                borderRadius: '50%', border: '2px solid var(--bg-primary)'
+              }}></span>
+            )}
+          </button>
+
+          {showNotifications && (
+            <div className="glass" style={{
+              position: 'absolute', top: '100%', left: 0, marginTop: '0.5rem',
+              width: '280px', padding: '1rem', borderRadius: 'var(--radius-md)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.2)', zIndex: 1000,
+              border: '1px solid var(--glass-border)'
+            }}>
+              <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.8rem', fontWeight: 800 }}>NOTIFICATIONS</h4>
+              {needsUsername ? (
+                <div style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                  <AlertCircle size={16} color="#f59e0b" style={{ flexShrink: 0 }} />
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: '#f59e0b' }}>Identity Required</p>
+                    <p style={{ margin: '0.2rem 0 0', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Please set your unique username to participate in the community.</p>
+                  </div>
+                </div>
+              ) : (
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center' }}>No new notifications</p>
+              )}
+            </div>
+          )}
+        </div>
 
         <Link href="/inbox" title="Live Drills" style={{ 
           display: 'flex', 
