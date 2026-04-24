@@ -129,6 +129,8 @@ function WikiContent() {
     guide._id === highlightId
   );
 
+  const previewId = getYouTubeId(videoUrl);
+
   return (
     <div style={{ marginTop: '2rem', paddingBottom: '5rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -249,16 +251,16 @@ function WikiContent() {
       <AnimatePresence>
         {showForm && (
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="glass-card" style={{ width: '100%', maxWidth: '600px', padding: '2.5rem', borderRadius: 'var(--radius-xl)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="glass-card" style={{ width: '100%', maxWidth: '600px', padding: '2rem', borderRadius: 'var(--radius-xl)', overflowY: 'auto', maxHeight: '95vh' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Share Your <span className="gradient-text">Wisdom</span></h2>
                 <button onClick={() => setShowForm(false)} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
               </div>
 
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                   <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>DOMAIN</label>
-                  <select value={domain} onChange={(e) => setDomain(e.target.value)} style={{ padding: '0.8rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none' }}>
+                  <select value={domain} onChange={(e) => setDomain(e.target.value)} style={{ padding: '0.7rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none' }}>
                     <option>Cybersecurity</option>
                     <option>Financial Literacy</option>
                     <option>Mental Health</option>
@@ -269,20 +271,43 @@ function WikiContent() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                   <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>STRATEGY TITLE</label>
-                  <input required type="text" placeholder="e.g., How to spot a fake bank URL" value={title} onChange={(e) => setTitle(e.target.value)} style={{ padding: '0.8rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none' }} />
+                  <input required type="text" placeholder="e.g., How to spot a fake bank URL" value={title} onChange={(e) => setTitle(e.target.value)} style={{ padding: '0.7rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none' }} />
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                   <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>YOUTUBE VIDEO URL (OPTIONAL)</label>
                   <div style={{ position: 'relative' }}>
                     <PlayCircle size={18} style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                    <input type="url" placeholder="https://www.youtube.com/watch?v=..." value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} style={{ width: '100%', padding: '0.8rem 0.8rem 0.8rem 2.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none' }} />
+                    <input type="url" placeholder="https://www.youtube.com/watch?v=..." value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} style={{ width: '100%', padding: '0.7rem 0.7rem 0.7rem 2.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none' }} />
                   </div>
                 </div>
 
+                {/* REAL-TIME PREVIEW */}
+                <AnimatePresence>
+                  {previewId && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      style={{ overflow: 'hidden' }}
+                    >
+                      <div style={{ width: '100%', aspectRatio: '16/9', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: '#000', marginBottom: '0.5rem' }}>
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          src={`https://www.youtube.com/embed/${previewId}`}
+                          title="YouTube video preview"
+                          frameBorder="0"
+                        ></iframe>
+                      </div>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--accent-success)', fontWeight: 700, textAlign: 'center' }}>✓ Video recognized successfully!</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                   <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>CONTENT / DESCRIPTION</label>
-                  <textarea required rows={4} placeholder="Explain your strategy or summarize the video..." value={content} onChange={(e) => setContent(e.target.value)} style={{ padding: '0.8rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none', resize: 'none' }} />
+                  <textarea required rows={4} placeholder="Explain your strategy or summarize the video..." value={content} onChange={(e) => setContent(e.target.value)} style={{ padding: '0.7rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none', resize: 'none' }} />
                 </div>
 
                 <button disabled={isSubmitting} className="btn-primary" style={{ width: '100%', padding: '1rem', marginTop: '0.5rem' }}>
