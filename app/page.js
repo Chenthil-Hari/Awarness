@@ -18,12 +18,35 @@ export default function Home() {
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [userXp, setUserXp] = useState(0);
 
-  // Initialize XP from session
+  const [ghostUser, setGhostUser] = useState(null);
+
+  // Initialize XP and handle Ghost Mode
   useEffect(() => {
-    if (session?.user?.xp !== undefined) {
-      setUserXp(session.user.xp);
+    const checkGhost = async () => {
+      const cookies = document.cookie.split('; ');
+      const ghostId = cookies.find(c => c.startsWith('impersonate_user_id='))?.split('=')[1];
+      
+      if (ghostId && session?.user?.role === 'admin') {
+        try {
+          const res = await fetch(`/api/admin/users/${ghostId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setGhostUser(data);
+            setUserXp(data.xp || 0);
+          }
+        } catch (error) {
+          console.error('Failed to fetch ghost user data');
+        }
+      } else if (session?.user?.xp !== undefined) {
+        setUserXp(session.user.xp);
+        setGhostUser(null);
+      }
+    };
+
+    if (status === 'authenticated') {
+      checkGhost();
     }
-  }, [session]);
+  }, [session, status]);
 
   const handleScenarioComplete = () => {
     setSelectedScenario(null);
@@ -64,7 +87,7 @@ export default function Home() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="hero-title" style={{ fontSize: '3rem', marginBottom: '1rem', fontWeight: 800, lineHeight: 1.1 }}>
-              Welcome back, <span className="gradient-text">{session.user.username || 'Learner'}</span>
+              Welcome back, <span className="gradient-text">{ghostUser ? ghostUser.username : (session.user.username || 'Learner')}</span>
             </h1>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '700px', margin: '0 auto 2.5rem', padding: '0 1rem' }}>
               Pick up where you left off and continue mastering real-world challenges.

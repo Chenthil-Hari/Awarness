@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon } from 'lucide-react';
+import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost } from 'lucide-react';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -65,6 +65,21 @@ export default function AdminPage() {
       }
     } catch (error) {
       alert('Failed to delete guide');
+    }
+  };
+
+  const handleImpersonate = async (userId, username) => {
+    try {
+      const res = await fetch('/api/admin/impersonate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, username })
+      });
+      if (res.ok) {
+        window.location.href = '/dashboard';
+      }
+    } catch (error) {
+      alert('Failed to activate Ghost Mode');
     }
   };
 
@@ -281,13 +296,24 @@ export default function AdminPage() {
                         </div>
                       </td>
                       <td style={{ padding: '1.2rem' }}>
-                        <span style={{ 
-                          padding: '0.3rem 0.8rem', borderRadius: 'var(--radius-full)', fontSize: '0.7rem', fontWeight: 800,
-                          background: user.role === 'admin' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-                          color: user.role === 'admin' ? 'var(--accent-primary)' : 'var(--text-muted)'
-                        }}>
-                          {user.role?.toUpperCase() || 'USER'}
-                        </span>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <span style={{ 
+                            padding: '0.3rem 0.8rem', borderRadius: 'var(--radius-full)', fontSize: '0.7rem', fontWeight: 800,
+                            background: user.role === 'admin' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                            color: user.role === 'admin' ? 'var(--accent-primary)' : 'var(--text-muted)'
+                          }}>
+                            {user.role?.toUpperCase() || 'USER'}
+                          </span>
+                          {user.role !== 'admin' && (
+                            <button 
+                              onClick={() => handleImpersonate(user._id, user.username)}
+                              title="Ghost Mode (Impersonate)"
+                              style={{ color: 'var(--accent-secondary)', opacity: 0.6 }}
+                            >
+                              <Ghost size={16} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -18,12 +18,14 @@ export const metadata = {
 
 import { Providers } from "./providers";
 import ChatBot from "./components/ChatBot";
+import GhostBanner from "./components/GhostBanner";
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${outfit.variable} ${plusJakarta.variable}`} suppressHydrationWarning>
       <body>
         <Providers>
+          <GhostBanner />
           {children}
           <ChatBot />
         </Providers>
