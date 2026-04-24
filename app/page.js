@@ -13,7 +13,6 @@ import CommunityPoll from './components/CommunityPoll';
 import LandingPage from './components/LandingPage';
 import LoadingSpinner from './components/LoadingSpinner';
 import CampaignTracker from './components/CampaignTracker';
-import DigitalCompanion from './components/DigitalCompanion';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -184,7 +183,6 @@ export default function Home() {
 
           {/* Right Column: Community & Stats */}
           <aside style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-            <DigitalCompanion />
             <CommunityPoll />
           </aside>
         </div>
