@@ -11,7 +11,7 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { xpToAdd, badgeAwarded } = await req.json();
+    const { xpToAdd, badgeAwarded, scenarioId } = await req.json();
 
     const client = await clientPromise;
     const db = client.db();
@@ -22,8 +22,10 @@ export async function POST(req) {
       $inc: { xp: xpToAdd || 0 }
     };
 
-    if (badgeAwarded) {
-      updateQuery.$addToSet = { badges: badgeAwarded };
+    if (badgeAwarded || scenarioId) {
+      updateQuery.$addToSet = {};
+      if (badgeAwarded) updateQuery.$addToSet.badges = badgeAwarded;
+      if (scenarioId) updateQuery.$addToSet.completedMissions = scenarioId;
     }
 
     await usersCollection.updateOne(

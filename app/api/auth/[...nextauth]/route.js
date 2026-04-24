@@ -144,6 +144,7 @@ export const authOptions = {
         token.xp = user.xp || 0;
         token.streak = user.streak || 0;
         token.role = user.role || 'user';
+        token.completedMissions = user.completedMissions || [];
       }
       
       // Handle manual session updates (trigger: "update")
@@ -165,6 +166,7 @@ export const authOptions = {
           session.user.xp = dbUser.xp || 0;
           session.user.streak = dbUser.streak || 0;
           session.user.role = dbUser.role || 'user';
+          session.user.completedMissions = dbUser.completedMissions || [];
         } else {
           // Fallback to token
           session.user.id = token.id;
@@ -172,6 +174,7 @@ export const authOptions = {
           session.user.xp = token.xp || 0;
           session.user.streak = token.streak || 0;
           session.user.role = token.role || 'user';
+          session.user.completedMissions = token.completedMissions || [];
         }
       }
       return session;

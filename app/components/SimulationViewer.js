@@ -8,7 +8,7 @@ import { useSimulation } from '../hooks/useSimulation';
 import Link from 'next/link';
 
 export default function SimulationViewer({ scenario, onExit }) {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const {
     currentStep,
     score,
@@ -24,14 +24,19 @@ export default function SimulationViewer({ scenario, onExit }) {
       // Award XP and Badge
       const badge = scenario.id === 'phishing-1' ? 'Phishing Detective' : 
                     scenario.id === 'finance-1' ? 'Budget Master' : null;
-      
+      const isCampaign = scenario.id?.startsWith('campaign-');
+
       fetch('/api/user/complete-simulation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ xpToAdd: score, badgeAwarded: badge }),
+        body: JSON.stringify({ xpToAdd: score, badgeAwarded: badge, scenarioId: isCampaign ? scenario.id : null }),
+      }).then(() => {
+        if (isCampaign) {
+           update(); // Refresh session to unlock next campaign mission
+        }
       }).catch(err => console.error("Failed to save progress:", err));
     }
-  }, [isComplete, currentStep.failed, score, scenario.id]);
+  }, [isComplete, currentStep.failed, score, scenario.id, update]);
 
   // Map item names to icons
   const itemIcons = {

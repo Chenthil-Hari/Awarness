@@ -12,6 +12,7 @@ import { calculateLevel } from '../lib/game';
 import CommunityPoll from './components/CommunityPoll';
 import LandingPage from './components/LandingPage';
 import LoadingSpinner from './components/LoadingSpinner';
+import CampaignTracker from './components/CampaignTracker';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -142,6 +143,11 @@ export default function Home() {
             ))}
           </motion.div>
         </header>
+
+        {/* The Campaign Section */}
+        <section style={{ marginBottom: '4rem' }}>
+          <CampaignTracker onSelectScenario={(s) => setSelectedScenario(s)} />
+        </section>
 
         {/* Main Dashboard Layout */}
         <div style={{ 
