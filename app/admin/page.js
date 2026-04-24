@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost } from 'lucide-react';
+import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail } from 'lucide-react';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -80,6 +80,30 @@ export default function AdminPage() {
       }
     } catch (error) {
       alert('Failed to activate Ghost Mode');
+    }
+  };
+
+  const handleTestEmail = async () => {
+    const email = prompt("Enter email address to send test to:", session.user.email);
+    if (!email) return;
+    
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/test-mail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('✅ SUCCESS: ' + data.message);
+      } else {
+        alert('❌ FAILED: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('❌ SYSTEM ERROR: Could not connect to test API');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -339,6 +363,9 @@ export default function AdminPage() {
                 <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Quick Actions</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                    <button onClick={handleTestEmail} className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--accent-primary)' }}>
+                      <Mail size={18} /> Test Email System
+                    </button>
                     <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
                       <Shield size={18} /> Clear Audit Logs
                     </button>
