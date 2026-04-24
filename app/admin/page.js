@@ -786,6 +786,9 @@ export default function AdminPage() {
                             document.getElementById('btn-type-announcement').style.background = 'var(--accent-primary)';
                             document.getElementById('btn-type-maintenance').style.background = 'rgba(255,255,255,0.05)';
                             window.broadcastType = 'announcement';
+                            // Pre-fill News Template
+                            document.getElementById('broadcast-subject').value = '📢 New Mission Briefing: Security Intel Update';
+                            document.getElementById('broadcast-message').value = 'A new simulation has just been deployed to your dashboard. Stay ahead of the latest threats by completing your daily drill and claiming your XP bonus!\n\nSee you in the Command Center.';
                           }}
                           style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--accent-primary)', color: 'white', fontWeight: 700, cursor: 'pointer' }}
                         >
@@ -797,6 +800,9 @@ export default function AdminPage() {
                             document.getElementById('btn-type-maintenance').style.background = '#f59e0b';
                             document.getElementById('btn-type-announcement').style.background = 'rgba(255,255,255,0.05)';
                             window.broadcastType = 'maintenance';
+                            // Pre-fill Maintenance Template
+                            document.getElementById('broadcast-subject').value = '⚠️ Scheduled System Maintenance & Security Upgrades';
+                            document.getElementById('broadcast-message').value = 'Our engineers are performing a scheduled security upgrade to keep your awareness journey bulletproof. The platform will be temporarily offline for approximately 30 minutes.\n\nWe appreciate your patience as we harden our defenses.';
                           }}
                           style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: isDark ? 'white' : '#0f172a', fontWeight: 700, cursor: 'pointer' }}
                         >
