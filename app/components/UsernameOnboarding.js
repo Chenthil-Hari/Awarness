@@ -12,7 +12,16 @@ export default function UsernameOnboarding({ isOpen, onComplete }) {
   const [status, setStatus] = useState('idle'); // idle, checking, available, taken, error
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hasCompleted, setHasCompleted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    // Check if user already completed this in the current browser session
+    const isMuzzled = localStorage.getItem('onboarding_complete');
+    if (isMuzzled) {
+      setHasCompleted(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!username || username.length < 3) {
@@ -58,18 +67,17 @@ export default function UsernameOnboarding({ isOpen, onComplete }) {
       });
       
       if (res.ok) {
-        // Update the local session state
+        // Muzzle the modal locally immediately
+        localStorage.setItem('onboarding_complete', 'true');
+        setHasCompleted(true);
+        
         await update({
           ...session,
           user: { ...session.user, username: username }
         });
         
         onComplete();
-        
-        // Force a hard reload to ensure all components see the new username
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
+        window.location.reload();
       }
     } catch (err) {
       alert('Failed to save username');
@@ -80,7 +88,7 @@ export default function UsernameOnboarding({ isOpen, onComplete }) {
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {(isOpen && !hasCompleted) && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

@@ -154,11 +154,24 @@ export const authOptions = {
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.id;
-        session.user.username = token.username;
-        session.user.xp = token.xp || 0;
-        session.user.streak = token.streak || 0;
-        session.user.role = token.role || 'user';
+        // ALWAYS fetch latest data from DB to avoid stale JWT issues
+        const client = await clientPromise;
+        const dbUser = await client.db().collection("users").findOne({ email: session.user.email });
+        
+        if (dbUser) {
+          session.user.id = dbUser._id.toString();
+          session.user.username = dbUser.username;
+          session.user.xp = dbUser.xp || 0;
+          session.user.streak = dbUser.streak || 0;
+          session.user.role = dbUser.role || 'user';
+        } else {
+          // Fallback to token if DB fetch fails
+          session.user.id = token.id;
+          session.user.username = token.username;
+          session.user.xp = token.xp || 0;
+          session.user.streak = token.streak || 0;
+          session.user.role = token.role || 'user';
+        }
       }
       return session;
     }
