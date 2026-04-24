@@ -65,9 +65,9 @@ export default function CommunityPoll() {
     </div>
   );
 
-  if (!poll) return null;
+  if (!poll || poll.error || !poll.options) return null;
 
-  const totalVotes = poll.options.reduce((acc, opt) => acc + opt.votes, 0);
+  const totalVotes = poll.options.reduce((acc, opt) => acc + (opt.votes || 0), 0);
 
   return (
     <div className="glass-card" style={{ 
@@ -103,7 +103,7 @@ export default function CommunityPoll() {
             >
               {poll.options.map((option) => (
                 <motion.button
-                  key={option.id}
+                   key={option.id}
                   whileHover={{ scale: 1.02, background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)' }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleVote(option.id)}
@@ -130,7 +130,7 @@ export default function CommunityPoll() {
               ))}
               {!session && (
                 <p style={{ fontSize: '0.7rem', color: '#f87171', textAlign: 'center', marginTop: '0.5rem' }}>
-                  <AlertCircle size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                  <AlertCircle size(10) style={{ verticalAlign: 'middle', marginRight: '4px' }} />
                   Login required to vote
                 </p>
               )}
