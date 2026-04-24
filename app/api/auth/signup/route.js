@@ -5,9 +5,9 @@ import { sendWelcomeEmail } from "@/lib/mail";
 
 export async function POST(req) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, username } = await req.json();
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !username) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
@@ -21,11 +21,15 @@ export async function POST(req) {
       return NextResponse.json({ error: "User already exists" }, { status: 400 });
     }
 
-    // Generate unique username
-    let baseUsername = name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '');
-    let username = baseUsername;
-    while (await usersCollection.findOne({ username })) {
-      username = `${baseUsername}_${Math.floor(Math.random() * 1000)}`;
+    // Sanitize and check username
+    const sanitizedUsername = username.toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '');
+    if (sanitizedUsername.length < 3) {
+      return NextResponse.json({ error: "Username too short" }, { status: 400 });
+    }
+
+    const usernameExists = await usersCollection.findOne({ username: sanitizedUsername });
+    if (usernameExists) {
+      return NextResponse.json({ error: "Username already taken" }, { status: 400 });
     }
 
     // Hash password
@@ -35,7 +39,7 @@ export async function POST(req) {
     await usersCollection.insertOne({
       name,
       email,
-      username,
+      username: sanitizedUsername,
       password: hashedPassword,
       createdAt: new Date(),
     });

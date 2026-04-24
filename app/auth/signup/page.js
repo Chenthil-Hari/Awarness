@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { UserPlus, Mail, Lock, User, Shield, Globe } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, Shield, Globe, Check, AlertCircle } from 'lucide-react';
 
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -18,14 +18,44 @@ const GoogleIcon = () => (
 
 export default function SignupPage() {
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [usernameStatus, setUsernameStatus] = useState('idle'); // idle, checking, available, taken
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+    const timer = setTimeout(async () => {
+      if (!username || username.length < 3) {
+        setUsernameStatus('idle');
+        return;
+      }
+      
+      setUsernameStatus('checking');
+      try {
+        const res = await fetch('/api/user/check-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+        setUsernameStatus(data.available ? 'available' : 'taken');
+      } catch (err) {
+        setUsernameStatus('idle');
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [username]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (usernameStatus === 'taken') {
+      setError('Username is already taken');
+      return;
+    }
+    
     setLoading(true);
     setError('');
 
@@ -33,7 +63,7 @@ export default function SignupPage() {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, username }),
       });
 
       const data = await res.json();
@@ -122,6 +152,31 @@ export default function SignupPage() {
                 outline: 'none'
               }}
             />
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-primary)', fontWeight: 900, fontSize: '0.9rem' }}>@</span>
+            <input 
+              type="text" 
+              placeholder="Username" 
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem 0.75rem 2.25rem',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: `1px solid ${usernameStatus === 'taken' ? 'var(--accent-danger)' : 'var(--glass-border)'}`,
+                borderRadius: 'var(--radius-md)',
+                color: 'white',
+                outline: 'none'
+              }}
+            />
+            <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)' }}>
+              {usernameStatus === 'checking' && <div className="spin" style={{ width: '14px', height: '14px', border: '2px solid var(--accent-primary)', borderTopColor: 'transparent', borderRadius: '50%' }}></div>}
+              {usernameStatus === 'available' && <Check size={14} color="var(--accent-success)" />}
+              {usernameStatus === 'taken' && <AlertCircle size={14} color="var(--accent-danger)" />}
+            </div>
           </div>
 
           <div style={{ position: 'relative' }}>
