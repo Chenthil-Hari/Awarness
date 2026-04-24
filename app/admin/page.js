@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff } from 'lucide-react';
+import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save } from 'lucide-react';
 import AdminCommandBar from '../components/AdminCommandBar';
 
 export default function AdminPage() {
@@ -16,6 +16,39 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [theme, setTheme] = useState('dark');
   const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
+  const [newScenario, setNewScenario] = useState({
+    title: '',
+    category: 'Cybersecurity',
+    difficulty: 'Beginner',
+    description: '',
+    xpReward: 100,
+    steps: {
+      start: {
+        text: '',
+        options: [
+          { text: '', nextStep: 'success', feedback: '', points: 50 }
+        ]
+      },
+      success: { text: 'Congratulations! You solved it.', isFinal: true },
+      fail: { text: 'Unfortunate. Try again!', isFinal: true, failed: true }
+    }
+  });
+
+  const handleSaveScenario = async () => {
+    try {
+      const res = await fetch('/api/admin/scenarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newScenario)
+      });
+      if (res.ok) {
+        alert('Scenario deployed successfully!');
+        setActiveTab('overview');
+      }
+    } catch (error) {
+      alert('Failed to save scenario');
+    }
+  };
 
   useEffect(() => {
     // Command Bar Listener (Ctrl + K)
@@ -266,18 +299,18 @@ export default function AdminPage() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem' }}>
-          {['overview', 'reports', 'users'].map(tab => (
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem', overflowX: 'auto' }}>
+          {['overview', 'reports', 'users', 'sandbox'].map(tab => (
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
               style={{ 
                 background: 'none', border: 'none', color: activeTab === tab ? (isDark ? 'var(--text-primary)' : '#7c3aed') : 'var(--text-muted)',
                 fontWeight: 700, fontSize: '1rem', cursor: 'pointer', position: 'relative', padding: '0.5rem 1rem',
-                textTransform: 'capitalize'
+                textTransform: 'capitalize', whiteSpace: 'nowrap'
               }}
             >
-              {tab}
+              {tab === 'sandbox' ? 'Sandbox 🏗️' : tab}
               {activeTab === tab && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1rem', left: 0, right: 0, height: '3px', background: 'var(--accent-primary)' }} />}
             </button>
           ))}
@@ -391,7 +424,117 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === 'overview' && (
+          {activeTab === 'sandbox' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
+                    <Layout size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>The <span className="gradient-text">Sandbox</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Architect your own interactive simulations</p>
+                  </div>
+                  <button onClick={handleSaveScenario} className="btn-primary" style={{ marginLeft: 'auto', gap: '0.5rem', padding: '0.8rem 1.5rem' }}>
+                    <Save size={18} /> Deploy Scenario
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                  {/* Basic Info */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>SCENARIO TITLE</label>
+                      <input 
+                        value={newScenario.title}
+                        onChange={(e) => setNewScenario({...newScenario, title: e.target.value})}
+                        placeholder="e.g. The Phishing Phone Call"
+                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>CATEGORY</label>
+                      <select 
+                        value={newScenario.category}
+                        onChange={(e) => setNewScenario({...newScenario, category: e.target.value})}
+                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }}
+                      >
+                        <option value="Cybersecurity">Cybersecurity</option>
+                        <option value="Financial Literacy">Financial Literacy</option>
+                        <option value="Life Skills">Life Skills</option>
+                        <option value="Mental Health">Mental Health</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>SHORT DESCRIPTION</label>
+                      <textarea 
+                        value={newScenario.description}
+                        onChange={(e) => setNewScenario({...newScenario, description: e.target.value})}
+                        placeholder="Describe the situation to the user..."
+                        style={{ width: '100%', height: '100px', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a', resize: 'none' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Steps Editor */}
+                  <div className="glass" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1rem' }}>Initial Step Configuration</h3>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>QUESTION / STORY TEXT</label>
+                      <textarea 
+                        value={newScenario.steps.start.text}
+                        onChange={(e) => {
+                          const updated = {...newScenario};
+                          updated.steps.start.text = e.target.value;
+                          setNewScenario(updated);
+                        }}
+                        placeholder="What happens first?"
+                        style={{ width: '100%', height: '80px', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a', resize: 'none' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block' }}>USER CHOICES</label>
+                      {newScenario.steps.start.options.map((opt, i) => (
+                        <div key={i} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid var(--glass-border)' }}>
+                          <input 
+                            value={opt.text}
+                            onChange={(e) => {
+                              const updated = {...newScenario};
+                              updated.steps.start.options[i].text = e.target.value;
+                              setNewScenario(updated);
+                            }}
+                            placeholder={`Choice #${i + 1} text`}
+                            style={{ width: '100%', marginBottom: '0.5rem', background: 'none', border: 'none', borderBottom: '1px solid var(--glass-border)', color: isDark ? 'white' : '#0f172a', padding: '0.5rem 0', outline: 'none' }}
+                          />
+                          <input 
+                            value={opt.feedback}
+                            onChange={(e) => {
+                              const updated = {...newScenario};
+                              updated.steps.start.options[i].feedback = e.target.value;
+                              setNewScenario(updated);
+                            }}
+                            placeholder="Feedback for this choice..."
+                            style={{ width: '100%', fontSize: '0.8rem', color: 'var(--text-muted)', background: 'none', border: 'none', outline: 'none' }}
+                          />
+                        </div>
+                      ))}
+                      <button 
+                        onClick={() => {
+                          const updated = {...newScenario};
+                          updated.steps.start.options.push({ text: '', nextStep: 'success', feedback: '', points: 50 });
+                          setNewScenario(updated);
+                        }}
+                        style={{ padding: '0.75rem', border: '1px dashed var(--glass-border)', borderRadius: '8px', color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'none', cursor: 'pointer' }}
+                      >
+                        <Plus size={14} /> Add Choice
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
                 <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Active Notifications</h3>

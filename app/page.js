@@ -5,7 +5,6 @@ import { useSession } from 'next-auth/react';
 import Navbar from './components/Navbar';
 import ScenarioCard from './components/ScenarioCard';
 import SimulationViewer from './components/SimulationViewer';
-import { scenarios } from './data/scenarios';
 import { motion } from 'framer-motion';
 import { Shield, Lightbulb, TrendingUp, Users } from 'lucide-react';
 import { calculateLevel } from '../lib/game';
@@ -17,6 +16,8 @@ import UsernameOnboarding from './components/UsernameOnboarding';
 export default function Home() {
   const { data: session, status } = useSession();
   const [selectedScenario, setSelectedScenario] = useState(null);
+  const [scenarios, setScenarios] = useState([]);
+  const [loadingScenarios, setLoadingScenarios] = useState(true);
   const [userXp, setUserXp] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -45,8 +46,21 @@ export default function Home() {
       }
     };
 
+    const fetchScenarios = async () => {
+      try {
+        const res = await fetch('/api/scenarios');
+        const data = await res.json();
+        setScenarios(data);
+      } catch (err) {
+        console.error("Failed to load scenarios");
+      } finally {
+        setLoadingScenarios(false);
+      }
+    };
+
     if (status === 'authenticated') {
       checkGhost();
+      fetchScenarios();
       
       // Check if username is missing
       if (!session.user.username) {
