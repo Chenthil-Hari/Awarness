@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '../components/Navbar';
@@ -176,25 +176,39 @@ function WikiContent() {
   const [reportReason, setReportReason] = useState('Inaccurate Information');
   const [reportDetails, setReportDetails] = useState('');
 
-  useEffect(() => {
-    fetchGuides();
-  }, []);
-
-  const fetchGuides = async () => {
+  const fetchGuides = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
-      const res = await fetch('/api/guides');
+      // Add timestamp to bust cache and ensure we always get latest messages
+      const res = await fetch(`/api/guides?t=${new Date().getTime()}`, {
+        cache: 'no-store'
+      });
       const data = await res.json();
       setGuides(data);
-      if (highlightId) {
-        setSearchQuery('');
-        setExpandedGuide(highlightId);
-      }
     } catch (error) {
       console.error('Failed to fetch guides');
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchGuides();
+    
+    // LIVE PULSE: Auto-refresh data every 5 seconds to show new comments instantly
+    const interval = setInterval(() => {
+      fetchGuides(true); // silent update
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [fetchGuides]);
+
+  useEffect(() => {
+    if (highlightId && guides.length > 0) {
+      setSearchQuery('');
+      setExpandedGuide(highlightId);
+    }
+  }, [highlightId, guides.length]);
 
   const getYouTubeId = (url) => {
     if (!url) return null;
@@ -211,7 +225,7 @@ function WikiContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ guideId }),
       });
-      if (res.ok) fetchGuides();
+      if (res.ok) fetchGuides(true);
     } catch (error) {
       console.error('Failed to vote');
     }
@@ -269,7 +283,7 @@ function WikiContent() {
         setContent('');
         setVideoUrl('');
         setShowForm(false);
-        fetchGuides();
+        fetchGuides(true);
       }
     } catch (error) {
       console.error('Failed to submit guide');
@@ -316,7 +330,7 @@ function WikiContent() {
         </button>
       </div>
 
-      {loading ? (
+      {loading && !guides.length ? (
         <div style={{ padding: '4rem' }}>
           <LoadingSpinner size={100} message="Syncing with the hive mind..." />
         </div>
@@ -430,7 +444,7 @@ function WikiContent() {
                       <CommentSection 
                         guideId={guide._id} 
                         comments={guide.comments} 
-                        onCommentAdded={() => fetchGuides()} 
+                        onCommentAdded={() => fetchGuides(true)} 
                       />
                     </motion.div>
                   )}
