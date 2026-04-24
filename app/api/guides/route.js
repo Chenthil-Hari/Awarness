@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
+import { scanContent } from '@/lib/moderation';
 
 export async function GET() {
   try {
@@ -34,6 +35,9 @@ export async function POST(req) {
     const client = await clientPromise;
     const db = client.db();
 
+    // AI SENTINEL SCAN
+    const scanResult = await scanContent(`${title} ${content}`);
+
     const newGuide = {
       title,
       content,
@@ -45,7 +49,10 @@ export async function POST(req) {
       username: session.user.username,
       upvotes: 0,
       voters: [],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      aiStatus: scanResult.status, // safe, toxic, inaccurate, flagged
+      aiReason: scanResult.reason,
+      aiScore: scanResult.score
     };
 
     const result = await db.collection('guides').insertOne(newGuide);

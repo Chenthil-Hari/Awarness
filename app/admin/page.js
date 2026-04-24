@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command } from 'lucide-react';
+import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff } from 'lucide-react';
 import AdminCommandBar from '../components/AdminCommandBar';
 
 export default function AdminPage() {
@@ -143,6 +143,24 @@ export default function AdminPage() {
       </div>
     );
   }
+
+  const handleMarkSafe = async (id, type) => {
+    try {
+      const res = await fetch(`/api/admin/moderation/safe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, type })
+      });
+      if (res.ok) {
+        // Refresh data
+        const guidesRes = await fetch('/api/guides');
+        const guidesData = await guidesRes.json();
+        setGuides(guidesData);
+      }
+    } catch (error) {
+      alert('Failed to authorize content');
+    }
+  };
 
   const isDark = theme === 'dark';
 
@@ -402,6 +420,93 @@ export default function AdminPage() {
                   </div>
                 </div>
              </div>
+          )}
+
+          {activeTab === 'sentinel' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', border: '1px solid rgba(245, 158, 11, 0.3)', background: isDark ? 'rgba(245, 158, 11, 0.05)' : '#fffbeb' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ padding: '0.8rem', background: '#f59e0b', borderRadius: '12px', color: 'white' }}>
+                    <Bot size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>AI Sentinel <span style={{ color: '#f59e0b' }}>Review Queue</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Content flagged for potential toxicity or misinformation</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
+                {guides.filter(g => g.aiStatus && g.aiStatus !== 'safe').length === 0 ? (
+                  <div className="glass-card" style={{ gridColumn: '1/-1', padding: '4rem', textAlign: 'center' }}>
+                    <CheckCircle size={48} style={{ color: 'var(--accent-success)', margin: '0 auto 1.5rem' }} />
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>All Clear, Commander!</h3>
+                    <p style={{ color: 'var(--text-muted)', margin: 0 }}>The AI Sentinel hasn't flagged any new content.</p>
+                  </div>
+                ) : (
+                  guides.filter(g => g.aiStatus && g.aiStatus !== 'safe').map(item => (
+                    <motion.div 
+                      key={item._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="glass-card"
+                      style={{ 
+                        padding: '1.5rem', 
+                        borderRadius: 'var(--radius-xl)', 
+                        borderLeft: `6px solid ${item.aiStatus === 'toxic' ? '#ef4444' : '#f59e0b'}`,
+                        background: isDark ? 'var(--glass-bg)' : 'white'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <span style={{ 
+                          fontSize: '0.65rem', 
+                          fontWeight: 900, 
+                          padding: '4px 8px', 
+                          borderRadius: '6px',
+                          background: item.aiStatus === 'toxic' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                          color: item.aiStatus === 'toxic' ? '#ef4444' : '#f59e0b',
+                          textTransform: 'uppercase'
+                        }}>
+                          {item.aiStatus} detected
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Wiki Guide</span>
+                      </div>
+                      
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '0.5rem' }}>{item.title}</h3>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {item.content}
+                      </p>
+
+                      <div style={{ padding: '0.75rem', background: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', border: '1px dashed var(--glass-border)' }}>
+                        <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                          SENTINEL REASON:
+                        </p>
+                        <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', fontStyle: 'italic', color: item.aiStatus === 'toxic' ? '#ef4444' : '#f59e0b' }}>
+                          "{item.aiReason || 'Suspicious patterns in language or metadata.'}"
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <button 
+                          onClick={() => handleMarkSafe(item._id, 'guide')}
+                          className="btn-secondary" 
+                          style={{ flex: 1, fontSize: '0.8rem', gap: '0.4rem', border: '1px solid var(--accent-success)', color: 'var(--accent-success)' }}
+                        >
+                          <CheckCircle size={16} /> Authorize
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteGuide(item._id)}
+                          className="btn-secondary" 
+                          style={{ flex: 1, fontSize: '0.8rem', gap: '0.4rem', border: '1px solid var(--accent-danger)', color: 'var(--accent-danger)' }}
+                        >
+                          <Trash2 size={16} /> Vanish
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>
