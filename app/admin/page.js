@@ -76,7 +76,7 @@ export default function AdminPage() {
         body: JSON.stringify({ userId, username })
       });
       if (res.ok) {
-        window.location.href = '/dashboard';
+        window.location.href = '/';
       }
     } catch (error) {
       alert('Failed to activate Ghost Mode');
