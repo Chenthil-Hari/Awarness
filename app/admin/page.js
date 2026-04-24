@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail } from 'lucide-react';
+import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command } from 'lucide-react';
+import AdminCommandBar from '../components/AdminCommandBar';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -14,6 +15,19 @@ export default function AdminPage() {
   const [users, setUsers] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [theme, setTheme] = useState('dark');
+  const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
+
+  useEffect(() => {
+    // Command Bar Listener (Ctrl + K)
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandBarOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     // Load theme from localStorage
@@ -140,6 +154,17 @@ export default function AdminPage() {
       padding: '2rem',
       transition: 'background 0.3s ease, color 0.3s ease'
     }}>
+      <AdminCommandBar 
+        isOpen={isCommandBarOpen}
+        onClose={() => setIsCommandBarOpen(false)}
+        onNavigate={setActiveTab}
+        onToggleTheme={toggleTheme}
+        onTestEmail={handleTestEmail}
+        users={users}
+        reports={reports}
+        currentTheme={theme}
+      />
+
       <div className="container">
         {/* Isolated Header */}
         <div style={{ 
@@ -156,7 +181,9 @@ export default function AdminPage() {
             </div>
             <div>
               <h1 style={{ fontSize: '1.8rem', fontWeight: 900, letterSpacing: '-1px', margin: 0 }}>Admin <span className="gradient-text">Command</span></h1>
-              <p style={{ color: isDark ? 'var(--text-muted)' : 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>SECURE SYSTEM OVERRIDE</p>
+              <p style={{ color: isDark ? 'var(--text-muted)' : 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                SECURE SYSTEM OVERRIDE <span style={{ padding: '2px 6px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', fontSize: '0.6rem' }}><Command size={8} /> K</span>
+              </p>
             </div>
           </div>
           
