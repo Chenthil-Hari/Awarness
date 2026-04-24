@@ -10,9 +10,11 @@ import { motion } from 'framer-motion';
 import { Shield, Lightbulb, TrendingUp, Users } from 'lucide-react';
 import { calculateLevel } from '../lib/game';
 import CommunityPoll from './components/CommunityPoll';
+import LandingPage from './components/LandingPage';
+import LoadingSpinner from './components/LoadingSpinner';
 
 export default function Home() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [userXp, setUserXp] = useState(0);
 
@@ -29,6 +31,26 @@ export default function Home() {
 
   const level = calculateLevel(userXp);
 
+  // Show landing page if not authenticated
+  if (status === 'unauthenticated') {
+    return (
+      <main>
+        <Navbar />
+        <LandingPage />
+      </main>
+    );
+  }
+
+  // Show loading while checking session
+  if (status === 'loading') {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // Authenticated Dashboard View
   return (
     <main style={{ minHeight: '100vh', paddingBottom: '5rem' }}>
       <Navbar score={userXp} level={level} />
@@ -42,10 +64,10 @@ export default function Home() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="hero-title" style={{ fontSize: '3rem', marginBottom: '1rem', fontWeight: 800, lineHeight: 1.1 }}>
-              Master Real-World <span className="gradient-text">Challenges</span>
+              Welcome back, <span className="gradient-text">{session.user.username || 'Learner'}</span>
             </h1>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '700px', margin: '0 auto 2.5rem', padding: '0 1rem' }}>
-              Step into realistic simulations designed to build your awareness and decision-making skills in safety, finance, and digital security.
+              Pick up where you left off and continue mastering real-world challenges.
             </p>
           </motion.div>
 

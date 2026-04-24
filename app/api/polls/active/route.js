@@ -10,9 +10,6 @@ export async function GET(req) {
     const db = client.db();
     const pollsCollection = db.collection("polls");
 
-    // FORCED RESET: Clear old test data permanently
-    await pollsCollection.deleteMany({});
-
     // Fetch the most recent poll
     let activePoll = await pollsCollection.findOne({}, { sort: { createdAt: -1 } });
 

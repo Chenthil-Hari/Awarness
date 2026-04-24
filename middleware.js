@@ -8,8 +8,10 @@ export default withAuth({
 
 export const config = {
   matcher: [
-    "/",
-    "/profile",
-    // Protect any other internal routes here
+    "/profile/:path*",
+    "/settings/:path*",
+    "/leaderboard/:path*",
+    "/inbox/:path*",
+    "/wiki/:path*",
   ],
 };
