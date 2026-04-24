@@ -115,7 +115,7 @@ export default function LoginPage() {
                 background: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid var(--glass-border)',
                 borderRadius: 'var(--radius-md)',
-                color: 'white',
+                color: 'var(--text-primary)',
                 outline: 'none'
               }}
             />
@@ -135,7 +135,7 @@ export default function LoginPage() {
                 background: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid var(--glass-border)',
                 borderRadius: 'var(--radius-md)',
-                color: 'white',
+                color: 'var(--text-primary)',
                 outline: 'none'
               }}
             />
