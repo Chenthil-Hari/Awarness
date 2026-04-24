@@ -4,16 +4,24 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { ObjectId } from 'mongodb';
 
-export async function DELETE(req, { params }) {
+export async function DELETE(req, context) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
-      console.log("Delete failed: No session found");
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    // Next.js sometimes fails to populate context.params in certain environments
+    // We'll use context.params.id with a fallback to the URL itself
+    let id = context.params?.id;
+    
     if (!id) {
+      // Fallback: Extract from URL (e.g., /api/guides/123 -> 123)
+      const urlParts = req.url.split('/');
+      id = urlParts[urlParts.length - 1];
+    }
+
+    if (!id || id === 'guides' || id === '') {
       return NextResponse.json({ error: 'Missing guide ID' }, { status: 400 });
     }
 
@@ -30,47 +38,25 @@ export async function DELETE(req, { params }) {
       query = { _id: id };
     }
 
-    // Verify ownership before deleting
     const guide = await db.collection('guides').findOne(query);
     
     if (!guide) {
-      console.log("Delete failed: Guide not found", { id });
       return NextResponse.json({ error: 'Guide not found' }, { status: 404 });
     }
 
-    // Check ownership
-    // Convert both to strings for a safe comparison
-    const guideAuthorId = guide.authorId?.toString();
-    const sessionUserId = session.user.id?.toString();
-    
-    const isOwner = guideAuthorId === sessionUserId;
-    const isSystem = sessionUserId === 'official' || session.user.role === 'admin';
-
-    console.log("Delete Debug:", {
-      guideTitle: guide.title,
-      guideAuthorId,
-      sessionUserId,
-      isOwner,
-      isSystem
-    });
+    // Ownership check (String-safe)
+    const isOwner = guide.authorId?.toString() === session.user.id?.toString();
+    const isSystem = session.user.id === 'official' || session.user.role === 'admin';
 
     if (!isOwner && !isSystem) {
-      return NextResponse.json({ 
-        error: 'Forbidden: You do not own this guide',
-        details: { guideAuthorId, sessionUserId }
-      }, { status: 403 });
+      return NextResponse.json({ error: 'Forbidden: You do not own this guide' }, { status: 403 });
     }
 
     const result = await db.collection('guides').deleteOne(query);
 
-    if (result.deletedCount === 0) {
-      console.log("Delete failed: MongoDB deletedCount was 0");
-      return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
-    }
-
     return NextResponse.json({ message: 'Guide deleted successfully' });
   } catch (error) {
-    console.error("Delete Error Trace:", error);
-    return NextResponse.json({ error: 'Internal server error during deletion' }, { status: 500 });
+    console.error("Delete Error:", error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
