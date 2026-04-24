@@ -41,7 +41,7 @@ export default function ProfilePage() {
 
       if (!res.ok) throw new Error(data.error);
 
-      // Update the local session to reflect the new username
+      // Update the local session
       await update({
         ...session,
         user: {
@@ -51,7 +51,7 @@ export default function ProfilePage() {
       });
 
       setStatus({ type: 'success', message: 'Username updated successfully!' });
-      setIsEditing(false);
+      setIsEditing(false); // CLOSE THE FORM
       
       // Force refresh to update Navbar
       router.refresh();
@@ -74,7 +74,7 @@ export default function ProfilePage() {
   const level = calculateLevel(userXp);
 
   return (
-    <main className="container">
+    <main className="container" style={{ paddingBottom: '5rem' }}>
       <Navbar score={userXp} level={level} />
       
       <div className="flex-center" style={{ marginTop: '2rem' }}>
@@ -82,111 +82,100 @@ export default function ProfilePage() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="glass-card" 
-          style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}
+          style={{ width: '100%', maxWidth: '500px', padding: '2.5rem' }}
         >
+          {/* Header Section */}
           <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
             <div style={{ 
-              width: '64px', 
-              height: '64px', 
+              width: '80px', 
+              height: '80px', 
               borderRadius: '50%', 
               background: 'var(--bg-tertiary)', 
-              margin: '0 auto 1.25rem',
+              margin: '0 auto 1.5rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               border: '2px solid var(--accent-primary)',
-              position: 'relative',
-              overflow: 'hidden'
+              boxShadow: '0 0 20px rgba(124, 58, 237, 0.2)'
             }}>
-              <ProfileIcon size={56} />
+              <ProfileIcon size={64} />
             </div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>{session.user.name}</h2>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>{session.user.name}</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
               <Mail size={14} /> {session.user.email}
-            </div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0, color: 'var(--text-secondary)' }}>Account <span className="gradient-text">Identity</span></h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>Manage your unique platform presence</p>
+            </p>
           </div>
 
+          {/* Stats Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2.5rem' }}>
-            <div className="glass" style={{ padding: '1rem', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
-              <div style={{ color: 'var(--accent-primary)', marginBottom: '0.4rem' }}><Zap size={18} style={{ margin: '0 auto' }} /></div>
-              <p style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>{level}</p>
-              <p style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Current Level</p>
+            <div className="glass" style={{ padding: '1.25rem', borderRadius: 'var(--radius-lg)', textAlign: 'center', border: '1px solid var(--glass-border)' }}>
+              <Zap size={20} color="var(--accent-primary)" style={{ margin: '0 auto 0.5rem' }} />
+              <p style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0 }}>{level}</p>
+              <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Current Level</p>
             </div>
-            <div className="glass" style={{ padding: '1rem', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
-              <div style={{ color: 'var(--accent-secondary)', marginBottom: '0.4rem' }}><Shield size={18} style={{ margin: '0 auto' }} /></div>
-              <p style={{ fontSize: '0.8rem', fontWeight: 800, margin: '0.3rem 0', textTransform: 'capitalize' }}>{session.user.role || 'Citizen'}</p>
-              <p style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Account Type</p>
+            <div className="glass" style={{ padding: '1.25rem', borderRadius: 'var(--radius-lg)', textAlign: 'center', border: '1px solid var(--glass-border)' }}>
+              <Shield size={20} color="var(--accent-secondary)" style={{ margin: '0 auto 0.5rem' }} />
+              <p style={{ fontSize: '0.9rem', fontWeight: 800, margin: '0.4rem 0', textTransform: 'capitalize' }}>{session.user.role || 'Citizen'}</p>
+              <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Security Rank</p>
             </div>
           </div>
 
-            <div style={{ marginBottom: '2.5rem' }}>
-              <h3 style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--text-secondary)' }}>YOUR ACHIEVEMENTS</h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                {session.user.badges?.length > 0 ? (
-                  session.user.badges.map((badge, idx) => (
-                    <div key={idx} className="glass-card" style={{ padding: '0.6rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(139, 92, 246, 0.1)', borderColor: 'rgba(139, 92, 246, 0.2)' }}>
-                      <Star size={14} color="var(--accent-secondary)" />
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>{badge}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Complete simulations to earn badges!</p>
-                )}
-              </div>
-            </div>
-
+          {/* Status Message */}
           {status.message && (
-            <div style={{ 
-              padding: '0.75rem', 
-              borderRadius: 'var(--radius-md)', 
-              marginBottom: '1.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              background: status.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-              border: `1px solid ${status.type === 'success' ? 'var(--accent-success)' : 'var(--accent-danger)'}`,
-              color: status.type === 'success' ? 'var(--accent-success)' : 'var(--accent-danger)'
-            }}>
-              {status.type === 'success' ? <Check size={18} /> : <AlertCircle size={18} />}
-              <span style={{ fontSize: '0.85rem' }}>{status.message}</span>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              style={{ 
+                padding: '1rem', 
+                borderRadius: 'var(--radius-md)', 
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                background: status.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                border: `1px solid ${status.type === 'success' ? 'var(--accent-success)' : 'var(--accent-danger)'}`,
+                color: status.type === 'success' ? 'var(--accent-success)' : 'var(--accent-danger)'
+              }}
+            >
+              {status.type === 'success' ? <Check size={20} /> : <AlertCircle size={20} />}
+              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{status.message}</span>
+            </motion.div>
           )}
 
-          <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {/* Identity Form */}
+          <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>UNIQUE USERNAME</label>
-                {!isEditing && (
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.5px' }}>IDENTITY HANDLE</label>
+                {!isEditing ? (
                   <button 
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    style={{ color: 'var(--accent-secondary)', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}
+                    className="hover-lift"
+                    style={{ color: 'var(--accent-secondary)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', fontWeight: 800, background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.2)', padding: '0.3rem 0.75rem', borderRadius: '20px', cursor: 'pointer' }}
                   >
-                    <Edit2 size={12} /> Edit
+                    <Edit2 size={12} /> EDIT
                   </button>
-                )}
-                {isEditing && (
+                ) : (
                   <button 
                     type="button"
                     onClick={() => setIsEditing(false)}
-                    style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', fontWeight: 800, background: 'none', border: 'none', cursor: 'pointer' }}
                   >
-                    <X size={12} /> Cancel
+                    <X size={12} /> CANCEL
                   </button>
                 )}
               </div>
 
               {!isEditing ? (
-                <div className="glass" style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ color: 'var(--accent-primary)', fontWeight: 800 }}>@</span>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>{session.user.username || 'user'}</span>
+                <div className="glass" style={{ padding: '1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255, 255, 255, 0.03)' }}>
+                  <span style={{ color: 'var(--accent-primary)', fontWeight: 900, fontSize: '1.1rem' }}>@</span>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>{session.user.username || 'user'}</span>
                 </div>
               ) : (
-                <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-primary)', fontWeight: 700 }}>@</span>
+                    <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-primary)', fontWeight: 900 }}>@</span>
                     <input 
                       type="text" 
                       value={username}
@@ -195,34 +184,45 @@ export default function ProfilePage() {
                       autoFocus
                       style={{
                         width: '100%',
-                        padding: '0.75rem 0.75rem 0.75rem 2.2rem',
+                        padding: '1rem 1rem 1rem 2.5rem',
                         background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid var(--accent-secondary)',
+                        border: '2px solid var(--accent-secondary)',
                         borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-primary)',
-                        fontSize: '0.9rem',
-                        outline: 'none'
+                        color: 'white',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        boxShadow: '0 0 15px rgba(6, 182, 212, 0.1)'
                       }}
                     />
                   </div>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
                     Letters, numbers, and underscores only.
                   </p>
-                </>
+                </div>
               )}
             </div>
 
             {isEditing && (
-              <button 
+              <motion.button 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 type="submit" 
                 className="btn-primary" 
                 disabled={loading}
-                style={{ marginTop: '0.5rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-secondary)', boxShadow: '0 4px 14px 0 rgba(6, 182, 212, 0.39)' }}
+                style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem', background: 'var(--accent-secondary)', boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)' }}
               >
-                {loading ? 'Saving...' : <><Save size={18} /> Save Changes</>}
-              </button>
+                {loading ? 'Processing...' : <><Save size={20} /> Save Changes</>}
+              </motion.button>
             )}
           </form>
+
+          {/* Profile Actions */}
+          <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+             <Link href="/leaderboard" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }} className="hover-lift">
+               <Star size={16} color="var(--accent-primary)" /> View Rankings
+             </Link>
+             <button style={{ fontSize: '0.85rem', color: 'var(--accent-danger)', background: 'none', border: 'none', fontWeight: 600 }}>Delete Account</button>
+          </div>
         </motion.div>
       </div>
     </main>
