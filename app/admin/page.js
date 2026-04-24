@@ -557,6 +557,8 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
+          )}
+
           {activeTab === 'overview' && (
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
               <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
