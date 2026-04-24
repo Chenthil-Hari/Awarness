@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
-    const isAdminPath = req.nexturl.pathname.startsWith("/admin");
+    const isAdminPath = req.nextUrl.pathname.startsWith("/admin");
 
     // If it's an admin path, ensure user has admin role
     if (isAdminPath && token?.role !== "admin") {
