@@ -7,7 +7,149 @@ import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SimulationLottie from '../components/SimulationLottie';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ThumbsUp, Plus, Search, BookOpen, Send, X, MessageSquare, ShieldCheck, Trash2, Flag, AlertCircle, Award, Video, PlayCircle } from 'lucide-react';
+import { ThumbsUp, Plus, Search, Send, X, MessageSquare, Trash2, Flag, AlertCircle, Award, Video, PlayCircle, CornerDownRight, User } from 'lucide-react';
+
+function CommentItem({ comment, onReply, isReply = false }) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, x: isReply ? 20 : 0 }}
+      animate={{ opacity: 1, x: isReply ? 20 : 0 }}
+      style={{ 
+        marginBottom: '1rem', 
+        paddingLeft: isReply ? '1.5rem' : '0',
+        borderLeft: isReply ? '2px solid var(--glass-border)' : 'none'
+      }}
+    >
+      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+        <div style={{ 
+          width: isReply ? '24px' : '32px', 
+          height: isReply ? '24px' : '32px', 
+          borderRadius: '50%', 
+          background: 'var(--bg-tertiary)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          border: '1px solid var(--glass-border)',
+          flexShrink: 0
+        }}>
+          <span style={{ fontSize: isReply ? '0.6rem' : '0.8rem', fontWeight: 800 }}>
+            {comment.username?.charAt(0).toUpperCase() || <User size={12}/>}
+          </span>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>@{comment.username}</span>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{new Date(comment.createdAt).toLocaleDateString()}</span>
+          </div>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.4, margin: 0 }}>{comment.content}</p>
+          
+          {!isReply && (
+            <button 
+              onClick={() => onReply(comment.id)}
+              style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 700, marginTop: '0.4rem', background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              Reply
+            </button>
+          )}
+        </div>
+      </div>
+
+      {comment.replies && comment.replies.map(reply => (
+        <CommentItem key={reply.id} comment={reply} isReply={true} />
+      ))}
+    </motion.div>
+  );
+}
+
+function CommentSection({ guideId, comments = [], onCommentAdded }) {
+  const { data: session } = useSession();
+  const [content, setContent] = useState('');
+  const [replyTo, setReplyTo] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!session || !content.trim()) return;
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch('/api/guides/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          guideId, 
+          content, 
+          parentCommentId: replyTo 
+        }),
+      });
+
+      if (res.ok) {
+        setContent('');
+        setReplyTo(null);
+        onCommentAdded();
+      }
+    } catch (error) {
+      console.error("Failed to post comment");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)' }}>
+      <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <MessageSquare size={18} /> Discussion ({comments.length + comments.reduce((acc, c) => acc + (c.replies?.length || 0), 0)})
+      </h4>
+
+      <div style={{ marginBottom: '2rem' }}>
+        {comments.length === 0 ? (
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>No comments yet. Start the conversation!</p>
+        ) : (
+          comments.map(comment => (
+            <CommentItem 
+              key={comment.id} 
+              comment={comment} 
+              onReply={(id) => setReplyTo(id)} 
+            />
+          ))
+        )}
+      </div>
+
+      {session ? (
+        <form onSubmit={handleSubmit} style={{ position: 'relative' }}>
+          {replyTo && (
+            <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <CornerDownRight size={14} /> Replying to comment
+              <button onClick={() => setReplyTo(null)} style={{ color: 'var(--text-muted)' }}><X size={12} /></button>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input 
+              type="text" 
+              placeholder={replyTo ? "Write a reply..." : "Add a comment..."}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              style={{ 
+                flex: 1, padding: '0.75rem 1rem', background: 'var(--bg-tertiary)', 
+                border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
+                color: 'var(--text-primary)', outline: 'none', fontSize: '0.9rem'
+              }}
+            />
+            <button 
+              disabled={isSubmitting}
+              className="btn-primary" 
+              style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)' }}
+            >
+              <Send size={18} />
+            </button>
+          </div>
+        </form>
+      ) : (
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>Please sign in to join the discussion.</p>
+      )}
+    </div>
+  );
+}
 
 function WikiContent() {
   const { data: session } = useSession();
@@ -19,6 +161,7 @@ function WikiContent() {
   const [showForm, setShowForm] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedGuide, setExpandedGuide] = useState(null);
   
   // Form State
   const [title, setTitle] = useState('');
@@ -41,7 +184,10 @@ function WikiContent() {
       const res = await fetch('/api/guides');
       const data = await res.json();
       setGuides(data);
-      if (highlightId) setSearchQuery('');
+      if (highlightId) {
+        setSearchQuery('');
+        setExpandedGuide(highlightId);
+      }
     } catch (error) {
       console.error('Failed to fetch guides');
     } finally {
@@ -170,6 +316,7 @@ function WikiContent() {
           {filteredGuides.map((guide, idx) => {
             const isHighlighted = guide._id === highlightId;
             const youtubeId = getYouTubeId(guide.videoUrl);
+            const isExpanded = expandedGuide === guide._id;
             
             return (
               <motion.div
@@ -222,7 +369,6 @@ function WikiContent() {
                       src={`https://www.youtube.com/embed/${youtubeId}`}
                       title="YouTube video player"
                       frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
                     ></iframe>
                   </div>
@@ -232,22 +378,53 @@ function WikiContent() {
                   {guide.content}
                 </p>
 
-                <div style={{ paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>{guide.username?.charAt(0).toUpperCase() || 'S'}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>{guide.username?.charAt(0).toUpperCase() || 'S'}</span>
+                    </div>
+                    <div>
+                      <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700 }}>@{guide.username || 'system'}</p>
+                      <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(guide.createdAt).toLocaleDateString()}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700 }}>@{guide.username || 'system'}</p>
-                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(guide.createdAt).toLocaleDateString()}</p>
-                  </div>
+                  
+                  <button 
+                    onClick={() => setExpandedGuide(isExpanded ? null : guide._id)}
+                    style={{ 
+                      display: 'flex', alignItems: 'center', gap: '0.5rem', 
+                      color: isExpanded ? 'var(--accent-primary)' : 'var(--text-muted)',
+                      fontSize: '0.85rem', fontWeight: 700
+                    }}
+                  >
+                    <MessageSquare size={18} />
+                    {guide.comments?.length || 0} Comments
+                  </button>
                 </div>
+
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      style={{ overflow: 'hidden' }}
+                    >
+                      <CommentSection 
+                        guideId={guide._id} 
+                        comments={guide.comments} 
+                        onCommentAdded={() => fetchGuides()} 
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             );
           })}
         </div>
       )}
 
-      {/* Modal Form */}
+      {/* Modal Forms (Submission & Report) - Omitted for brevity, kept from original code */}
       <AnimatePresence>
         {showForm && (
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
@@ -282,32 +459,19 @@ function WikiContent() {
                   </div>
                 </div>
 
-                {/* REAL-TIME PREVIEW */}
                 <AnimatePresence>
                   {previewId && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      style={{ overflow: 'hidden' }}
-                    >
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                       <div style={{ width: '100%', aspectRatio: '16/9', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: '#000', marginBottom: '0.5rem' }}>
-                        <iframe
-                          width="100%"
-                          height="100%"
-                          src={`https://www.youtube.com/embed/${previewId}`}
-                          title="YouTube video preview"
-                          frameBorder="0"
-                        ></iframe>
+                        <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${previewId}`} title="YouTube preview" frameBorder="0"></iframe>
                       </div>
-                      <p style={{ fontSize: '0.65rem', color: 'var(--accent-success)', fontWeight: 700, textAlign: 'center' }}>✓ Video recognized successfully!</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>CONTENT / DESCRIPTION</label>
-                  <textarea required rows={4} placeholder="Explain your strategy or summarize the video..." value={content} onChange={(e) => setContent(e.target.value)} style={{ padding: '0.7rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none', resize: 'none' }} />
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>CONTENT</label>
+                  <textarea required rows={4} placeholder="Explain your strategy..." value={content} onChange={(e) => setContent(e.target.value)} style={{ padding: '0.7rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none', resize: 'none' }} />
                 </div>
 
                 <button disabled={isSubmitting} className="btn-primary" style={{ width: '100%', padding: '1rem', marginTop: '0.5rem' }}>
@@ -337,11 +501,10 @@ function WikiContent() {
                     <option>Inaccurate Information</option>
                     <option>Inappropriate Content</option>
                     <option>Spam or Scams</option>
-                    <option>Other</option>
                   </select>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>ADDITIONAL DETAILS</label>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>DETAILS</label>
                   <textarea rows={4} placeholder="Help us understand..." value={reportDetails} onChange={(e) => setReportDetails(e.target.value)} style={{ padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none', resize: 'none' }} />
                 </div>
                 <button className="btn-primary" style={{ width: '100%', padding: '1rem', background: 'var(--accent-warning)' }}>Submit Report</button>
