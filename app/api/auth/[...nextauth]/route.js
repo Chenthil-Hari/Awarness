@@ -4,6 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
+import { sendWelcomeEmail } from "@/lib/mail";
 
 export const authOptions = {
   adapter: MongoDBAdapter(clientPromise),
@@ -43,6 +44,45 @@ export const authOptions = {
   pages: {
     signIn: "/auth/login",
   },
+  events: {
+    async createUser({ user }) {
+      // This fires for Google signups (where the adapter creates the user)
+      // Manual signups via signup/route.js handle their own email to avoid duplicates
+      try {
+        const client = await clientPromise;
+        const db = client.db();
+        const usersCollection = db.collection("users");
+
+        // Check if username already exists (shouldn't for a brand new user, but safety first)
+        let baseUsername = user.name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '');
+        let username = baseUsername;
+        let count = 0;
+        while (await usersCollection.findOne({ username }) && count < 10) {
+          username = `${baseUsername}_${Math.floor(Math.random() * 1000)}`;
+          count++;
+        }
+
+        // Initialize user with defaults
+        await usersCollection.updateOne(
+          { email: user.email },
+          { 
+            $set: { 
+              username: username,
+              xp: 0,
+              streak: 1,
+              role: 'user',
+              createdAt: new Date()
+            } 
+          }
+        );
+
+        await sendWelcomeEmail(user.email, user.name);
+        console.log("Welcome email sent to new Google user:", user.email);
+      } catch (error) {
+        console.error("Failed to initialize Google user or send email:", error);
+      }
+    }
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
       const client = await clientPromise;
@@ -51,14 +91,18 @@ export const authOptions = {
 
       if (account.provider === "google") {
         const existingUser = await usersCollection.findOne({ email: user.email });
-        if (!existingUser) return false;
-        user.username = existingUser.username;
-        user.xp = existingUser.xp || 0;
-        user.streak = existingUser.streak || 0;
-        user.role = existingUser.role || 'user'; // Sync role from DB
+        if (existingUser) {
+          // Update existing user session data
+          user.username = existingUser.username;
+          user.xp = existingUser.xp || 0;
+          user.streak = existingUser.streak || 0;
+          user.role = existingUser.role || 'user';
+        } else {
+          // New user will be handled by events.createUser
+        }
       }
 
-      // STREAK LOGIC
+      // STREAK LOGIC for existing users
       const dbUser = await usersCollection.findOne({ email: user.email });
       if (dbUser) {
         const now = new Date();
@@ -99,9 +143,6 @@ export const authOptions = {
         token.xp = user.xp || 0;
         token.streak = user.streak || 0;
         token.role = user.role || 'user';
-      } else {
-        // If it's a subsequent call, we might want to refresh the role from DB
-        // But for now, we'll rely on sign-in sync
       }
       return token;
     },
