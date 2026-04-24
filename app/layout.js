@@ -27,7 +27,6 @@ export default function RootLayout({ children }) {
       <body>
         <Providers>
           <GhostBanner />
-          <SupportWidget />
           {children}
           <ChatBot />
         </Providers>
