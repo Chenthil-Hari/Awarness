@@ -8,9 +8,11 @@ export async function GET() {
     const usersCollection = db.collection("users");
 
     // Fetch top 10 users sorted by XP
-    // We'll also return their name and username
+    // CRITICAL: Filter out admins so they don't appear in public rankings
     const topUsers = await usersCollection
-      .find({})
+      .find({ 
+        role: { $ne: 'admin' } 
+      })
       .sort({ xp: -1 })
       .limit(10)
       .project({ name: 1, username: 1, xp: 1, badges: 1 })
