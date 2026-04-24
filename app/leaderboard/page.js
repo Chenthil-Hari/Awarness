@@ -16,7 +16,12 @@ export default function LeaderboardPage() {
     fetch('/api/leaderboard')
       .then(res => res.json())
       .then(data => {
-        setUsers(data);
+        setUsers(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Leaderboard fetch error:", err);
+        setUsers([]);
         setLoading(false);
       });
   }, []);
@@ -70,49 +75,55 @@ export default function LeaderboardPage() {
               </div>
 
               {/* Rows */}
-              {users.map((user, index) => (
-                <motion.div
-                  key={user._id}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: index * 0.1 }}
-                  style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '60px 1fr 100px', 
-                    padding: '1.25rem 1rem', 
-                    alignItems: 'center',
-                    borderBottom: index === users.length - 1 ? 'none' : '1px solid var(--glass-border)',
-                    background: index === 0 ? 'rgba(255, 215, 0, 0.05)' : 'transparent',
-                    borderRadius: index === 0 ? 'var(--radius-md)' : '0'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    {getRankIcon(index)}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ 
-                      width: '32px', 
-                      height: '32px', 
-                      borderRadius: '50%', 
-                      background: 'var(--bg-tertiary)',
-                      display: 'flex',
+              {Array.isArray(users) && users.length > 0 ? (
+                users.map((user, index) => (
+                  <motion.div
+                    key={user._id}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: index * 0.1 }}
+                    style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '60px 1fr 100px', 
+                      padding: '1.25rem 1rem', 
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      border: `2px solid ${index < 3 ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
-                      flexShrink: 0
-                    }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.8rem' }}>{user.name.charAt(0)}</span>
+                      borderBottom: index === users.length - 1 ? 'none' : '1px solid var(--glass-border)',
+                      background: index === 0 ? 'rgba(255, 215, 0, 0.05)' : 'transparent',
+                      borderRadius: index === 0 ? 'var(--radius-md)' : '0'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      {getRankIcon(index)}
                     </div>
-                    <div style={{ overflow: 'hidden' }}>
-                      <p style={{ fontWeight: 700, margin: 0, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</p>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>@{user.username || 'user'}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ 
+                        width: '32px', 
+                        height: '32px', 
+                        borderRadius: '50%', 
+                        background: 'var(--bg-tertiary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: `2px solid ${index < 3 ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
+                        flexShrink: 0
+                      }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.8rem' }}>{user.name?.charAt(0) || '?'}</span>
+                      </div>
+                      <div style={{ overflow: 'hidden' }}>
+                        <p style={{ fontWeight: 700, margin: 0, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name || 'Anonymous'}</p>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>@{user.username || 'user'}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ textAlign: 'right', fontWeight: 900, color: 'var(--accent-primary)', fontSize: '1rem' }}>
-                    {user.xp || 0} <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>XP</span>
-                  </div>
-                </motion.div>
-              ))}
+                    <div style={{ textAlign: 'right', fontWeight: 900, color: 'var(--accent-primary)', fontSize: '1rem' }}>
+                      {user.xp || 0} <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>XP</span>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  No rankings available at the moment.
+                </div>
+              )}
             </div>
           )}
         </div>
