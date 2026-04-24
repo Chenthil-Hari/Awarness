@@ -50,7 +50,19 @@ export async function POST(req) {
 
     return NextResponse.json({ message: "User created successfully" }, { status: 201 });
   } catch (error) {
-    console.error("Signup error:", error);
+    console.error("Signup error details:", {
+      message: error.message,
+      name: error.name,
+      code: error.code
+    });
+    
+    // Check for common MongoDB connection errors
+    if (error.name === 'MongoServerSelectionError' || error.name === 'MongoNetworkError') {
+      return NextResponse.json({ 
+        error: "Database connection failed. Ensure your IP is whitelisted in MongoDB Atlas." 
+      }, { status: 500 });
+    }
+
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
