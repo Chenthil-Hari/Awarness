@@ -8,6 +8,7 @@ import { Sun, Moon, Monitor, ChevronRight } from 'lucide-react';
 import SettingsIcon from '../components/SettingsIcon';
 import { useTheme } from '../context/ThemeContext';
 import Link from 'next/link';
+import SupportSection from '../components/SupportSection';
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -114,6 +115,10 @@ export default function SettingsPage() {
                 <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>Dark Mode</span>
               </button>
             </div>
+          </section>
+
+          <section>
+            <SupportSection />
           </section>
 
           <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem' }}>
