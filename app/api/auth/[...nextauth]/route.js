@@ -139,6 +139,7 @@ export const authOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email; // MASTER KEY
         token.username = user.username;
         token.xp = user.xp || 0;
         token.streak = user.streak || 0;
@@ -153,10 +154,10 @@ export const authOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (token) {
+      if (token?.email) {
         // ALWAYS fetch latest data from DB to avoid stale JWT issues
         const client = await clientPromise;
-        const dbUser = await client.db().collection("users").findOne({ email: session.user.email });
+        const dbUser = await client.db().collection("users").findOne({ email: token.email });
         
         if (dbUser) {
           session.user.id = dbUser._id.toString();
@@ -165,7 +166,7 @@ export const authOptions = {
           session.user.streak = dbUser.streak || 0;
           session.user.role = dbUser.role || 'user';
         } else {
-          // Fallback to token if DB fetch fails
+          // Fallback to token
           session.user.id = token.id;
           session.user.username = token.username;
           session.user.xp = token.xp || 0;

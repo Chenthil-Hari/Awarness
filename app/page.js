@@ -11,7 +11,6 @@ import { calculateLevel } from '../lib/game';
 import CommunityPoll from './components/CommunityPoll';
 import LandingPage from './components/LandingPage';
 import LoadingSpinner from './components/LoadingSpinner';
-import UsernameOnboarding from './components/UsernameOnboarding';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -19,7 +18,6 @@ export default function Home() {
   const [scenarios, setScenarios] = useState([]);
   const [loadingScenarios, setLoadingScenarios] = useState(true);
   const [userXp, setUserXp] = useState(0);
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const [ghostUser, setGhostUser] = useState(null);
 
@@ -62,12 +60,12 @@ export default function Home() {
       checkGhost();
       fetchScenarios();
       
-      // Check if username is missing
+      // Redirect to onboarding if username is missing
       if (!session.user.username) {
-        setShowOnboarding(true);
+        router.push('/onboarding');
       }
     }
-  }, [session, status]);
+  }, [session, status, router]);
 
   const handleScenarioComplete = () => {
     setSelectedScenario(null);
@@ -97,11 +95,6 @@ export default function Home() {
   // Authenticated Dashboard View
   return (
     <main style={{ minHeight: '100vh', paddingBottom: '5rem' }}>
-      <UsernameOnboarding 
-        isOpen={showOnboarding} 
-        onComplete={() => setShowOnboarding(false)} 
-      />
-      
       <Navbar score={userXp} level={level} />
 
       <div className="container" style={{ padding: '0 1rem' }}>
