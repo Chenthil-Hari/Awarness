@@ -58,12 +58,18 @@ export default function UsernameOnboarding({ isOpen, onComplete }) {
       });
       
       if (res.ok) {
+        // Update the local session state
         await update({
           ...session,
           user: { ...session.user, username: username }
         });
+        
         onComplete();
-        router.refresh();
+        
+        // Force a hard reload to ensure all components see the new username
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       }
     } catch (err) {
       alert('Failed to save username');

@@ -136,7 +136,7 @@ export const authOptions = {
 
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.username = user.username;
@@ -144,6 +144,12 @@ export const authOptions = {
         token.streak = user.streak || 0;
         token.role = user.role || 'user';
       }
+      
+      // Handle manual session updates (trigger: "update")
+      if (trigger === "update" && session?.user?.username) {
+        token.username = session.user.username;
+      }
+      
       return token;
     },
     async session({ session, token }) {
