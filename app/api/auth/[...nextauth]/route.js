@@ -30,7 +30,8 @@ export const authOptions = {
             id: user._id.toString(), 
             name: user.name, 
             email: user.email,
-            role: user.role || 'user'
+            role: user.role || 'user',
+            league: user.league || 'Bronze'
           };
         }
 
@@ -97,6 +98,7 @@ export const authOptions = {
           user.xp = existingUser.xp || 0;
           user.streak = existingUser.streak || 0;
           user.role = existingUser.role || 'user';
+          user.league = existingUser.league || 'Bronze';
         } else {
           // New user will be handled by events.createUser
         }
@@ -145,6 +147,7 @@ export const authOptions = {
         token.streak = user.streak || 0;
         token.role = user.role || 'user';
         token.completedMissions = user.completedMissions || [];
+        token.league = user.league || 'Bronze';
       }
       
       // Handle manual session updates (trigger: "update")
@@ -167,6 +170,7 @@ export const authOptions = {
           session.user.streak = dbUser.streak || 0;
           session.user.role = dbUser.role || 'user';
           session.user.completedMissions = dbUser.completedMissions || [];
+          session.user.league = dbUser.league || 'Bronze';
         } else {
           // Fallback to token
           session.user.id = token.id;
@@ -175,6 +179,7 @@ export const authOptions = {
           session.user.streak = token.streak || 0;
           session.user.role = token.role || 'user';
           session.user.completedMissions = token.completedMissions || [];
+          session.user.league = token.league || 'Bronze';
         }
       }
       return session;

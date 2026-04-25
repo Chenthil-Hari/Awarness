@@ -1,10 +1,29 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
+const LEAGUES = ['Bronze', 'Silver', 'Gold', 'Hacker-Tier'];
 
 export async function GET(request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const leagueQuery = searchParams.get('league') || 'Bronze';
+
+    // Verify Authorization
+    const userLeague = session.user.league || 'Bronze';
+    const isAdmin = session.user.role === 'admin';
+    const allowedLeagueIndex = isAdmin ? LEAGUES.length - 1 : LEAGUES.indexOf(userLeague);
+    const requestedLeagueIndex = LEAGUES.indexOf(leagueQuery);
+
+    if (requestedLeagueIndex > allowedLeagueIndex) {
+      return NextResponse.json({ error: "Forbidden: You have not unlocked this tier yet." }, { status: 403 });
+    }
 
     const client = await clientPromise;
     const db = client.db();

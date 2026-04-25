@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import TrophyIcon from '../components/TrophyIcon';
@@ -11,9 +12,16 @@ import Link from 'next/link';
 const LEAGUES = ['Bronze', 'Silver', 'Gold', 'Hacker-Tier'];
 
 export default function LeaderboardPage() {
+  const { data: session, status } = useSession();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeLeague, setActiveLeague] = useState('Bronze');
+
+  // Determine allowed leagues
+  const userLeague = session?.user?.league || 'Bronze';
+  const isAdmin = session?.user?.role === 'admin';
+  const allowedLeagueIndex = isAdmin ? LEAGUES.length - 1 : LEAGUES.indexOf(userLeague);
+  const allowedLeagues = LEAGUES.filter((_, index) => index <= Math.max(allowedLeagueIndex, 0));
 
   useEffect(() => {
     setLoading(true);
@@ -62,7 +70,7 @@ export default function LeaderboardPage() {
           marginBottom: '2rem',
           flexWrap: 'wrap'
         }}>
-          {LEAGUES.map((league) => (
+          {allowedLeagues.map((league) => (
             <button
               key={league}
               onClick={() => setActiveLeague(league)}
