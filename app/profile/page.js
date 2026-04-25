@@ -11,7 +11,21 @@ import {
   BarChart3, Calendar, ChevronRight, Edit2, Save, X, 
   Mail, LogOut, Settings, Award, Check, AlertCircle 
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+// Removed missing date-fns import
+const timeAgo = (date) => {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + " years ago";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + " months ago";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + " days ago";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + " hours ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + " minutes ago";
+  return Math.floor(seconds) + " seconds ago";
+};
 
 const CATEGORIES = ['phishing', 'smishing', 'finance', 'security'];
 
@@ -249,7 +263,7 @@ export default function ProfilePage() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
                         <p style={{ fontWeight: 800, margin: 0, fontSize: '0.9rem' }}>{item.type} {item.success ? 'Neutralized' : 'Breached'}</p>
                         <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>
-                          {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+                          {timeAgo(item.timestamp)}
                         </p>
                       </div>
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 600 }}>
