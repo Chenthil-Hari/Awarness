@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut, Home, BookOpen, Mail, Bell } from 'lucide-react';
+import { Shield, LogOut, Home, BookOpen, Mail, Bell, Award } from 'lucide-react';
 import StreakIcon from './StreakIcon';
 import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
@@ -181,6 +181,11 @@ export default function Navbar({ score = 0, level = 1 }) {
             <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
               <TrophyIcon size={18} />
               <span className="hide-mobile" style={{ fontSize: '0.65rem', fontWeight: 700 }}>Ranking</span>
+            </Link>
+
+            <Link href="/achievements" title="Achievements" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
+              <Award size={18} />
+              <span className="hide-mobile" style={{ fontSize: '0.65rem', fontWeight: 700 }}>Badges</span>
             </Link>
 
             <Link href="/settings" title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
