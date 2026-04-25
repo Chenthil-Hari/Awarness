@@ -114,7 +114,8 @@ export default function SmishingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             style={{
-              width: '320px',
+              width: '100%',
+              maxWidth: '320px',
               height: '640px',
               borderRadius: '44px',
               background: 'linear-gradient(160deg, #1a1a2e 0%, #0d0d1a 100%)',

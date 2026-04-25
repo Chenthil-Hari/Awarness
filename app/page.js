@@ -150,7 +150,7 @@ export default function Home() {
         </section>
 
         {/* Main Dashboard Layout */}
-        <div style={{ 
+        <div className="grid-responsive" style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 800px), 1fr))',
           gap: '2.5rem',

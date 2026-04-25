@@ -261,6 +261,10 @@ button {
   font-family: var(--font-heading);
 }
 
+.show-mobile {
+  display: none !important;
+}
+
 /* Responsive Media Queries */
 @media (max-width: 1024px) {
   .container {
@@ -293,11 +297,49 @@ button {
     display: none !important;
   }
 
+  .show-mobile {
+    display: flex !important;
+  }
+
   .hero-gradient-bg {
     width: 100%;
     height: 100%;
     top: 0;
     right: 0;
+  }
+
+  .grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+
+  .inbox-grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+
+  .inbox-sidebar {
+    display: none !important;
+  }
+
+  .inbox-list-pane {
+    display: block !important;
+  }
+
+  .inbox-detail-pane {
+    display: none !important;
+  }
+
+  .inbox-container.email-selected .inbox-list-pane {
+    display: none !important;
+  }
+
+  .inbox-container.email-selected .inbox-detail-pane {
+    display: flex !important;
+    width: 100% !important;
+  }
+
+  .navbar-responsive {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
   }
 }
 
@@ -307,5 +349,10 @@ button {
   .btn-primary, .btn-secondary {
     width: 100%;
     padding: 0.6rem 1rem;
+  }
+
+  .navbar-actions {
+    justify-content: center !important;
+    width: 100% !important;
   }
 }

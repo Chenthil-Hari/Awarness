@@ -31,7 +31,7 @@ export default function Navbar({ score = 0, level = 1 }) {
       flexWrap: 'wrap',
       gap: '1rem'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div style={{
             width: '32px',
@@ -157,7 +157,7 @@ export default function Navbar({ score = 0, level = 1 }) {
         </Link>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1 }}>
+      <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1 }}>
         <div style={{ textAlign: 'right', display: 'none', lg: 'block' }}>
           <p style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 700 }}>XP</p>
           <p style={{ fontSize: '0.85rem', fontWeight: 900, margin: 0, color: 'var(--accent-secondary)' }}>{score}</p>

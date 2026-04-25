@@ -91,7 +91,7 @@ export default function InboxClient({ onProgressUpdate, initialXp }) {
   };
 
   return (
-    <div style={{ 
+    <div className={`inbox-container ${selectedId ? 'email-selected' : ''}`} style={{ 
       display: 'grid', 
       gridTemplateColumns: '260px 1fr', 
       height: '80vh',
@@ -103,7 +103,7 @@ export default function InboxClient({ onProgressUpdate, initialXp }) {
       boxShadow: isDark ? 'none' : '0 10px 40px rgba(0,0,0,0.05)'
     }}>
       {/* Sidebar */}
-      <div style={{ 
+      <div className="inbox-sidebar" style={{ 
         background: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)', 
         padding: '1.5rem',
         borderRight: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`
@@ -127,9 +127,9 @@ export default function InboxClient({ onProgressUpdate, initialXp }) {
       </div>
 
       {/* Main Content: List + Detail */}
-      <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr' }}>
+      <div className="inbox-grid-responsive" style={{ display: 'grid', gridTemplateColumns: '350px 1fr' }}>
         {/* Email List */}
-        <div style={{ 
+        <div className="inbox-list-pane" style={{ 
           borderRight: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`, 
           overflowY: 'auto', 
           background: isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)' 
@@ -161,7 +161,7 @@ export default function InboxClient({ onProgressUpdate, initialXp }) {
         </div>
 
         {/* Email Detail */}
-        <div style={{ display: 'flex', flexDirection: 'column', background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)', position: 'relative' }}>
+        <div className="inbox-detail-pane" style={{ display: 'flex', flexDirection: 'column', background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)', position: 'relative' }}>
           {selectedEmail ? (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               {/* Toolbar */}
@@ -170,8 +170,21 @@ export default function InboxClient({ onProgressUpdate, initialXp }) {
                 background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.8)',
                 borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0,0,0,0.05)'}`,
                 display: 'flex',
-                gap: '0.75rem'
+                gap: '0.75rem',
+                flexWrap: 'wrap'
               }}>
+                <button 
+                  onClick={() => setSelectedId(null)}
+                  className="show-mobile"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.4rem',
+                    padding: '0.6rem 0.8rem', borderRadius: '10px',
+                    background: 'transparent', border: 'none', color: isDark ? 'white' : '#1e293b',
+                    cursor: 'pointer', fontWeight: 700
+                  }}
+                >
+                  &larr; Back
+                </button>
                 <ActionButton icon={<ShieldAlert size={18}/>} label="Report Phishing" color="#ef4444" onClick={() => handleAction('Report')} disabled={selectedEmail.acted} isDark={isDark} />
                 <ActionButton icon={<Trash2 size={18}/>} label="Delete" color={isDark ? "#94a3b8" : "#64748b"} onClick={() => handleAction('Delete')} disabled={selectedEmail.acted} isDark={isDark} />
                 <ActionButton icon={<Send size={18}/>} label="Reply" color="#7c3aed" onClick={() => handleAction('Reply')} disabled={selectedEmail.acted} isDark={isDark} />
