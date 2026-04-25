@@ -176,6 +176,8 @@ export const authOptions = {
           session.user.role = dbUser.role || 'user';
           session.user.completedMissions = dbUser.completedMissions || [];
           session.user.badges = dbUser.badges || [];
+          session.user.performance = dbUser.performance || {};
+          session.user.history = dbUser.history || [];
 
           // Dynamic League Calculation
           let calculatedLeague = 'Bronze';

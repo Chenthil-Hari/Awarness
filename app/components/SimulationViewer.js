@@ -33,7 +33,9 @@ export default function SimulationViewer({ scenario, onExit }) {
           xpToAdd: score, 
           badgeAwarded: badge, 
           scenarioId: isCampaign ? scenario.id : null,
-          activityId: !isCampaign ? `sim-${scenario.id}` : null
+          activityId: !isCampaign ? `sim-${scenario.id}` : null,
+          category: scenario.domain || 'Security',
+          isSuccess: !currentStep.failed
         }),
       }).then(() => {
         if (isCampaign) {

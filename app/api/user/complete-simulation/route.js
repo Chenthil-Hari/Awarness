@@ -11,7 +11,7 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { xpToAdd, badgeAwarded, scenarioId, activityId } = await req.json();
+    const { xpToAdd, badgeAwarded, scenarioId, activityId, category, isSuccess } = await req.json();
 
     const client = await clientPromise;
     const db = client.db();
@@ -30,7 +30,25 @@ export async function POST(req) {
 
     // Update user's XP and add badge if awarded
     const updateQuery = {
-      $inc: { xp: actualXpToAdd }
+      $inc: { 
+        xp: actualXpToAdd,
+        [`performance.${category?.toLowerCase() || 'general'}.xp`]: actualXpToAdd,
+        [`performance.${category?.toLowerCase() || 'general'}.completed`]: actualXpToAdd > 0 ? 1 : 0,
+        [`performance.${category?.toLowerCase() || 'general'}.attempts`]: 1,
+        [`performance.${category?.toLowerCase() || 'general'}.successes`]: isSuccess ? 1 : 0,
+      },
+      $push: {
+        history: {
+          $each: [{
+            id: scenarioId || activityId,
+            type: category || 'Simulation',
+            xp: actualXpToAdd,
+            timestamp: new Date(),
+            success: isSuccess
+          }],
+          $slice: -20 // Keep last 20 items
+        }
+      }
     };
 
     updateQuery.$addToSet = {};

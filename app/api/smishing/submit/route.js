@@ -99,7 +99,27 @@ export async function POST(request) {
       }
     }
 
-    const updatePayload = { $inc: { xp: actualEarnedXP } };
+    const updatePayload = { 
+      $inc: { 
+        xp: actualEarnedXP,
+        'performance.smishing.xp': actualEarnedXP,
+        'performance.smishing.completed': actualEarnedXP > 0 ? 1 : 0,
+        'performance.smishing.attempts': answers.length,
+        'performance.smishing.successes': answers.filter(a => a.isCorrect).length,
+      },
+      $push: {
+        history: {
+          $each: [{
+            id: 'smishing-session',
+            type: 'Smishing',
+            xp: actualEarnedXP,
+            timestamp: new Date(),
+            success: finalScore > 70
+          }],
+          $slice: -20
+        }
+      }
+    };
     
     updatePayload.$addToSet = {};
     if (tier.badge) {
