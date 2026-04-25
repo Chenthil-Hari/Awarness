@@ -7,6 +7,8 @@ import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
 import ProfileIcon from './ProfileIcon';
 import SettingsIcon from './SettingsIcon';
+import Lottie from 'lottie-react';
+import bellAnimation from '../../images/bell.json';
 
 export default function Navbar({ score = 0, level = 1 }) {
   const { data: session } = useSession();
@@ -95,7 +97,9 @@ export default function Navbar({ score = 0, level = 1 }) {
               border: '1px solid var(--glass-border)',
               cursor: 'pointer'
             }} className="hover-lift">
-            <Bell size={16} />
+            <div style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '-2px' }}>
+              <Lottie animationData={bellAnimation} loop={true} style={{ width: '100%', height: '100%' }} />
+            </div>
           </button>
 
           {showNotifications && (

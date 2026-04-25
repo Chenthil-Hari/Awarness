@@ -16,17 +16,22 @@ export default function LeaderboardPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeLeague, setActiveLeague] = useState('Bronze');
+  const [errorMsg, setErrorMsg] = useState(null);
 
   // Determine allowed leagues
-  const userLeague = session?.user?.league || 'Bronze';
-  const isAdmin = session?.user?.role === 'admin';
-  const allowedLeagueIndex = isAdmin ? LEAGUES.length - 1 : LEAGUES.indexOf(userLeague);
-  const allowedLeagues = LEAGUES.filter((_, index) => index <= Math.max(allowedLeagueIndex, 0));
+  const allowedLeagues = LEAGUES;
 
   useEffect(() => {
     setLoading(true);
+    setErrorMsg(null);
     fetch(`/api/leaderboard?league=${activeLeague}`)
-      .then(res => res.json())
+      .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to fetch");
+        }
+        return data;
+      })
       .then(data => {
         setUsers(Array.isArray(data) ? data : []);
         setLoading(false);
@@ -34,6 +39,7 @@ export default function LeaderboardPage() {
       .catch(err => {
         console.error("Leaderboard fetch error:", err);
         setUsers([]);
+        setErrorMsg(err.message);
         setLoading(false);
       });
   }, [activeLeague]);
@@ -102,6 +108,12 @@ export default function LeaderboardPage() {
           {loading ? (
             <div style={{ padding: '4rem' }}>
               <LoadingSpinner size={100} message="Calculating elite rankings..." />
+            </div>
+          ) : errorMsg ? (
+            <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+              <p style={{ fontSize: '3rem', margin: '0 0 1rem 0' }}>🔒</p>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Tier Locked</h3>
+              <p style={{ fontSize: '1rem' }}>{errorMsg}</p>
             </div>
           ) : (
             <div style={{ width: '100%' }}>
