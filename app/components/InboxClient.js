@@ -84,7 +84,7 @@ export default function InboxClient({ onProgressUpdate, initialXp }) {
         await fetch('/api/user/complete-simulation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ xpToAdd: pointsAwarded }),
+          body: JSON.stringify({ xpToAdd: pointsAwarded, activityId: `inbox-${selectedEmail.id}` }),
         });
       } catch (err) { console.error(err); }
     }

@@ -29,7 +29,12 @@ export default function SimulationViewer({ scenario, onExit }) {
       fetch('/api/user/complete-simulation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ xpToAdd: score, badgeAwarded: badge, scenarioId: isCampaign ? scenario.id : null }),
+        body: JSON.stringify({ 
+          xpToAdd: score, 
+          badgeAwarded: badge, 
+          scenarioId: isCampaign ? scenario.id : null,
+          activityId: !isCampaign ? `sim-${scenario.id}` : null
+        }),
       }).then(() => {
         if (isCampaign) {
            update(); // Refresh session to unlock next campaign mission

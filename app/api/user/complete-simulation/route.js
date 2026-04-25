@@ -11,21 +11,35 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { xpToAdd, badgeAwarded, scenarioId } = await req.json();
+    const { xpToAdd, badgeAwarded, scenarioId, activityId } = await req.json();
 
     const client = await clientPromise;
     const db = client.db();
     const usersCollection = db.collection("users");
 
+    const user = await usersCollection.findOne({ email: session.user.email });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Check if already completed to prevent XP farming
+    const alreadyCompletedMission = scenarioId && user.completedMissions?.includes(scenarioId);
+    const alreadyCompletedActivity = activityId && user.completedActivities?.includes(activityId);
+
+    const actualXpToAdd = (alreadyCompletedMission || alreadyCompletedActivity) ? 0 : (xpToAdd || 0);
+
     // Update user's XP and add badge if awarded
     const updateQuery = {
-      $inc: { xp: xpToAdd || 0 }
+      $inc: { xp: actualXpToAdd }
     };
 
-    if (badgeAwarded || scenarioId) {
-      updateQuery.$addToSet = {};
-      if (badgeAwarded) updateQuery.$addToSet.badges = badgeAwarded;
-      if (scenarioId) updateQuery.$addToSet.completedMissions = scenarioId;
+    updateQuery.$addToSet = {};
+    if (badgeAwarded) updateQuery.$addToSet.badges = badgeAwarded;
+    if (scenarioId) updateQuery.$addToSet.completedMissions = scenarioId;
+    if (activityId) updateQuery.$addToSet.completedActivities = activityId;
+
+    if (Object.keys(updateQuery.$addToSet).length === 0) {
+      delete updateQuery.$addToSet;
     }
 
     await usersCollection.updateOne(

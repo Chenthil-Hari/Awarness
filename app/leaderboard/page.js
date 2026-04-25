@@ -161,8 +161,6 @@ export default function LeaderboardPage() {
               {/* Rows */}
               {Array.isArray(users) && users.length > 0 ? (
                 users.map((user, index) => {
-                  const isPromotionZone = activeLeague !== 'Hacker-Tier' && index < 10;
-                  const isDemotionZone = activeLeague !== 'Bronze' && users.length > 10 && index >= users.length - 10;
                   
                   return (
                     <motion.div
@@ -176,7 +174,7 @@ export default function LeaderboardPage() {
                         padding: '1.25rem 1rem', 
                         alignItems: 'center',
                         borderBottom: index === users.length - 1 ? 'none' : '1px solid var(--glass-border)',
-                        background: isPromotionZone ? 'rgba(16, 185, 129, 0.05)' : (isDemotionZone ? 'rgba(239, 68, 68, 0.05)' : 'transparent'),
+                        background: 'transparent',
                         borderRadius: index === 0 ? 'var(--radius-md)' : '0'
                       }}
                     >
@@ -201,8 +199,6 @@ export default function LeaderboardPage() {
                           <p style={{ fontWeight: 700, margin: 0, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name || 'Anonymous'}</p>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>@{user.username || 'user'}</p>
-                            {isPromotionZone && <span style={{ fontSize: '0.6rem', background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0.1rem 0.4rem', borderRadius: '1rem', fontWeight: 700 }}>Promotion Zone</span>}
-                            {isDemotionZone && <span style={{ fontSize: '0.6rem', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '0.1rem 0.4rem', borderRadius: '1rem', fontWeight: 700 }}>Demotion Zone</span>}
                           </div>
                         </div>
                       </div>

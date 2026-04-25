@@ -175,7 +175,22 @@ export const authOptions = {
           session.user.streak = dbUser.streak || 0;
           session.user.role = dbUser.role || 'user';
           session.user.completedMissions = dbUser.completedMissions || [];
-          session.user.league = dbUser.league || 'Bronze';
+
+          // Dynamic League Calculation
+          let calculatedLeague = 'Bronze';
+          if (session.user.xp >= 3000) calculatedLeague = 'Hacker-Tier';
+          else if (session.user.xp >= 1500) calculatedLeague = 'Gold';
+          else if (session.user.xp >= 500) calculatedLeague = 'Silver';
+
+          session.user.league = calculatedLeague;
+
+          // Update DB if league changed dynamically
+          if (dbUser.league !== calculatedLeague) {
+            client.db().collection("users").updateOne(
+              { email: token.email },
+              { $set: { league: calculatedLeague } }
+            );
+          }
         } else {
           // Fallback to token
           session.user.id = token.id;

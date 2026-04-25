@@ -72,15 +72,45 @@ export async function POST(request) {
     // Determine tier
     const tier = SCORE_TIERS.find(t => finalScore >= t.min && finalScore <= t.max) || SCORE_TIERS[3];
 
-    // Award XP and badge in DB
     const client = await clientPromise;
     const db = client.db();
     const usersCollection = db.collection('users');
 
-    const updatePayload = { $inc: { xp: earnedXP } };
+    const user = await usersCollection.findOne({ email: session.user.email });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
+    const completedActivities = user.completedActivities || [];
+    let actualEarnedXP = 0;
+    const newCompletedActivities = [];
+
+    // Recalculate XP only for new activities
+    for (const answer of answers) {
+      const scenario = scenarioMap[answer.scenarioId];
+      if (!scenario) continue;
+      
+      const activityId = `smishing-${scenario.id}`;
+      if (!completedActivities.includes(activityId)) {
+        if (answer.action === scenario.correctAction) {
+          actualEarnedXP += scenario.xpValue;
+        }
+        newCompletedActivities.push(activityId);
+      }
+    }
+
+    const updatePayload = { $inc: { xp: actualEarnedXP } };
+    
+    updatePayload.$addToSet = {};
     if (tier.badge) {
-      updatePayload.$addToSet = { badges: tier.badge };
+      updatePayload.$addToSet.badges = tier.badge;
+    }
+    if (newCompletedActivities.length > 0) {
+      updatePayload.$addToSet.completedActivities = { $each: newCompletedActivities };
+    }
+
+    if (Object.keys(updatePayload.$addToSet).length === 0) {
+      delete updatePayload.$addToSet;
     }
 
     await usersCollection.updateOne(
@@ -92,7 +122,7 @@ export async function POST(request) {
       score: finalScore,
       tier: tier.label,
       tierColor: tier.color,
-      earnedXP,
+      earnedXP: actualEarnedXP, // Show actual XP earned (0 if repeated)
       breakdown,
     });
 

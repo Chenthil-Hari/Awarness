@@ -15,15 +15,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const leagueQuery = searchParams.get('league') || 'Bronze';
 
-    // Verify Authorization
-    const userLeague = session.user.league || 'Bronze';
-    const isAdmin = session.user.role === 'admin';
-    const allowedLeagueIndex = isAdmin ? LEAGUES.length - 1 : LEAGUES.indexOf(userLeague);
-    const requestedLeagueIndex = LEAGUES.indexOf(leagueQuery);
-
-    if (requestedLeagueIndex > allowedLeagueIndex) {
-      return NextResponse.json({ error: "Forbidden: You have not unlocked this tier yet." }, { status: 403 });
-    }
+    // Removed tier blocking logic. Users can view any tier.
 
     const client = await clientPromise;
     const db = client.db();
