@@ -5,15 +5,19 @@ import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import TrophyIcon from '../components/TrophyIcon';
 import { motion } from 'framer-motion';
-import { Medal, Star, Target, Crown } from 'lucide-react';
+import { Medal, Star, Target, Crown, Shield, Zap } from 'lucide-react';
 import Link from 'next/link';
+
+const LEAGUES = ['Bronze', 'Silver', 'Gold', 'Hacker-Tier'];
 
 export default function LeaderboardPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeLeague, setActiveLeague] = useState('Bronze');
 
   useEffect(() => {
-    fetch('/api/leaderboard')
+    setLoading(true);
+    fetch(`/api/leaderboard?league=${activeLeague}`)
       .then(res => res.json())
       .then(data => {
         setUsers(Array.isArray(data) ? data : []);
@@ -24,7 +28,7 @@ export default function LeaderboardPage() {
         setUsers([]);
         setLoading(false);
       });
-  }, []);
+  }, [activeLeague]);
 
   const getRankIcon = (index) => {
     if (index === 0) return <Crown size={24} color="#FFD700" />; // Gold
@@ -48,6 +52,42 @@ export default function LeaderboardPage() {
             <h1 style={{ fontSize: '3.5rem', fontWeight: 900, marginTop: '1rem' }}>Global <span className="gradient-text">Leaderboard</span></h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>The elite hall of awareness masters.</p>
           </motion.div>
+        </div>
+
+        {/* League Tabs */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '0.5rem', 
+          marginBottom: '2rem',
+          flexWrap: 'wrap'
+        }}>
+          {LEAGUES.map((league) => (
+            <button
+              key={league}
+              onClick={() => setActiveLeague(league)}
+              style={{
+                padding: '0.75rem 1.5rem',
+                borderRadius: 'var(--radius-full)',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                border: activeLeague === league ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
+                background: activeLeague === league ? 'rgba(139, 92, 246, 0.15)' : 'var(--bg-secondary)',
+                color: activeLeague === league ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              {league === 'Bronze' && <Shield size={16} />}
+              {league === 'Silver' && <Star size={16} />}
+              {league === 'Gold' && <Crown size={16} />}
+              {league === 'Hacker-Tier' && <Zap size={16} />}
+              {league}
+            </button>
+          ))}
         </div>
 
         <div className="glass-card" style={{ maxWidth: '900px', margin: '0 auto', padding: '0.5rem', borderRadius: 'var(--radius-xl)' }}>
@@ -76,49 +116,58 @@ export default function LeaderboardPage() {
 
               {/* Rows */}
               {Array.isArray(users) && users.length > 0 ? (
-                users.map((user, index) => (
-                  <motion.div
-                    key={user._id}
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: '60px 1fr 100px', 
-                      padding: '1.25rem 1rem', 
-                      alignItems: 'center',
-                      borderBottom: index === users.length - 1 ? 'none' : '1px solid var(--glass-border)',
-                      background: index === 0 ? 'rgba(255, 215, 0, 0.05)' : 'transparent',
-                      borderRadius: index === 0 ? 'var(--radius-md)' : '0'
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'center' }}>
-                      {getRankIcon(index)}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ 
-                        width: '32px', 
-                        height: '32px', 
-                        borderRadius: '50%', 
-                        background: 'var(--bg-tertiary)',
-                        display: 'flex',
+                users.map((user, index) => {
+                  const isPromotionZone = activeLeague !== 'Hacker-Tier' && index < 10;
+                  const isDemotionZone = activeLeague !== 'Bronze' && users.length > 10 && index >= users.length - 10;
+                  
+                  return (
+                    <motion.div
+                      key={user._id}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: '60px 1fr 120px', 
+                        padding: '1.25rem 1rem', 
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        border: `2px solid ${index < 3 ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
-                        flexShrink: 0
-                      }}>
-                        <span style={{ fontWeight: 700, fontSize: '0.8rem' }}>{user.name?.charAt(0) || '?'}</span>
+                        borderBottom: index === users.length - 1 ? 'none' : '1px solid var(--glass-border)',
+                        background: isPromotionZone ? 'rgba(16, 185, 129, 0.05)' : (isDemotionZone ? 'rgba(239, 68, 68, 0.05)' : 'transparent'),
+                        borderRadius: index === 0 ? 'var(--radius-md)' : '0'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        {getRankIcon(index)}
                       </div>
-                      <div style={{ overflow: 'hidden' }}>
-                        <p style={{ fontWeight: 700, margin: 0, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name || 'Anonymous'}</p>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>@{user.username || 'user'}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{ 
+                          width: '32px', 
+                          height: '32px', 
+                          borderRadius: '50%', 
+                          background: 'var(--bg-tertiary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: `2px solid ${index < 3 ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
+                          flexShrink: 0
+                        }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.8rem' }}>{user.name?.charAt(0) || '?'}</span>
+                        </div>
+                        <div style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                          <p style={{ fontWeight: 700, margin: 0, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name || 'Anonymous'}</p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>@{user.username || 'user'}</p>
+                            {isPromotionZone && <span style={{ fontSize: '0.6rem', background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0.1rem 0.4rem', borderRadius: '1rem', fontWeight: 700 }}>Promotion Zone</span>}
+                            {isDemotionZone && <span style={{ fontSize: '0.6rem', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '0.1rem 0.4rem', borderRadius: '1rem', fontWeight: 700 }}>Demotion Zone</span>}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div style={{ textAlign: 'right', fontWeight: 900, color: 'var(--accent-primary)', fontSize: '1rem' }}>
-                      {user.xp || 0} <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>XP</span>
-                    </div>
-                  </motion.div>
-                ))
+                      <div style={{ textAlign: 'right', fontWeight: 900, color: 'var(--accent-primary)', fontSize: '1rem' }}>
+                        {user.xp || 0} <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>XP</span>
+                      </div>
+                    </motion.div>
+                  );
+                })
               ) : (
                 <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
                   No rankings available at the moment.

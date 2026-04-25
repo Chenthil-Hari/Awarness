@@ -1,21 +1,35 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const leagueQuery = searchParams.get('league') || 'Bronze';
+
     const client = await clientPromise;
     const db = client.db();
     const usersCollection = db.collection("users");
 
-    // Fetch top 10 users sorted by XP
-    // CRITICAL: Filter out admins so they don't appear in public rankings
+    // Build the query
+    const query = { role: { $ne: 'admin' } };
+
+    if (leagueQuery === 'Bronze') {
+      // Bronze includes users specifically in Bronze or users with no league assigned yet
+      query.$or = [
+        { league: 'Bronze' },
+        { league: { $exists: false } },
+        { league: null }
+      ];
+    } else {
+      query.league = leagueQuery;
+    }
+
+    // Fetch top users for the requested league, sorted by XP
     const topUsers = await usersCollection
-      .find({ 
-        role: { $ne: 'admin' } 
-      })
+      .find(query)
       .sort({ xp: -1 })
-      .limit(10)
-      .project({ name: 1, username: 1, xp: 1, badges: 1 })
+      .limit(50) // Increased limit to show full league
+      .project({ name: 1, username: 1, xp: 1, badges: 1, league: 1 })
       .toArray();
 
     return NextResponse.json(topUsers);
