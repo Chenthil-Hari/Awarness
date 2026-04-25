@@ -1,4 +1,10 @@
-export const scenarios = [
+import { scenariosA } from './scenariosA';
+import { scenariosB } from './scenariosB';
+import { scenariosC } from './scenariosC';
+import { scenariosD } from './scenariosD';
+import { scenariosE } from './scenariosE';
+
+const baseScenarios = [
   {
     id: 'cybersecurity-phishing',
     title: 'The Suspicious Invoice',
@@ -206,4 +212,13 @@ export const scenarios = [
       fail_spread: { text: "Scenario Complete: The fire spread to the rest of the kitchen. You should have smothered it instead of fanning it.", isFinal: true, failed: true }
     }
   }
+];
+
+export const scenarios = [
+  ...baseScenarios,
+  ...scenariosA,
+  ...scenariosB,
+  ...scenariosC,
+  ...scenariosD,
+  ...scenariosE,
 ];
