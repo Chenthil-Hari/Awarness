@@ -9,6 +9,7 @@ import ProfileIcon from './ProfileIcon';
 import SettingsIcon from './SettingsIcon';
 import Lottie from 'lottie-react';
 import bellAnimation from '../../images/bell.json';
+import mobileWifiAnimation from '../../images/mobile-wifi.json';
 
 export default function Navbar({ score = 0, level = 1 }) {
   const { data: session } = useSession();
@@ -93,7 +94,9 @@ export default function Navbar({ score = 0, level = 1 }) {
             background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid var(--glass-border)'
           }} className="hover-lift">
-            <span style={{ fontSize: '0.85rem' }}>📱</span>
+            <div style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Lottie animationData={mobileWifiAnimation} loop={true} style={{ width: '100%', height: '100%' }} />
+            </div>
             <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>PHONE DRILL</span>
           </Link>
         )}
