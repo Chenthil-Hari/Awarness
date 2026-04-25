@@ -10,6 +10,8 @@ import SmishingMessage from '../components/SmishingMessage';
 import IncomingCall from '../components/IncomingCall';
 import PhoneScore from '../components/PhoneScore';
 import smishingScenarios from '../data/smishingScenarios';
+import Lottie from 'lottie-react';
+import onlineEuroAnimation from '../../images/online-euro.json';
 
 function getTime() {
   return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -200,7 +202,9 @@ export default function SmishingPage() {
                         gap: '1rem',
                       }}
                     >
-                      <div style={{ fontSize: '3rem' }}>📱</div>
+                      <div style={{ width: '90px', height: '90px', margin: '0 auto' }}>
+                        <Lottie animationData={onlineEuroAnimation} loop={true} style={{ width: '100%', height: '100%' }} />
+                      </div>
                       <p style={{ fontSize: '0.9rem', fontWeight: 800, color: '#f8fafc' }}>Phone Drill</p>
                       <p style={{ fontSize: '0.7rem', color: '#64748b', lineHeight: 1.5 }}>
                         You will receive {smishingScenarios.length} messages, calls, and notifications. Decide the right action for each.
