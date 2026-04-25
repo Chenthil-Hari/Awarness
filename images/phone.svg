@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" id="phone">
+  <g transform="translate(-36.634 -1686.772)scale(1.73268)">
+    <rect width="27.229" height="50.925" x="36.385" y="976.9" fill="#3b3c3d" stroke="#fcd116" stroke-width="1.018" rx="4.114" ry="2.852"></rect>
+    <path fill="none" stroke="#4bb7c0" stroke-width=".339" d="M51.444 1024.62a1.445 1.445 0 1 1-2.89 0 1.445 1.445 0 0 1 2.89 0z"></path>
+    <path fill="#4bb7c0" d="M46.411 981.475a1.04 1.04 0 1 1-2.078 0 1.04 1.04 0 0 1 2.078 0z"></path>
+    <rect width="6.444" height="1.143" x="47.978" y="980.946" fill="#4bb7c0" ry=".572"></rect>
+    <path fill="#9777a8" d="M38.491 984.837h23.017v36.657H38.491z"></path>
+  </g>
+</svg>

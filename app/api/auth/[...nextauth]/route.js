@@ -113,7 +113,11 @@ export const authOptions = {
         let newStreak = dbUser.streak || 1;
         
         if (lastLogin) {
-          const diffInTime = now.getTime() - lastLogin.getTime();
+          // Normalize both dates to midnight UTC to compare calendar days
+          const lastDate = new Date(Date.UTC(lastLogin.getUTCFullYear(), lastLogin.getUTCMonth(), lastLogin.getUTCDate()));
+          const nowDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+          
+          const diffInTime = nowDate.getTime() - lastDate.getTime();
           const diffInDays = Math.floor(diffInTime / (1000 * 3600 * 24));
 
           if (diffInDays === 1) {
@@ -121,6 +125,7 @@ export const authOptions = {
           } else if (diffInDays > 1) {
             newStreak = 1;
           }
+          // if diffInDays === 0, it's the same day, so streak remains the same
         }
 
         await usersCollection.updateOne(

@@ -12,6 +12,7 @@ import PhoneScore from '../components/PhoneScore';
 import smishingScenarios from '../data/smishingScenarios';
 import Lottie from 'lottie-react';
 import onlineEuroAnimation from '../../images/online-euro.json';
+import Image from 'next/image';
 
 function getTime() {
   return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -87,9 +88,10 @@ export default function SmishingPage() {
       {/* Page Header */}
       <div className="container" style={{ padding: '0 1rem' }}>
         <div style={{ textAlign: 'center', padding: '2rem 0 3rem' }}>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Image src="/images/phone.svg" alt="Phone Drill" width={80} height={80} style={{ marginBottom: '1rem' }} />
             <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>
-              📱 <span className="gradient-text">Smishing Simulator</span>
+              <span className="gradient-text">Smishing Simulator</span>
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', maxWidth: '600px', margin: '0 auto' }}>
               A realistic phone experience. Identify scam messages, calls, and notifications before they get you.
