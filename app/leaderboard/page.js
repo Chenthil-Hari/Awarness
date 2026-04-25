@@ -8,6 +8,8 @@ import TrophyIcon from '../components/TrophyIcon';
 import { motion } from 'framer-motion';
 import { Medal, Star, Target, Crown, Shield, Zap } from 'lucide-react';
 import Link from 'next/link';
+import Lottie from 'lottie-react';
+import eiffelCelebration from '../../images/eiffel-celebration.json';
 
 const LEAGUES = ['Bronze', 'Silver', 'Gold', 'Hacker-Tier'];
 
@@ -52,7 +54,29 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <main className="container">
+    <main className="container" style={{ position: 'relative', zIndex: 1 }}>
+      {/* Full Background Animation */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: -1,
+        opacity: 0.15,
+        pointerEvents: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden'
+      }}>
+        <Lottie 
+          animationData={eiffelCelebration} 
+          loop={true} 
+          style={{ width: '100%', height: '100%', transform: 'scale(1.2)' }} 
+        />
+      </div>
+
       <Navbar />
       
       <div style={{ marginTop: '4rem', marginBottom: '4rem' }}>
