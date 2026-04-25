@@ -81,6 +81,23 @@ export default function Navbar({ score = 0, level = 1 }) {
           <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>WIKI</span>
         </Link>
 
+        {session && (
+          <Link href="/smishing" title="Smishing Simulator" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.4rem', 
+            color: 'var(--text-secondary)', 
+            transition: 'all 0.3s ease', 
+            padding: '0.4rem 0.75rem', 
+            borderRadius: 'var(--radius-md)', 
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid var(--glass-border)'
+          }} className="hover-lift">
+            <span style={{ fontSize: '0.85rem' }}>📱</span>
+            <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>PHONE DRILL</span>
+          </Link>
+        )}
+
         <div style={{ position: 'relative' }}>
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
