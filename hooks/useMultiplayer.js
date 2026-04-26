@@ -56,7 +56,7 @@ export function useMultiplayer(roomCode, isEnabled) {
         body: JSON.stringify({
           channel: `presence-room-${roomCode}`,
           event,
-          data: { ...data, senderId: session?.user?.email || session?.user?.id },
+          data: { ...data, senderId: session?.user?.id },
         }),
       });
     } catch (err) {
@@ -89,7 +89,7 @@ export function useMultiplayer(roomCode, isEnabled) {
     };
   }, [isConnected, roomCode]); // Re-bind when connection status or room changes
 
-  const me = members.find(m => m.user_id === (session?.user?.email || session?.user?.id));
+  const me = members.find(m => m.user_id === session?.user?.id);
 
   return { members, isConnected, broadcast, on, me };
 }

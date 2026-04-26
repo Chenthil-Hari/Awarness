@@ -32,7 +32,7 @@ function DuelContent() {
   const [isReady, setIsReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
 
-  const { members, broadcast, on } = useMultiplayer(roomCode, !!myId);
+  const { members, broadcast, on, isConnected } = useMultiplayer(roomCode, !!myId);
 
   // Send invitation if we are the challenger
   useEffect(() => {
@@ -70,6 +70,16 @@ function DuelContent() {
       finishDuel('loss');
     }
   });
+
+  on('request-sync', () => {
+    if (isReady) broadcast('player-ready', { senderId: myId });
+  });
+
+  useEffect(() => {
+    if (isConnected) {
+      broadcast('request-sync', {});
+    }
+  }, [isConnected]);
 
   useEffect(() => {
     if (isReady && opponentReady && gameState === 'waiting') {
