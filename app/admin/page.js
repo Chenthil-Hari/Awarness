@@ -164,9 +164,14 @@ export default function AdminPage() {
   const handleDismissReport = async (reportId) => {
     try {
       const res = await fetch(`/api/admin/reports/${reportId}`, { method: 'DELETE' });
-      if (res.ok) fetchAdminData();
+      if (res.ok) {
+        fetchAdminData();
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to dismiss report: ${errorData.error || 'Unknown error'}`);
+      }
     } catch (error) {
-      alert('Failed to dismiss report');
+      alert('Network error while dismissing report');
     }
   };
 
