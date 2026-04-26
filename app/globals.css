@@ -265,6 +265,10 @@ button {
   display: none !important;
 }
 
+.show-mobile-only {
+  display: none !important;
+}
+
 /* Responsive Media Queries */
 @media (max-width: 1024px) {
   .container {
@@ -299,6 +303,10 @@ button {
 
   .show-mobile {
     display: flex !important;
+  }
+
+  .show-mobile-only {
+    display: block !important;
   }
 
   .hero-gradient-bg {
