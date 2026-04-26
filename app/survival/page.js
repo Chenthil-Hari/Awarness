@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
@@ -10,7 +10,7 @@ import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
 import { survivalScenarios } from '../data/survivalScenarios';
 
-export default function SurvivalMode() {
+function SurvivalContent() {
   const { data: session, update } = useSession();
   const searchParams = useSearchParams();
   const isFriendMode = searchParams.get('mode') === 'friends';
@@ -26,6 +26,9 @@ export default function SurvivalMode() {
   const [timeLeft, setTimeLeft] = useState(15);
   const [eliminationText, setEliminationText] = useState('');
   const [isWinning, setIsWinning] = useState(false);
+
+  // Sound effects simulation (visual)
+  const [heartbeatActive, setHeartbeatActive] = useState(false);
 
   // Initialize Room
   useEffect(() => {
@@ -57,9 +60,6 @@ export default function SurvivalMode() {
     navigator.clipboard.writeText(roomCode);
     alert("Room code copied to clipboard!");
   };
-
-  // Sound effects simulation (visual)
-  const [heartbeatActive, setHeartbeatActive] = useState(false);
 
   // Timer logic
   useEffect(() => {
@@ -472,5 +472,13 @@ export default function SurvivalMode() {
         )}
       </AnimatePresence>
     </main>
+  );
+}
+
+export default function SurvivalMode() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)', color: 'var(--accent-danger)', fontWeight: 800 }}>JOINING LOBBY...</div>}>
+      <SurvivalContent />
+    </Suspense>
   );
 }

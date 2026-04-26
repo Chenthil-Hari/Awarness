@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { Shield, Cpu, Binary, Map, Radio, AlertCircle, CheckCircle2, XCircle, ArrowRight, Timer, Terminal, Users, Play, Lock, Link as LinkIcon, UserPlus } from 'lucide-react';
@@ -42,7 +42,7 @@ const RoleCard = ({ role, icon: Icon, description, selected, onClick }) => (
   </motion.div>
 );
 
-export default function HeistPage() {
+function HeistContent() {
   const searchParams = useSearchParams();
   const isFriendMode = searchParams.get('mode') === 'friends';
 
@@ -527,5 +527,13 @@ export default function HeistPage() {
         )}
       </AnimatePresence>
     </main>
+  );
+}
+
+export default function HeistPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)', color: 'var(--accent-primary)', fontWeight: 800 }}>INITIALIZING MISSION...</div>}>
+      <HeistContent />
+    </Suspense>
   );
 }
