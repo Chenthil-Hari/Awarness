@@ -33,6 +33,24 @@ function DuelContent() {
 
   const { members, broadcast, on } = useMultiplayer(roomCode, !!myId);
 
+  // Send invitation if we are the challenger
+  useEffect(() => {
+    if (opponentId && roomCode && session?.user?.id) {
+      const sendInvite = async () => {
+        try {
+          await fetch('/api/duels/invite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ opponentId, roomCode })
+          });
+        } catch (e) {
+          console.error("Failed to send duel invite", e);
+        }
+      };
+      sendInvite();
+    }
+  }, [opponentId, roomCode, session]);
+
   // Use a subset of scenarios for the duel
   const duelQuestions = survivalScenarios.slice(0, 3);
 

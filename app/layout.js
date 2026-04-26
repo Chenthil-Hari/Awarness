@@ -22,6 +22,7 @@ import GhostBanner from "./components/GhostBanner";
 import SupportWidget from "./components/SupportWidget";
 import ClickSpark from "./components/ClickSpark/ClickSpark";
 import MobileBottomNav from "./components/MobileBottomNav";
+import RealTimeDuelHandler from "./components/RealTimeDuelHandler";
 
 export default function RootLayout({ children }) {
   return (
@@ -39,6 +40,7 @@ export default function RootLayout({ children }) {
             {children}
             <ChatBot />
             <MobileBottomNav />
+            <RealTimeDuelHandler />
           </ClickSpark>
         </Providers>
       </body>
