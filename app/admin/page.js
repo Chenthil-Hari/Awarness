@@ -360,7 +360,7 @@ export default function AdminPage() {
                             <span style={{ background: 'var(--accent-danger)', color: 'white', padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-full)', fontSize: '0.7rem', fontWeight: 800 }}>{report.reason}</span>
                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reported {new Date(report.createdAt).toLocaleDateString()}</span>
                           </div>
-                          <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: isDark ? 'white' : '#0f172a' }}>{report.guideTitle}</h4>
+                          <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: isDark ? 'white' : '#0f172a' }}>{report.guideTitle || 'Unknown / Deleted Strategy'}</h4>
                           <p style={{ fontSize: '0.9rem', color: isDark ? 'var(--text-secondary)' : '#475569', marginTop: '0.4rem' }}>"{report.details}"</p>
                         </div>
                         <div style={{ display: 'flex', gap: '0.8rem' }}>

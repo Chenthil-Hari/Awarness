@@ -25,7 +25,7 @@ export async function GET() {
             as: 'guide'
           }
         },
-        { $unwind: '$guide' },
+        { $unwind: { path: '$guide', preserveNullAndEmptyArrays: true } },
         {
           $project: {
             _id: 1,

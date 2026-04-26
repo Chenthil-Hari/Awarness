@@ -175,6 +175,7 @@ function WikiContent() {
   const [reportingGuide, setReportingGuide] = useState(null);
   const [reportReason, setReportReason] = useState('Inaccurate Information');
   const [reportDetails, setReportDetails] = useState('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   const fetchGuides = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
@@ -251,20 +252,34 @@ function WikiContent() {
 
   const handleReport = async (e) => {
     e.preventDefault();
-    if (!session || !reportingGuide) return;
+    if (!session) {
+      alert('Please sign in to report content.');
+      return;
+    }
+    if (!reportingGuide) return;
+    
+    setIsSubmittingReport(true);
     try {
       const res = await fetch('/api/guides/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ guideId: reportingGuide._id, reason: reportReason, details: reportDetails }),
       });
+      
       if (res.ok) {
         setShowReportModal(false);
         setReportDetails('');
-        alert('Thank you for your report.');
+        setReportReason('Inaccurate Information');
+        alert('Thank you for your report. Our moderators will review it shortly.');
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to submit report: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Failed to report');
+      alert('Network error. Please try again.');
+    } finally {
+      setIsSubmittingReport(false);
     }
   };
 
@@ -381,7 +396,14 @@ function WikiContent() {
                         {isDeleting ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
                       </button>
                     ) : (
-                      <button onClick={() => { setReportingGuide(guide); setShowReportModal(true); }} style={{ color: 'var(--text-muted)' }}><Flag size={18} /></button>
+                      <button onClick={() => { 
+                        if (!session) {
+                          window.location.href = '/auth/login';
+                        } else {
+                          setReportingGuide(guide); 
+                          setShowReportModal(true); 
+                        }
+                      }} style={{ color: 'var(--text-muted)' }}><Flag size={18} /></button>
                     )}
                     <button onClick={() => handleVote(guide._id)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: guide.voters?.includes(session?.user?.id) ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
                       <ThumbsUp size={20} fill={guide.voters?.includes(session?.user?.id) ? 'var(--accent-primary)' : 'transparent'} />
@@ -538,7 +560,9 @@ function WikiContent() {
                   <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>DETAILS</label>
                   <textarea rows={4} placeholder="Help us understand..." value={reportDetails} onChange={(e) => setReportDetails(e.target.value)} style={{ padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', outline: 'none', resize: 'none' }} />
                 </div>
-                <button className="btn-primary" style={{ width: '100%', padding: '1rem', background: 'var(--accent-warning)' }}>Submit Report</button>
+                <button type="submit" disabled={isSubmittingReport} className="btn-primary" style={{ width: '100%', padding: '1rem', background: 'var(--accent-warning)' }}>
+                  {isSubmittingReport ? <Loader2 className="animate-spin" size={20} /> : 'Submit Report'}
+                </button>
               </form>
             </motion.div>
           </div>
