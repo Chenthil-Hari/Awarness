@@ -162,6 +162,7 @@ export default function AdminPage() {
   };
 
   const handleDismissReport = async (reportId) => {
+    alert(`Attempting to dismiss report: ${reportId}`);
     try {
       const res = await fetch(`/api/admin/reports/${reportId}`, { method: 'DELETE' });
       if (res.ok) {
