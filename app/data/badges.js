@@ -61,5 +61,14 @@ export const badges = [
     iconName: 'ShieldCheck',
     rarity: 'epic',
     color: '#3b82f6', // Blue
+  },
+  {
+    id: 'survival-champion',
+    title: 'Sole Survivor',
+    description: 'Outlast 99 other participants in the high-stakes Survival Mode Gauntlet. You are the ultimate legend.',
+    iconType: 'lucide',
+    iconName: 'Trophy',
+    rarity: 'legendary',
+    color: '#f59e0b', // Amber
   }
 ];

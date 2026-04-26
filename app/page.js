@@ -7,7 +7,9 @@ import Navbar from './components/Navbar';
 import ScenarioCard from './components/ScenarioCard';
 import SimulationViewer from './components/SimulationViewer';
 import { motion } from 'framer-motion';
-import { Shield, Lightbulb, TrendingUp, Users } from 'lucide-react';
+import { Shield, Lightbulb, TrendingUp, Users, Skull } from 'lucide-react';
+import Link from 'next/link';
+import BorderGlow from './components/BorderGlow/BorderGlow';
 import { calculateLevel } from '../lib/game';
 import CommunityPoll from './components/CommunityPoll';
 import LandingPage from './components/LandingPage';
@@ -185,6 +187,53 @@ export default function Home() {
           <aside style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
             <CommunityPoll />
           </aside>
+        </div>
+
+        {/* Survival Mode Call to Action */}
+        <div style={{ marginTop: '4rem' }}>
+          <BorderGlow
+            glowColor="0 80 50"
+            backgroundColor="var(--bg-secondary)"
+            borderRadius={32}
+            animated={true}
+          >
+            <div className="flex-mobile-column" style={{ 
+              padding: '2.5rem', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              gap: '2rem' 
+            }}>
+              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                <div style={{ 
+                  width: '64px', 
+                  height: '64px', 
+                  background: 'var(--accent-danger)', 
+                  borderRadius: '16px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  color: 'white',
+                  boxShadow: '0 0 20px rgba(220, 38, 38, 0.4)'
+                }}>
+                  <Skull size={32} />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--accent-danger)', letterSpacing: '1px' }}>LIMITED TIME EVENT</span>
+                    <span style={{ padding: '2px 8px', background: 'rgba(220, 38, 38, 0.1)', borderRadius: '4px', fontSize: '0.6rem', fontWeight: 800, color: 'var(--accent-danger)' }}>LIVE</span>
+                  </div>
+                  <h2 style={{ fontSize: '1.75rem', fontWeight: 900 }}>The Gauntlet: <span style={{ color: 'var(--accent-danger)' }}>Survival Mode</span></h2>
+                  <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', fontSize: '0.9rem' }}>
+                    100 players enter, one survives. Can you outlast the global lobby?
+                  </p>
+                </div>
+              </div>
+              <Link href="/survival" className="btn-primary" style={{ background: 'var(--accent-danger)', padding: '1rem 2rem', fontSize: '1.1rem', width: 'auto' }}>
+                Enter Arena
+              </Link>
+            </div>
+          </BorderGlow>
         </div>
 
         {/* Daily Challenge Card */}
