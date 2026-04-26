@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Shield, TrendingUp, Users, ArrowRight, CheckCircle2, Play, Zap, Award } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import BorderGlow from './BorderGlow/BorderGlow';
 
 const features = [
   {
@@ -206,38 +207,46 @@ export default function LandingPage() {
           
           <div className="feature-grid">
             {features.map((feature, i) => (
-              <motion.div
+              <BorderGlow
                 key={i}
-                whileHover={{ y: -10 }}
-                className="glass-card"
-                style={{ padding: '3rem 2rem', borderRadius: 'var(--radius-xl)' }}
+                edgeSensitivity={30}
+                glowColor="40 80 80"
+                backgroundColor="var(--bg-primary)"
+                borderRadius={32}
+                glowRadius={40}
+                glowIntensity={1.0}
+                coneSpread={25}
+                animated={true}
+                colors={['#c084fc', '#f472b6', '#38bdf8']}
               >
-                <div style={{ 
-                  width: '60px', 
-                  height: '60px', 
-                  borderRadius: '16px', 
-                  background: 'rgba(255,255,255,0.05)', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  marginBottom: '1.5rem',
-                  fontSize: '2rem'
-                }}>
-                  {feature.icon}
+                <div style={{ padding: '3rem 2rem', height: '100%' }}>
+                  <div style={{ 
+                    width: '60px', 
+                    height: '60px', 
+                    borderRadius: '16px', 
+                    background: 'rgba(255,255,255,0.05)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    marginBottom: '1.5rem',
+                    fontSize: '2rem'
+                  }}>
+                    {feature.icon}
+                  </div>
+                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{feature.title}</h3>
+                  <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                    {feature.description}
+                  </p>
+                  <ul style={{ listStyle: 'none', padding: 0 }}>
+                    {['Interactive Scenarios', 'Real-time Feedback', 'Progress Tracking'].map((item, j) => (
+                      <li key={j} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                        <CheckCircle2 size={16} className="text-emerald-500" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{feature.title}</h3>
-                <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-                  {feature.description}
-                </p>
-                <ul style={{ listStyle: 'none', padding: 0 }}>
-                  {['Interactive Scenarios', 'Real-time Feedback', 'Progress Tracking'].map((item, j) => (
-                    <li key={j} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                      <CheckCircle2 size={16} className="text-emerald-500" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
+              </BorderGlow>
             ))}
           </div>
         </div>
