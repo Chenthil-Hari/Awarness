@@ -8,6 +8,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import SimulationLottie from '../components/SimulationLottie';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThumbsUp, Plus, Search, Send, X, MessageSquare, Trash2, Flag, AlertCircle, Award, Video, PlayCircle, CornerDownRight, User, Loader2 } from 'lucide-react';
+import BorderGlow from '../components/BorderGlow/BorderGlow';
 
 function CommentItem({ comment, onReply, isReply = false }) {
   return (
@@ -358,120 +359,130 @@ function WikiContent() {
             const isDeleting = deletingId === guide._id;
             
             return (
-              <motion.div
+              <BorderGlow
                 key={guide._id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ 
-                  opacity: isDeleting ? 0.5 : 1, 
-                  scale: isDeleting ? 0.98 : 1,
-                  borderColor: isHighlighted ? 'var(--accent-primary)' : 'var(--glass-border)',
-                  boxShadow: isHighlighted ? '0 0 20px rgba(139, 92, 246, 0.3)' : 'none'
-                }}
-                transition={{ delay: idx * 0.05 }}
-                className="glass-card"
-                style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', display: 'flex', flexDirection: 'column', position: 'relative', border: isHighlighted ? '2px solid var(--accent-primary)' : '1px solid var(--glass-border)' }}
+                edgeSensitivity={30}
+                glowColor={isHighlighted ? "260 80 50" : (guide.domain === 'Cybersecurity' ? "260 80 80" : "190 80 80")}
+                backgroundColor="var(--bg-primary)"
+                borderRadius={24}
+                glowRadius={isHighlighted ? 50 : 40}
+                glowIntensity={isHighlighted ? 1.5 : 1.0}
+                coneSpread={25}
+                animated={isHighlighted}
+                colors={isHighlighted ? ['#7c3aed', '#a78bfa', '#c4b5fd'] : (guide.domain === 'Cybersecurity' ? ['#8b5cf6', '#a78bfa', '#c4b5fd'] : ['#06b6d4', '#22d3ee', '#67e8f9'])}
               >
-                {isHighlighted && (
-                  <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-primary)', color: 'white', padding: '2px 12px', borderRadius: 'var(--radius-full)', fontSize: '0.7rem', fontWeight: 800, zIndex: 10 }}>
-                    RECOMMENDED DEEP DIVE
-                  </div>
-                )}
+                <div
+                  style={{ 
+                    padding: '2rem', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    position: 'relative', 
+                    height: '100%',
+                    opacity: isDeleting ? 0.5 : 1
+                  }}
+                >
+                  {isHighlighted && (
+                    <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-primary)', color: 'white', padding: '2px 12px', borderRadius: 'var(--radius-full)', fontSize: '0.7rem', fontWeight: 800, zIndex: 10 }}>
+                      RECOMMENDED DEEP DIVE
+                    </div>
+                  )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--accent-secondary)', background: 'rgba(6, 182, 212, 0.1)', padding: '0.4rem 0.8rem', borderRadius: 'var(--radius-full)', textTransform: 'uppercase' }}>
-                      {guide.domain}
-                    </span>
-                    {guide.isOfficial && <Award size={18} color="var(--accent-primary)" />}
-                    {youtubeId && <Video size={18} color="var(--accent-secondary)" />}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--accent-secondary)', background: 'rgba(6, 182, 212, 0.1)', padding: '0.4rem 0.8rem', borderRadius: 'var(--radius-full)', textTransform: 'uppercase' }}>
+                        {guide.domain}
+                      </span>
+                      {guide.isOfficial && <Award size={18} color="var(--accent-primary)" />}
+                      {youtubeId && <Video size={18} color="var(--accent-secondary)" />}
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      {(session?.user?.id === guide.authorId || session?.user?.role === 'admin') ? (
+                        <button 
+                          disabled={isDeleting}
+                          onClick={() => handleDelete(guide._id)} 
+                          style={{ color: 'var(--accent-danger)', opacity: isDeleting ? 0.3 : 0.7 }}
+                        >
+                          {isDeleting ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
+                        </button>
+                      ) : (
+                        <button onClick={() => { 
+                          if (!session) {
+                            window.location.href = '/auth/login';
+                          } else {
+                            setReportingGuide(guide); 
+                            setShowReportModal(true); 
+                          }
+                        }} style={{ color: 'var(--text-muted)' }}><Flag size={18} /></button>
+                      )}
+                      <button onClick={() => handleVote(guide._id)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: guide.voters?.includes(session?.user?.id) ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
+                        <ThumbsUp size={20} fill={guide.voters?.includes(session?.user?.id) ? 'var(--accent-primary)' : 'transparent'} />
+                        <span style={{ fontWeight: 800 }}>{guide.upvotes || 0}</span>
+                      </button>
+                    </div>
                   </div>
                   
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    {(session?.user?.id === guide.authorId || session?.user?.role === 'admin') ? (
-                      <button 
-                        disabled={isDeleting}
-                        onClick={() => handleDelete(guide._id)} 
-                        style={{ color: 'var(--accent-danger)', opacity: isDeleting ? 0.3 : 0.7 }}
-                      >
-                        {isDeleting ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
-                      </button>
-                    ) : (
-                      <button onClick={() => { 
-                        if (!session) {
-                          window.location.href = '/auth/login';
-                        } else {
-                          setReportingGuide(guide); 
-                          setShowReportModal(true); 
-                        }
-                      }} style={{ color: 'var(--text-muted)' }}><Flag size={18} /></button>
-                    )}
-                    <button onClick={() => handleVote(guide._id)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: guide.voters?.includes(session?.user?.id) ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
-                      <ThumbsUp size={20} fill={guide.voters?.includes(session?.user?.id) ? 'var(--accent-primary)' : 'transparent'} />
-                      <span style={{ fontWeight: 800 }}>{guide.upvotes || 0}</span>
+                  <h3 style={{ fontSize: '1.4rem', marginBottom: '1rem', fontWeight: 700 }}>{guide.title}</h3>
+                  
+                  {youtubeId && (
+                    <div style={{ width: '100%', aspectRatio: '16/9', borderRadius: 'var(--radius-md)', overflow: 'hidden', marginBottom: '1.5rem', background: '#000' }}>
+                      <iframe
+                        width="100%"
+                        height="100%"
+                        src={`https://www.youtube.com/embed/${youtubeId}`}
+                        title="YouTube video player"
+                        frameBorder="0"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                  )}
+
+                  <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '2rem', flex: 1 }}>
+                    {guide.content}
+                  </p>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>{guide.username?.charAt(0).toUpperCase() || 'S'}</span>
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700 }}>@{guide.username || 'system'}</p>
+                        <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(guide.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    
+                    <button 
+                      onClick={() => setExpandedGuide(isExpanded ? null : guide._id)}
+                      style={{ 
+                        display: 'flex', alignItems: 'center', gap: '0.5rem', 
+                        color: isExpanded ? 'var(--accent-primary)' : 'var(--text-muted)',
+                        fontSize: '0.85rem', fontWeight: 700
+                      }}
+                    >
+                      <MessageSquare size={18} />
+                      {guide.comments?.length || 0} Comments
                     </button>
                   </div>
+
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        style={{ overflow: 'hidden' }}
+                      >
+                        <CommentSection 
+                          guideId={guide._id} 
+                          comments={guide.comments} 
+                          onCommentAdded={() => fetchGuides(true)} 
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-                
-                <h3 style={{ fontSize: '1.4rem', marginBottom: '1rem', fontWeight: 700 }}>{guide.title}</h3>
-                
-                {youtubeId && (
-                  <div style={{ width: '100%', aspectRatio: '16/9', borderRadius: 'var(--radius-md)', overflow: 'hidden', marginBottom: '1.5rem', background: '#000' }}>
-                    <iframe
-                      width="100%"
-                      height="100%"
-                      src={`https://www.youtube.com/embed/${youtubeId}`}
-                      title="YouTube video player"
-                      frameBorder="0"
-                      allowFullScreen
-                    ></iframe>
-                  </div>
-                )}
-
-                <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '2rem', flex: 1 }}>
-                  {guide.content}
-                </p>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>{guide.username?.charAt(0).toUpperCase() || 'S'}</span>
-                    </div>
-                    <div>
-                      <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700 }}>@{guide.username || 'system'}</p>
-                      <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(guide.createdAt).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  
-                  <button 
-                    onClick={() => setExpandedGuide(isExpanded ? null : guide._id)}
-                    style={{ 
-                      display: 'flex', alignItems: 'center', gap: '0.5rem', 
-                      color: isExpanded ? 'var(--accent-primary)' : 'var(--text-muted)',
-                      fontSize: '0.85rem', fontWeight: 700
-                    }}
-                  >
-                    <MessageSquare size={18} />
-                    {guide.comments?.length || 0} Comments
-                  </button>
-                </div>
-
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      style={{ overflow: 'hidden' }}
-                    >
-                      <CommentSection 
-                        guideId={guide._id} 
-                        comments={guide.comments} 
-                        onCommentAdded={() => fetchGuides(true)} 
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+              </BorderGlow>
             );
           })}
         </div>
