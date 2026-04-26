@@ -201,7 +201,7 @@ export default function ArchitectPage() {
                       placeholder="e.g. Operation Nightfall" 
                       value={missionData.title}
                       onChange={(e) => setMissionData({ ...missionData, title: e.target.value })}
-                      style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '1.1rem', fontWeight: 700 }}
+                      style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: 700 }}
                     />
                   </div>
                   <div>
@@ -211,7 +211,7 @@ export default function ArchitectPage() {
                       placeholder="Detailed mission brief for operatives..." 
                       value={missionData.description}
                       onChange={(e) => setMissionData({ ...missionData, description: e.target.value })}
-                      style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '1rem', lineHeight: 1.6, resize: 'none' }}
+                      style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '1rem', lineHeight: 1.6, resize: 'none' }}
                     />
                   </div>
                   <div style={{ display: 'flex', gap: '2rem' }}>
@@ -220,7 +220,7 @@ export default function ArchitectPage() {
                       <select 
                         value={missionData.mode}
                         onChange={(e) => setMissionData({ ...missionData, mode: e.target.value })}
-                        style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontWeight: 700 }}
+                        style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-primary)', fontWeight: 700 }}
                       >
                         <option value="heist">Co-op Heist</option>
                         <option value="survival">Solo Survival</option>
@@ -231,7 +231,7 @@ export default function ArchitectPage() {
                       <select 
                         value={missionData.difficulty}
                         onChange={(e) => setMissionData({ ...missionData, difficulty: e.target.value })}
-                        style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontWeight: 700 }}
+                        style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-primary)', fontWeight: 700 }}
                       >
                         <option value="standard">Standard</option>
                         <option value="hard">Hardcore</option>
@@ -267,7 +267,7 @@ export default function ArchitectPage() {
                         type="text" 
                         value={phase.title}
                         onChange={(e) => handlePhaseChange(pIdx, 'title', e.target.value)}
-                        style={{ background: 'transparent', border: 'none', fontSize: '1.2rem', fontWeight: 800, color: 'white', borderBottom: '1px solid transparent', padding: '2px 0' }}
+                        style={{ background: 'transparent', border: 'none', fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', borderBottom: '1px solid transparent', padding: '2px 0' }}
                         onFocus={(e) => e.target.style.borderBottom = '1px solid var(--accent-secondary)'}
                         onBlur={(e) => e.target.style.borderBottom = '1px solid transparent'}
                       />
@@ -296,7 +296,7 @@ export default function ArchitectPage() {
                         placeholder="Operatives will need to solve this..." 
                         value={q.text}
                         onChange={(e) => handleQuestionChange(pIdx, qIdx, e.target.value)}
-                        style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', marginBottom: '1.5rem' }}
+                        style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-primary)', marginBottom: '1.5rem' }}
                       />
                       
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
@@ -309,7 +309,7 @@ export default function ArchitectPage() {
                               type="text" 
                               value={opt.text}
                               onChange={(e) => handleOptionChange(pIdx, qIdx, oIdx, e.target.value)}
-                              style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-secondary)', border: `1px solid ${oIdx === 0 ? 'rgba(16, 185, 129, 0.2)' : 'var(--glass-border)'}`, borderRadius: '8px', color: 'white', fontSize: '0.9rem' }}
+                              style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-secondary)', border: `1px solid ${oIdx === 0 ? 'rgba(16, 185, 129, 0.2)' : 'var(--glass-border)'}`, borderRadius: '8px', color: 'var(--text-primary)', fontSize: '0.9rem' }}
                             />
                           </div>
                         ))}
