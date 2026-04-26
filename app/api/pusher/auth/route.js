@@ -1,15 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]/route';
-import Pusher from 'pusher';
-
-const pusher = new Pusher({
-  appId: process.env.PUSHER_APP_ID,
-  key: process.env.PUSHER_KEY,
-  secret: process.env.PUSHER_SECRET,
-  cluster: process.env.PUSHER_CLUSTER,
-  useTLS: true,
-});
+import { pusherServer } from '@/lib/pusher';
 
 export async function POST(req) {
   try {
@@ -30,7 +22,7 @@ export async function POST(req) {
       return new Response('Forbidden', { status: 403 });
     }
 
-    const authResponse = pusher.authorizeChannel(socketId, channel, {
+    const authResponse = pusherServer.authorizeChannel(socketId, channel, {
       user_id: session.user.id,
       user_info: {
         name: session.user.name,

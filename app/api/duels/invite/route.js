@@ -1,15 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]/route';
-import Pusher from 'pusher';
-
-const pusher = new Pusher({
-  appId: process.env.PUSHER_APP_ID,
-  key: process.env.PUSHER_KEY,
-  secret: process.env.PUSHER_SECRET,
-  cluster: process.env.PUSHER_CLUSTER,
-  useTLS: true,
-});
+import { pusherServer } from '@/lib/pusher';
 
 export async function POST(req) {
   try {
@@ -25,7 +17,7 @@ export async function POST(req) {
     }
 
     // Send invitation to the opponent's private channel
-    await pusher.trigger(`private-user-${opponentId}`, 'incoming-duel', {
+    await pusherServer.trigger(`private-user-${opponentId}`, 'incoming-duel', {
       challengerName: session.user.name || session.user.username,
       challengerId: session.user.id,
       roomCode: roomCode,

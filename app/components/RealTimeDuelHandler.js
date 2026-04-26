@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Swords, X, Check, Bell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import Pusher from 'pusher-js';
+import { getPusherClient } from '@/lib/pusher';
 
 export default function RealTimeDuelHandler() {
   const { data: session } = useSession();
@@ -13,12 +13,10 @@ export default function RealTimeDuelHandler() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id || typeof window === 'undefined') return;
 
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
-      authEndpoint: '/api/pusher/auth', // We need this for private channels
-    });
+    const pusher = getPusherClient();
+    if (!pusher) return;
 
     const channelName = `private-user-${session.user.id}`;
     const channel = pusher.subscribe(channelName);
