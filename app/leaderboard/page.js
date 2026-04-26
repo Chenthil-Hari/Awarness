@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import TrophyIcon from '../components/TrophyIcon';
 import { motion } from 'framer-motion';
-import { Medal, Star, Target, Crown, Shield, Zap } from 'lucide-react';
+import { Medal, Star, Target, Crown, Shield, Zap, Swords } from 'lucide-react';
 import Link from 'next/link';
 import Lottie from 'lottie-react';
 import eiffelCelebration from '../../images/eiffel-celebration.json';
@@ -202,8 +202,20 @@ export default function LeaderboardPage() {
                           </div>
                         </div>
                       </div>
-                      <div style={{ textAlign: 'right', fontWeight: 900, color: 'var(--accent-primary)', fontSize: '1rem' }}>
-                        {user.xp || 0} <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>XP</span>
+                      <div style={{ textAlign: 'right', fontWeight: 900, color: 'var(--accent-primary)', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '1rem' }}>
+                        {user.username !== session?.user?.username && (
+                          <Link 
+                            href={`/duels?opponentId=${user._id}&opponentName=${encodeURIComponent(user.name)}`}
+                            className="btn-primary"
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--accent-danger)' }}
+                          >
+                            <Swords size={12} />
+                            CHALLENGE
+                          </Link>
+                        )}
+                        <div>
+                          {user.xp || 0} <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>XP</span>
+                        </div>
                       </div>
                     </motion.div>
                   );

@@ -15,6 +15,7 @@ import CommunityPoll from './components/CommunityPoll';
 import LandingPage from './components/LandingPage';
 import LoadingSpinner from './components/LoadingSpinner';
 import CampaignTracker from './components/CampaignTracker';
+import HallOfFame from './components/HallOfFame';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -145,6 +146,8 @@ export default function Home() {
             ))}
           </motion.div>
         </header>
+        
+        <HallOfFame />
 
         {/* The Campaign Section */}
         <section style={{ marginBottom: '4rem' }}>
