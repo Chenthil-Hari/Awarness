@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Shield, LogOut, Home, BookOpen, Mail, Bell, Award } from 'lucide-react';
+import { Shield, LogOut, Home, BookOpen, Mail, Bell, Award, Hammer } from 'lucide-react';
 import StreakIcon from './StreakIcon';
 import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
@@ -98,6 +98,23 @@ export default function Navbar({ score = 0, level = 1 }) {
               <Lottie animationData={mobileWifiAnimation} loop={true} style={{ width: '100%', height: '100%' }} />
             </div>
             <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>PHONE DRILL</span>
+          </Link>
+        )}
+
+        {session && (
+          <Link href="/architect" title="Mission Designer" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.4rem', 
+            color: 'var(--text-secondary)', 
+            transition: 'all 0.3s ease', 
+            padding: '0.4rem 0.75rem', 
+            borderRadius: 'var(--radius-md)', 
+            background: 'rgba(255, 120, 0, 0.05)',
+            border: '1px solid rgba(255, 120, 0, 0.2)'
+          }} className="hover-lift">
+            <Hammer size={16} color="#FF7800" />
+            <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#FF7800' }}>ARCHITECT</span>
           </Link>
         )}
 
