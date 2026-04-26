@@ -10,6 +10,7 @@ import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
 import { useMultiplayer } from '@/hooks/useMultiplayer';
 import { survivalScenarios } from '../data/survivalScenarios';
+import { calculateLevel } from '@/lib/game';
 
 function SurvivalContent() {
   const { data: session, update } = useSession();
@@ -269,13 +270,21 @@ function SurvivalContent() {
                         
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--accent-primary)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900 }}>YOU</div>
+                            <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--accent-primary)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, position: 'relative' }}>
+                              YOU
+                              <div style={{ position: 'absolute', top: -10, right: -10, background: 'var(--bg-tertiary)', border: '1px solid var(--accent-danger)', borderRadius: '50%', width: '24px', height: '24px', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-danger)', fontWeight: 900 }}>
+                                L{calculateLevel(session?.user?.xp || 0)}
+                              </div>
+                            </div>
                             <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>HOST</span>
                           </div>
-                          {members.filter(m => m.name !== (searchParams.get('userName') || 'HOST')).map(f => (
+                          {members.filter(m => m.name !== (session?.user?.name || 'HOST')).map(f => (
                             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={f.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                              <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                              <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', position: 'relative' }}>
                                 <Users size={20} />
+                                <div style={{ position: 'absolute', top: -10, right: -10, background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '50%', width: '24px', height: '24px', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontWeight: 900 }}>
+                                  L{calculateLevel(f.xp || 0)}
+                                </div>
                               </div>
                               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{f.name}</span>
                             </motion.div>

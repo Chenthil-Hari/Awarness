@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Shield, Cpu, Binary, Map, Radio, AlertCircle, CheckCircle2, XCircle, ArrowRight, Timer, Terminal, Users, Play, Lock, Link as LinkIcon, UserPlus } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
 import { useMultiplayer } from '@/hooks/useMultiplayer';
 import { heistScenarios } from '../data/heistScenarios';
+import { calculateLevel } from '@/lib/game';
 
 const RoleCard = ({ role, icon: Icon, description, selected, onClick }) => (
   <motion.div
@@ -44,6 +46,7 @@ const RoleCard = ({ role, icon: Icon, description, selected, onClick }) => (
 );
 
 function HeistContent() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const isFriendMode = searchParams.get('mode') === 'friends';
 
@@ -295,13 +298,21 @@ function HeistContent() {
                       
                       <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                          <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'var(--accent-secondary)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900 }}>HOST</div>
+                          <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'var(--accent-secondary)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, position: 'relative' }}>
+                            HOST
+                            <div style={{ position: 'absolute', top: -10, right: -10, background: 'var(--bg-tertiary)', border: '1px solid var(--accent-secondary)', borderRadius: '50%', width: '24px', height: '24px', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-secondary)', fontWeight: 900 }}>
+                              L{calculateLevel(session?.user?.xp || 0)}
+                            </div>
+                          </div>
                           <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>YOU</span>
                         </div>
-                        {members.filter(m => m.name !== (searchParams.get('userName') || 'HOST')).map(member => (
+                        {members.filter(m => m.name !== (session?.user?.name || 'HOST')).map(member => (
                           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={member.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                            <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', position: 'relative' }}>
                               <Users size={24} />
+                              <div style={{ position: 'absolute', top: -10, right: -10, background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '50%', width: '24px', height: '24px', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontWeight: 900 }}>
+                                L{calculateLevel(member.xp || 0)}
+                              </div>
                             </div>
                             <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{member.name}</span>
                           </motion.div>

@@ -18,6 +18,9 @@ export async function POST(req) {
     user_info: {
       name: session.user.name,
       image: session.user.image,
+      xp: session.user.xp || 0,
+      league: session.user.league || 'Bronze',
+      role: session.user.role || 'user'
     },
   };
 
