@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
+import StreakIcon from '../components/StreakIcon';
 import { 
   Trophy, Target, Zap, Clock, TrendingUp, Shield, 
   BarChart3, Calendar, ChevronRight, Edit2, Save, X, 
@@ -227,7 +228,10 @@ export default function ProfilePage() {
             </motion.div>
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
               <p style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Current Streak</p>
-              <h3 style={{ fontSize: '2rem', fontWeight: 900, color: '#f59e0b', margin: 0 }}>{user.streak || 0} 🔥</h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <h3 style={{ fontSize: '2rem', fontWeight: 900, color: '#f59e0b', margin: 0 }}>{user.streak || 0}</h3>
+                <StreakIcon size={40} />
+              </div>
             </motion.div>
           </div>
         </div>
