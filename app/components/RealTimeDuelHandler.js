@@ -39,7 +39,7 @@ export default function RealTimeDuelHandler() {
 
   const handleAccept = () => {
     if (!invitation) return;
-    const roomUrl = `/duels?room=${invitation.roomCode}`;
+    const roomUrl = `/duels?room=${invitation.roomCode}&opponentId=${invitation.challengerId}&opponentName=${encodeURIComponent(invitation.challengerName)}`;
     setInvitation(null);
     router.push(roomUrl);
   };

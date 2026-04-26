@@ -17,10 +17,11 @@ function DuelContent() {
   
   const opponentId = searchParams.get('opponentId');
   const opponentName = searchParams.get('opponentName') || 'Opponent';
+  const urlRoom = searchParams.get('room');
   
   // Room code is derived from both IDs to ensure they land in the same room
-  const myId = session?.user?.email || session?.user?.id;
-  const roomCode = [myId, opponentId].sort().join('-').substring(0, 10).toUpperCase();
+  const myId = session?.user?.id;
+  const roomCode = urlRoom || [myId, opponentId].sort().join('-').substring(0, 10).toUpperCase();
 
   const [gameState, setGameState] = useState('waiting'); // waiting, countdown, playing, result
   const [currentQuestion, setCurrentQuestion] = useState(0);
