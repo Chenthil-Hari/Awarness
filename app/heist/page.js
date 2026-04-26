@@ -56,6 +56,8 @@ function HeistContent() {
   const [isJoined, setIsJoined] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const [missionDifficulty, setMissionDifficulty] = useState('standard');
+  const [customMissions, setCustomMissions] = useState([]);
+  const [selectedMissionId, setSelectedMissionId] = useState('default');
 
   const { members, broadcast, on } = useMultiplayer(roomCode, isFriendMode && isJoined);
 
@@ -94,7 +96,18 @@ function HeistContent() {
   on('settings-updated', (data) => {
     setBaseTime(data.timer);
     setMissionDifficulty(data.difficulty);
+    setSelectedMissionId(data.missionId || 'default');
   });
+
+  // Fetch Community Missions
+  useEffect(() => {
+    if (isFriendMode && isJoined) {
+      fetch('/api/architect/missions')
+        .then(res => res.json())
+        .then(data => setCustomMissions(data.missions || []))
+        .catch(err => console.error("Failed to fetch community missions"));
+    }
+  }, [isFriendMode, isJoined]);
 
   on('role-selected', (data) => {
     setMembers(prev => prev.map(m => 
@@ -131,10 +144,15 @@ function HeistContent() {
     }
   };
 
-  const updateSettings = (newTimer, newDiff) => {
+  const updateSettings = (newTimer, newDiff, missionId) => {
     setBaseTime(newTimer);
     setMissionDifficulty(newDiff);
-    broadcast('settings-updated', { timer: newTimer, difficulty: newDiff });
+    setSelectedMissionId(missionId || selectedMissionId);
+    broadcast('settings-updated', { 
+      timer: newTimer, 
+      difficulty: newDiff, 
+      missionId: missionId || selectedMissionId 
+    });
   };
 
   const copyRoomCode = () => {
@@ -184,7 +202,11 @@ function HeistContent() {
 
   const startHeist = () => {
     if (isFriendMode) {
-      broadcast('game-start', { chapter: 0, timer: baseTime });
+      broadcast('game-start', { 
+        chapter: 0, 
+        timer: baseTime,
+        missionId: selectedMissionId
+      });
     }
     setGameState('playing');
     setTimeLeft(baseTime);
@@ -232,9 +254,9 @@ function HeistContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          xpToAdd: 2500, 
-          badgeAwarded: 'heist-specialist',
-          scenarioId: 'heist-operation-success',
+          xpToAdd: selectedMissionId === 'default' ? 2500 : 3500, 
+          badgeAwarded: selectedMissionId === 'default' ? 'heist-specialist' : 'community-conqueror',
+          scenarioId: selectedMissionId === 'default' ? 'heist-operation-success' : `custom-${selectedMissionId}`,
           category: 'Security',
           isSuccess: true
         })
@@ -245,8 +267,18 @@ function HeistContent() {
     }
   };
 
-  const scenario = heistScenarios[currentChapter];
-  const otherRoles = selectedRole ? Object.keys(scenario.roles).filter(r => r !== selectedRole) : [];
+  // Get active scenario
+  const getScenario = () => {
+    if (selectedMissionId === 'default') {
+      return heistScenarios[currentChapter];
+    }
+    const custom = customMissions.find(m => m._id === selectedMissionId);
+    if (!custom) return heistScenarios[0];
+    return custom.phases[currentChapter];
+  };
+
+  const scenario = getScenario();
+  const otherRoles = selectedRole ? Object.keys(scenario.roles || { Hacker: {}, Analyst: {}, Decoy: {} }).filter(r => r !== selectedRole) : [];
 
   return (
     <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem' }}>
@@ -366,7 +398,20 @@ function HeistContent() {
                               style={{ padding: '0.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'white' }}
                             >
                               <option value="standard">Standard Ops</option>
-                              <option value="hard">High Security (Coming Soon)</option>
+                              <option value="hard">High Security</option>
+                            </select>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem', fontWeight: 800 }}>COMMUNITY MISSION</label>
+                            <select 
+                              value={selectedMissionId}
+                              onChange={(e) => updateSettings(baseTime, missionDifficulty, e.target.value)}
+                              style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--accent-secondary)', fontWeight: 800 }}
+                            >
+                              <option value="default">OFFICIAL: The Data Vault</option>
+                              {customMissions.map(m => (
+                                <option key={m._id} value={m._id}>ARCHITECT: {m.title}</option>
+                              ))}
                             </select>
                           </div>
                         </div>
