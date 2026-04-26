@@ -99,7 +99,14 @@ export default function AdminPage() {
       const reportsData = await reportsRes.json();
       const usersData = await usersRes.json();
       const ticketsData = await ticketsRes.json();
-      const missionsData = await reportsRes.ok ? await (await fetch('/api/admin/pending-missions')).json() : { missions: [] };
+      
+      let missionsData = { missions: [] };
+      try {
+        const missionsRes = await fetch('/api/admin/pending-missions');
+        if (missionsRes.ok) missionsData = await missionsRes.json();
+      } catch (err) {
+        console.error("Missions fetch error:", err);
+      }
       
       setStats(statsData);
       setReports(reportsData);

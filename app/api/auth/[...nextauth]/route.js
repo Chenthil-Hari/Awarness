@@ -170,6 +170,12 @@ export const authOptions = {
               { email: token.email },
               { $set: { streak: currentStreak, lastLoginDate: now.toISOString() } }
             );
+          } else {
+            // Refresh last seen even if streak didn't change
+            await usersCollection.updateOne(
+              { email: token.email },
+              { $set: { lastLoginDate: now.toISOString() } }
+            );
           }
           session.user.streak = currentStreak;
 

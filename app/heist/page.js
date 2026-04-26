@@ -116,6 +116,23 @@ function HeistContent() {
     addMessage('System', `${data.senderName} has assumed the role of ${data.role}.`);
   });
 
+  // Sync state for new members
+  useEffect(() => {
+    const newMember = members.find(m => !m.synced && m.user_id !== (session?.user?.email || session?.user?.id));
+    if (newMember && isHost) {
+      // Host broadcasts current settings to everyone (including new member)
+      broadcast('settings-updated', { 
+        timer: baseTime, 
+        difficulty: missionDifficulty, 
+        missionId: selectedMissionId 
+      });
+      // Host also broadcasts their own role if selected
+      if (selectedRole) {
+        broadcast('role-selected', { role: selectedRole, senderName: session?.user?.name || 'Host' });
+      }
+    }
+  }, [members.length, isHost]);
+
   // Initialize Room
   useEffect(() => {
     if (isFriendMode && !roomCode && !isJoined) {
@@ -225,8 +242,10 @@ function HeistContent() {
       }
 
       // Wait for "Team" to finish
+      const totalPhases = selectedMissionId === 'default' ? heistScenarios.length : (customMissions.find(m => m._id === selectedMissionId)?.phases?.length || heistScenarios.length);
+      
       setTimeout(() => {
-        if (currentChapter < heistScenarios.length - 1) {
+        if (currentChapter < totalPhases - 1) {
           setGameState('phase-complete');
         } else {
           setGameState('victory');

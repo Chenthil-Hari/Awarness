@@ -67,9 +67,10 @@ export function useMultiplayer(roomCode, isEnabled) {
   const on = (event, callback) => {
     useEffect(() => {
       if (!channelRef.current) return;
-      channelRef.current.bind(event, callback);
-      return () => channelRef.current.unbind(event, callback);
-    }, [event, callback]);
+      const channel = channelRef.current;
+      channel.bind(event, callback);
+      return () => channel.unbind(event, callback);
+    }, [event, callback, isConnected]); // Re-bind when connection is ready
   };
 
   const me = members.find(m => m.user_id === (session?.user?.email || session?.user?.id));
