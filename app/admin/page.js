@@ -14,6 +14,7 @@ export default function AdminPage() {
   const [reports, setReports] = useState([]);
   const [users, setUsers] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [pendingMissions, setPendingMissions] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [broadcastSubject, setBroadcastSubject] = useState('');
   const [broadcastMessage, setBroadcastMessage] = useState('');
@@ -90,18 +91,22 @@ export default function AdminPage() {
         fetch('/api/admin/stats'),
         fetch('/api/admin/reports'),
         fetch('/api/admin/users'),
-        fetch('/api/admin/support')
+        fetch('/api/admin/support'),
+        fetch('/api/admin/pending-missions')
       ]);
       
       const statsData = await statsRes.json();
       const reportsData = await reportsRes.json();
       const usersData = await usersRes.json();
       const ticketsData = await ticketsRes.json();
+      const missionsData = await reportsRes.ok ? await (await fetch('/api/admin/pending-missions')).json() : { missions: [] };
       
       setStats(statsData);
       setReports(reportsData);
-      setUsers(usersData);
-      setTickets(ticketsData);
+      setUsers(usersData.users || []);
+      setTickets(ticketsData.tickets || []);
+      setPendingMissions(missionsData.missions || []);
+      setLoading(false);
     } catch (error) {
       console.error('Failed to fetch admin data');
     } finally {
@@ -119,6 +124,22 @@ export default function AdminPage() {
       }
     } catch (error) {
       alert('Failed to delete guide');
+    }
+  };
+
+  const handleMissionAction = async (missionId, action) => {
+    try {
+      const res = await fetch('/api/admin/approve-mission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ missionId, action })
+      });
+      if (res.ok) {
+        setPendingMissions(prev => prev.filter(m => m._id !== missionId));
+        alert(`Mission ${action}d successfully`);
+      }
+    } catch (error) {
+      alert('Action failed');
     }
   };
 
@@ -332,7 +353,7 @@ export default function AdminPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem', overflowX: 'auto' }}>
-          {['overview', 'reports', 'users', 'sandbox', 'support', 'broadcast'].map(tab => (
+          {['overview', 'reports', 'missions', 'users', 'sandbox', 'support', 'broadcast'].map(tab => (
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -395,6 +416,63 @@ export default function AdminPage() {
                 )}
               </motion.div>
             </AnimatePresence>
+          )}
+
+          {activeTab === 'missions' && (
+            <div className="grid-container" style={{ gridTemplateColumns: '1fr' }}>
+              <div className="admin-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Zap color="#f59e0b" size={20} /> MISSION MODERATION QUEUE
+                    </h3>
+                    <p style={{ fontSize: '0.8rem', color: theme === 'dark' ? '#94a3b8' : '#64748b', marginTop: '0.25rem' }}>Review community-created missions before deployment.</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {pendingMissions.length > 0 ? pendingMissions.map((mission) => (
+                    <div key={mission._id} style={{ padding: '1.5rem', borderRadius: '12px', background: theme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <h4 style={{ margin: 0, fontWeight: 800, fontSize: '1.1rem' }}>{mission.title}</h4>
+                        <p style={{ margin: '0.25rem 0', fontSize: '0.8rem', color: theme === 'dark' ? '#94a3b8' : '#64748b' }}>Creator: <span style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>{mission.creatorName}</span> • {mission.phases?.length} Phases • {mission.mode}</p>
+                        <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', lineHeight: 1.5 }}>{mission.description}</p>
+                        
+                        <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                          <p style={{ fontSize: '0.7rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Payload Overview</p>
+                          {mission.phases?.slice(0, 2).map((p, i) => (
+                            <div key={i} style={{ fontSize: '0.8rem', marginBottom: '0.25rem' }}>
+                              <span style={{ color: 'var(--accent-secondary)', fontWeight: 800 }}>P{i+1}:</span> {p.title} ({p.questions?.length} Questions)
+                            </div>
+                          ))}
+                          {mission.phases?.length > 2 && <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>...and {mission.phases.length - 2} more phases</p>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <button 
+                          onClick={() => handleMissionAction(mission._id, 'approve')}
+                          className="btn-primary" 
+                          style={{ padding: '0.5rem 1rem', background: 'var(--accent-success)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        >
+                          <CheckCircle size={14} /> APPROVE
+                        </button>
+                        <button 
+                          onClick={() => handleMissionAction(mission._id, 'reject')}
+                          style={{ padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)', border: '1px solid var(--accent-danger)', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        >
+                          <Trash2 size={14} /> REJECT
+                        </button>
+                      </div>
+                    </div>
+                  )) : (
+                    <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
+                      <Ghost size={48} style={{ opacity: 0.1, marginBottom: '1rem' }} />
+                      <p>No missions pending moderation.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           )}
 
           {activeTab === 'users' && (

@@ -35,7 +35,7 @@ export async function POST(req) {
       creatorId: user._id,
       creatorName: user.username || user.name,
       createdAt: new Date(),
-      status: 'public', // Default to public for now
+      status: 'pending', // Requires admin approval
       plays: 0,
       rating: 0
     };
