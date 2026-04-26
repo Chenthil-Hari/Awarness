@@ -207,6 +207,9 @@ export default function Navbar({ score = 0, level = 1 }) {
 
         {session ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.5rem', borderLeft: '1px solid var(--glass-border)' }}>
+            <Link href="/settings" title="Settings" style={{ display: 'flex', alignItems: 'center', color: 'var(--text-secondary)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
+              <SettingsIcon size={18} />
+            </Link>
             <div style={{ textAlign: 'right' }} className="hide-mobile hide-tablet">
               <p style={{ fontSize: '0.7rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>@{session.user.username || 'user'}</p>
             </div>
