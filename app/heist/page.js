@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Cpu, Binary, Map, Radio, AlertCircle, CheckCircle2, XCircle, ArrowRight, Timer, Terminal, Users, Play, Lock } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Shield, Cpu, Binary, Map, Radio, AlertCircle, CheckCircle2, XCircle, ArrowRight, Timer, Terminal, Users, Play, Lock, Link as LinkIcon, UserPlus } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
+import TextPressure from '../components/TextPressure/TextPressure';
 import { heistScenarios } from '../data/heistScenarios';
 
 const RoleCard = ({ role, icon: Icon, description, selected, onClick }) => (
@@ -41,7 +43,14 @@ const RoleCard = ({ role, icon: Icon, description, selected, onClick }) => (
 );
 
 export default function HeistPage() {
-  const [gameState, setGameState] = useState('briefing'); // briefing, role-select, playing, phase-complete, failed, victory
+  const searchParams = useSearchParams();
+  const isFriendMode = searchParams.get('mode') === 'friends';
+
+  const [gameState, setGameState] = useState('briefing'); // briefing, lobby, role-select, playing, phase-complete, failed, victory
+  const [roomCode, setRoomCode] = useState('');
+  const [crew, setCrew] = useState([]);
+  const [isJoined, setIsJoined] = useState(false);
+
   const [selectedRole, setSelectedRole] = useState(null);
   const [currentChapter, setCurrentChapter] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
@@ -50,6 +59,29 @@ export default function HeistPage() {
   const [answerState, setAnswerState] = useState(null); // null, correct, wrong
 
   const chatRef = useRef(null);
+
+  // Initialize Room
+  useEffect(() => {
+    if (isFriendMode && !roomCode) {
+      setRoomCode(Math.random().toString(36).substring(2, 8).toUpperCase());
+    }
+  }, [isFriendMode, roomCode]);
+
+  // Simulate Crew Joining
+  useEffect(() => {
+    if (isFriendMode && isJoined && crew.length < 2) {
+      const timer = setTimeout(() => {
+        const mockCrew = ['Operator_X', 'Ghost_Protocol'];
+        setCrew(prev => [...prev, mockCrew[prev.length]]);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isFriendMode, isJoined, crew]);
+
+  const copyRoomCode = () => {
+    navigator.clipboard.writeText(roomCode);
+    alert("Room code copied to clipboard!");
+  };
 
   // Auto-scroll chat
   useEffect(() => {
@@ -83,6 +115,7 @@ export default function HeistPage() {
       const otherRoles = Object.keys(heistScenarios[currentChapter].roles).filter(r => r !== selectedRole);
       const interval = setInterval(() => {
         const role = otherRoles[Math.floor(Math.random() * otherRoles.length)];
+        const sender = isFriendMode ? (crew[otherRoles.indexOf(role)] || role) : role;
         const msgs = [
           "Checking the perimeter...",
           "Almost through the encryption...",
@@ -91,11 +124,11 @@ export default function HeistPage() {
           "Signal is getting weak!",
           "Decrypting phase 2..."
         ];
-        addMessage(role, msgs[Math.floor(Math.random() * msgs.length)]);
+        addMessage(sender, msgs[Math.floor(Math.random() * msgs.length)]);
       }, 5000);
       return () => clearInterval(interval);
     }
-  }, [gameState, currentChapter, selectedRole]);
+  }, [gameState, currentChapter, selectedRole, isFriendMode, crew]);
 
   const addMessage = (sender, text) => {
     setMessages(prev => [...prev, { sender, text, id: Date.now() }]);
@@ -174,10 +207,108 @@ export default function HeistPage() {
                 <br /><br />
                 Success depends on everyone. If one role fails, the security team will descend on us instantly.
               </p>
-              <button onClick={() => setGameState('role-select')} className="btn-primary" style={{ width: '100%', padding: '1.5rem' }}>
-                INITIALIZE ROLE SELECTION
+              <button 
+                onClick={() => setGameState(isFriendMode ? 'lobby' : 'role-select')} 
+                className="btn-primary" 
+                style={{ width: '100%', padding: '1.5rem' }}
+              >
+                {isFriendMode ? 'INITIALIZE SECURE LOBBY' : 'INITIALIZE ROLE SELECTION'}
               </button>
             </div>
+          </motion.div>
+        )}
+
+        {gameState === 'lobby' && (
+          <motion.div 
+            key="lobby"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto', paddingTop: '4rem' }}
+          >
+            <div style={{ height: '100px', marginBottom: '2rem' }}>
+              <TextPressure text="CREW LOBBY" textColor="var(--accent-secondary)" minFontSize={80} />
+            </div>
+            
+            <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', marginBottom: '3rem', lineHeight: 1.6 }}>
+              Assemble your team. Every specialist must be synchronized for the heist to succeed.
+            </p>
+
+            <BorderGlow
+              glowColor="190 80 50"
+              backgroundColor="var(--bg-secondary)"
+              borderRadius={32}
+              animated={true}
+            >
+              <div style={{ padding: '3rem' }}>
+                {!isJoined ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    <div style={{ background: 'var(--bg-tertiary)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                      <h3 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', fontWeight: 800 }}>Secure Mission Code</h3>
+                      <div style={{ display: 'flex', gap: '1rem' }}>
+                        <div style={{ flex: 1, position: 'relative' }}>
+                          <input 
+                            type="text" 
+                            placeholder="Enter Code" 
+                            style={{ width: '100%', padding: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
+                          />
+                        </div>
+                        <button onClick={() => setIsJoined(true)} className="btn-primary" style={{ padding: '1rem 2rem', background: 'var(--accent-secondary)' }}>JOIN</button>
+                      </div>
+                      <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>OR</span>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
+                      </div>
+                      <button onClick={() => setIsJoined(true)} className="btn-secondary" style={{ width: '100%', padding: '1rem', borderColor: 'var(--accent-secondary)', color: 'var(--accent-secondary)' }}>GENERATE MISSION LINK</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Crew Synchronization</h3>
+                    <div style={{ marginBottom: '2.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                        <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem 1.5rem', borderRadius: '8px', border: '1px dashed var(--accent-secondary)', fontSize: '1.5rem', fontWeight: 900, letterSpacing: '4px', color: 'var(--accent-secondary)' }}>
+                          {roomCode}
+                        </div>
+                        <button onClick={copyRoomCode} style={{ padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}>
+                          <LinkIcon size={20} />
+                        </button>
+                      </div>
+                      
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                          <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'var(--accent-secondary)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900 }}>HOST</div>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>YOU</span>
+                        </div>
+                        {crew.map(member => (
+                          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={member} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                              <Users size={24} />
+                            </div>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{member}</span>
+                          </motion.div>
+                        ))}
+                        {Array.from({ length: 2 - crew.length }).map((_, i) => (
+                          <div key={i} style={{ width: '60px', height: '60px', borderRadius: '16px', border: '2px dashed var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                            <UserPlus size={24} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <button 
+                      disabled={crew.length < 2}
+                      onClick={() => setGameState('role-select')} 
+                      className="btn-primary" 
+                      style={{ background: 'var(--accent-secondary)', padding: '1.5rem 3rem', fontSize: '1.2rem', opacity: (crew.length < 2) ? 0.5 : 1 }}
+                    >
+                      {crew.length < 2 ? 'WAITING FOR SPECIALISTS...' : 'ASSIGN ROLES'}
+                    </button>
+                  </>
+                )}
+              </div>
+            </BorderGlow>
           </motion.div>
         )}
 
@@ -282,7 +413,7 @@ export default function HeistPage() {
                   {otherRoles.map((role, idx) => (
                     <div key={role}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.5rem', fontWeight: 600 }}>
-                        <span>{role}</span>
+                        <span>{isFriendMode ? (crew[idx] || role) : role}</span>
                         <span>{Math.floor(idx === 0 ? teamProgress.role1 : teamProgress.role2)}%</span>
                       </div>
                       <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>

@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Skull, Trophy, Timer, AlertTriangle, ShieldCheck, ArrowRight, Zap, Heart, Loader2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
+import { Users, Skull, Trophy, Timer, AlertTriangle, ShieldCheck, ArrowRight, Zap, Heart, Loader2, Link as LinkIcon, UserPlus, Check } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
@@ -11,7 +12,14 @@ import { survivalScenarios } from '../data/survivalScenarios';
 
 export default function SurvivalMode() {
   const { data: session, update } = useSession();
+  const searchParams = useSearchParams();
+  const isFriendMode = searchParams.get('mode') === 'friends';
+
   const [gameState, setGameState] = useState('lobby'); // lobby, playing, eliminating, won, eliminated
+  const [roomCode, setRoomCode] = useState('');
+  const [friends, setFriends] = useState([]);
+  const [isJoined, setIsJoined] = useState(false);
+  
   const [round, setRound] = useState(0);
   const [players, setPlayers] = useState(100);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -19,8 +27,23 @@ export default function SurvivalMode() {
   const [eliminationText, setEliminationText] = useState('');
   const [isWinning, setIsWinning] = useState(false);
 
-  // Sound effects simulation (visual)
-  const [heartbeatActive, setHeartbeatActive] = useState(false);
+  // Initialize Room
+  useEffect(() => {
+    if (isFriendMode && !roomCode) {
+      setRoomCode(Math.random().toString(36).substring(2, 8).toUpperCase());
+    }
+  }, [isFriendMode, roomCode]);
+
+  // Simulate Friends Joining
+  useEffect(() => {
+    if (isFriendMode && isJoined && friends.length < 3) {
+      const timer = setTimeout(() => {
+        const mockFriends = ['Alex_Cyber', 'Sarah_Dev', 'Matrix_99'];
+        setFriends(prev => [...prev, mockFriends[prev.length]]);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isFriendMode, isJoined, friends]);
 
   const startGame = () => {
     setGameState('playing');
@@ -29,6 +52,14 @@ export default function SurvivalMode() {
     setTimeLeft(15);
     setSelectedOption(null);
   };
+
+  const copyRoomCode = () => {
+    navigator.clipboard.writeText(roomCode);
+    alert("Room code copied to clipboard!");
+  };
+
+  // Sound effects simulation (visual)
+  const [heartbeatActive, setHeartbeatActive] = useState(false);
 
   // Timer logic
   useEffect(() => {
@@ -128,7 +159,7 @@ export default function SurvivalMode() {
             <h1 style={{ fontSize: '1.5rem', margin: 0, fontWeight: 900 }}>Survival Mode: <span style={{ color: 'var(--accent-danger)' }}>The Gauntlet</span></h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
               <Users size={16} />
-              <span>{players} Players Remaining</span>
+              <span>{players} Players {isFriendMode ? `(${friends.length + 1} Friends)` : ''} Remaining</span>
             </div>
           </div>
         </div>
@@ -165,12 +196,13 @@ export default function SurvivalMode() {
             style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto', paddingTop: '4rem' }}
           >
             <div style={{ height: '100px', marginBottom: '2rem' }}>
-              <TextPressure text="SURVIVAL" textColor="var(--accent-danger)" minFontSize={80} />
+              <TextPressure text={isFriendMode ? "FRIEND LOBBY" : "SURVIVAL"} textColor="var(--accent-danger)" minFontSize={80} />
             </div>
             
             <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', marginBottom: '3rem', lineHeight: 1.6 }}>
-              100 enter. One mistake means instant elimination. <br />
-              Be the last one standing to claim the <span style={{ color: 'var(--accent-warning)', fontWeight: 800 }}>Legendary Survivor Badge</span> and 5,000 XP.
+              {isFriendMode 
+                ? "Compete against your crew. Only one of you can be the ultimate survivor." 
+                : "100 enter. One mistake means instant elimination. Outlast the world."}
             </p>
 
             <BorderGlow
@@ -180,11 +212,76 @@ export default function SurvivalMode() {
               animated={true}
             >
               <div style={{ padding: '3rem' }}>
-                <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Ready to risk it all?</h3>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Joining global lobby... (100/100 slots filled)</p>
-                <button onClick={startGame} className="btn-primary" style={{ background: 'var(--accent-danger)', padding: '1.5rem 3rem', fontSize: '1.2rem' }}>
-                  ENTER THE ARENA
-                </button>
+                {isFriendMode && !isJoined ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    <div style={{ background: 'var(--bg-tertiary)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                      <h3 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', fontWeight: 800 }}>Create or Join Room</h3>
+                      <div style={{ display: 'flex', gap: '1rem' }}>
+                        <div style={{ flex: 1, position: 'relative' }}>
+                          <input 
+                            type="text" 
+                            placeholder="Enter Code" 
+                            style={{ width: '100%', padding: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
+                          />
+                        </div>
+                        <button onClick={() => setIsJoined(true)} className="btn-primary" style={{ padding: '1rem 2rem' }}>JOIN</button>
+                      </div>
+                      <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>OR</span>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
+                      </div>
+                      <button onClick={() => setIsJoined(true)} className="btn-secondary" style={{ width: '100%', padding: '1rem' }}>CREATE PRIVATE ROOM</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{isFriendMode ? 'Room Ready' : 'Ready to risk it all?'}</h3>
+                    {isFriendMode ? (
+                      <div style={{ marginBottom: '2.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                          <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem 1.5rem', borderRadius: '8px', border: '1px dashed var(--accent-danger)', fontSize: '1.5rem', fontWeight: 900, letterSpacing: '4px' }}>
+                            {roomCode}
+                          </div>
+                          <button onClick={copyRoomCode} style={{ padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}>
+                            <LinkIcon size={20} />
+                          </button>
+                        </div>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--accent-primary)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900 }}>YOU</div>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>HOST</span>
+                          </div>
+                          {friends.map(f => (
+                            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={f} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                              <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                                <Users size={20} />
+                              </div>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{f}</span>
+                            </motion.div>
+                          ))}
+                          {Array.from({ length: 3 - friends.length }).map((_, i) => (
+                            <div key={i} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px dashed var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                              <UserPlus size={20} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Joining global lobby... (100/100 slots filled)</p>
+                    )}
+                    
+                    <button 
+                      disabled={isFriendMode && friends.length === 0}
+                      onClick={startGame} 
+                      className="btn-primary" 
+                      style={{ background: 'var(--accent-danger)', padding: '1.5rem 3rem', fontSize: '1.2rem', opacity: (isFriendMode && friends.length === 0) ? 0.5 : 1 }}
+                    >
+                      {isFriendMode && friends.length === 0 ? 'WAITING FOR CREW...' : 'ENTER THE ARENA'}
+                    </button>
+                  </>
+                )}
               </div>
             </BorderGlow>
           </motion.div>

@@ -216,7 +216,10 @@ export default function Home() {
                 </div>
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>100 players enter, one survives. Outlast the global lobby in this high-stakes mode.</p>
-              <Link href="/survival" className="btn-primary" style={{ background: 'var(--accent-danger)', padding: '0.8rem', fontSize: '1rem', width: '100%' }}>Enter Arena</Link>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <Link href="/survival" className="btn-primary" style={{ background: 'var(--accent-danger)', padding: '0.8rem', fontSize: '0.95rem', flex: 1, textAlign: 'center' }}>Enter Arena</Link>
+                <Link href="/survival?mode=friends" className="btn-secondary" style={{ padding: '0.8rem', fontSize: '0.95rem', flex: 1, textAlign: 'center', borderColor: 'var(--accent-danger)', color: 'var(--accent-danger)' }}>Play with Friends</Link>
+              </div>
             </div>
           </BorderGlow>
 
@@ -240,7 +243,10 @@ export default function Home() {
                 </div>
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>Coordinate with a team of specialists to breach the Void Syndicate's data vault.</p>
-              <Link href="/heist" className="btn-primary" style={{ background: 'var(--accent-secondary)', padding: '0.8rem', fontSize: '1rem', width: '100%' }}>Start Operation</Link>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <Link href="/heist" className="btn-primary" style={{ background: 'var(--accent-secondary)', padding: '0.8rem', fontSize: '0.95rem', flex: 1, textAlign: 'center' }}>Start Operation</Link>
+                <Link href="/heist?mode=friends" className="btn-secondary" style={{ padding: '0.8rem', fontSize: '0.95rem', flex: 1, textAlign: 'center', borderColor: 'var(--accent-secondary)', color: 'var(--accent-secondary)' }}>Invite Crew</Link>
+              </div>
             </div>
           </BorderGlow>
         </div>
