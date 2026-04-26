@@ -5,6 +5,7 @@ import { Shield, TrendingUp, Users, ArrowRight, CheckCircle2, Play, Zap, Award }
 import Link from 'next/link';
 import Image from 'next/image';
 import BorderGlow from './BorderGlow/BorderGlow';
+import TextPressure from './TextPressure/TextPressure';
 
 const features = [
   {
@@ -75,6 +76,19 @@ export default function LandingPage() {
               <span>THE FUTURE OF LEARNING IS HERE</span>
             </div>
             
+            <div style={{ position: 'relative', height: '100px', width: '100%', marginBottom: '0.5rem', marginLeft: '-5px' }}>
+              <TextPressure
+                text="MASTER THE UNSEEN"
+                flex={true}
+                alpha={false}
+                stroke={false}
+                width={true}
+                weight={true}
+                italic={true}
+                textColor="var(--text-primary)"
+                minFontSize={64}
+              />
+            </div>
             <h1 style={{ 
               fontSize: '4.5rem', 
               fontWeight: 900, 
@@ -82,7 +96,6 @@ export default function LandingPage() {
               marginBottom: '1.5rem',
               letterSpacing: '-0.02em'
             }}>
-              Master the Unseen <br />
               <span className="gradient-text">Real-World Skills</span>
             </h1>
             

@@ -9,6 +9,7 @@ import SimulationLottie from '../components/SimulationLottie';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThumbsUp, Plus, Search, Send, X, MessageSquare, Trash2, Flag, AlertCircle, Award, Video, PlayCircle, CornerDownRight, User, Loader2 } from 'lucide-react';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
+import TextPressure from '../components/TextPressure/TextPressure';
 
 function CommentItem({ comment, onReply, isReply = false }) {
   return (
@@ -323,7 +324,19 @@ function WikiContent() {
           <div className="flex-center" style={{ marginBottom: '1rem' }}>
             <SimulationLottie width={220} height={220} />
           </div>
-          <h1 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-2px' }}>Learning <span className="gradient-text">Hub</span></h1>
+          <div style={{ position: 'relative', height: '120px', width: '100%', maxWidth: '900px', margin: '0 auto -1rem' }}>
+            <TextPressure
+              text="LEARNING HUB"
+              flex={true}
+              alpha={false}
+              stroke={false}
+              width={true}
+              weight={true}
+              italic={true}
+              textColor="var(--text-primary)"
+              minFontSize={48}
+            />
+          </div>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto', fontWeight: 500 }}>
             Master simulations with community strategies, videos, and survival guides.
           </p>
