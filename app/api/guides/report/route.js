@@ -40,7 +40,7 @@ export async function POST(req) {
 
     return NextResponse.json({ message: 'Report submitted successfully' }, { status: 201 });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Failed to submit report' }, { status: 500 });
+    console.error('Report Submission Error:', error);
+    return NextResponse.json({ error: error.message || 'Failed to submit report' }, { status: 500 });
   }
 }
