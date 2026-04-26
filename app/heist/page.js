@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Shield, Cpu, Binary, Map, Radio, AlertCircle, CheckCircle2, XCircle, ArrowRight, Timer, Terminal, Users, Play, Lock, Link as LinkIcon, UserPlus } from 'lucide-react';
+import { Shield, Cpu, Binary, Radio, AlertCircle, CheckCircle2, XCircle, ArrowRight, Timer, Terminal, Users, Play, Lock, Link as LinkIcon, UserPlus, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
@@ -46,7 +46,7 @@ const RoleCard = ({ role, icon: Icon, description, selected, onClick }) => (
 );
 
 function HeistContent() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const searchParams = useSearchParams();
   const isFriendMode = searchParams.get('mode') === 'friends';
 
@@ -54,12 +54,15 @@ function HeistContent() {
   const [roomCode, setRoomCode] = useState('');
   const [inputCode, setInputCode] = useState('');
   const [isJoined, setIsJoined] = useState(false);
+  const [isHost, setIsHost] = useState(false);
+  const [missionDifficulty, setMissionDifficulty] = useState('standard');
 
   const { members, broadcast, on } = useMultiplayer(roomCode, isFriendMode && isJoined);
 
   const [selectedRole, setSelectedRole] = useState(null);
   const [currentChapter, setCurrentChapter] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
+  const [baseTime, setBaseTime] = useState(30);
   const [teamProgress, setTeamProgress] = useState({ role1: 0, role2: 0 });
   const [messages, setMessages] = useState([]);
   const [answerState, setAnswerState] = useState(null); // null, correct, wrong
@@ -67,15 +70,16 @@ function HeistContent() {
   const chatRef = useRef(null);
 
   // Multiplayer Event Listeners
-  on('game-start', () => {
+  on('game-start', (data) => {
     setGameState('playing');
-    setTimeLeft(30);
+    setTimeLeft(data.timer || 30);
+    setBaseTime(data.timer || 30);
     setTeamProgress({ role1: 0, role2: 0 });
     setMessages([{ sender: 'System', text: 'CONNECTION ESTABLISHED. MISSION START.', id: Date.now() }]);
   });
 
   on('progress-update', (data) => {
-    if (data.senderId !== (searchParams.get('userId') || 'me')) {
+    if (data.senderId !== (session?.user?.email || session?.user?.id)) {
       setTeamProgress(prev => ({
         ...prev,
         [data.role]: data.progress
@@ -85,6 +89,11 @@ function HeistContent() {
 
   on('new-message', (data) => {
     addMessage(data.sender, data.text);
+  });
+
+  on('settings-updated', (data) => {
+    setBaseTime(data.timer);
+    setMissionDifficulty(data.difficulty);
   });
 
   // Initialize Room
@@ -98,6 +107,7 @@ function HeistContent() {
     if (inputCode.trim()) {
       setRoomCode(inputCode.trim().toUpperCase());
       setIsJoined(true);
+      setIsHost(false);
     } else {
       alert("Please enter a mission code.");
     }
@@ -105,6 +115,19 @@ function HeistContent() {
 
   const handleCreate = () => {
     setIsJoined(true);
+    setIsHost(true);
+  };
+
+  const handleKick = (userId) => {
+    if (confirm("Are you sure you want to remove this operative?")) {
+      broadcast('kicked', { userId });
+    }
+  };
+
+  const updateSettings = (newTimer, newDiff) => {
+    setBaseTime(newTimer);
+    setMissionDifficulty(newDiff);
+    broadcast('settings-updated', { timer: newTimer, difficulty: newDiff });
   };
 
   const copyRoomCode = () => {
@@ -146,10 +169,10 @@ function HeistContent() {
 
   const startHeist = () => {
     if (isFriendMode) {
-      broadcast('game-start', { chapter: 0 });
+      broadcast('game-start', { chapter: 0, timer: baseTime });
     }
     setGameState('playing');
-    setTimeLeft(30);
+    setTimeLeft(baseTime);
     setTeamProgress({ role1: 0, role2: 0 });
     setMessages([{ sender: 'System', text: 'CONNECTION ESTABLISHED. MISSION START.', id: Date.now() }]);
   };
@@ -170,6 +193,7 @@ function HeistContent() {
           setGameState('phase-complete');
         } else {
           setGameState('victory');
+          handleVictory();
         }
       }, 2000);
     } else {
@@ -182,9 +206,28 @@ function HeistContent() {
   const nextPhase = () => {
     setCurrentChapter(prev => prev + 1);
     setGameState('playing');
-    setTimeLeft(30);
+    setTimeLeft(baseTime);
     setTeamProgress({ role1: 0, role2: 0 });
     setAnswerState(null);
+  };
+
+  const handleVictory = async () => {
+    try {
+      await fetch('/api/user/complete-simulation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          xpToAdd: 2500, 
+          badgeAwarded: 'heist-specialist',
+          scenarioId: 'heist-operation-success',
+          category: 'Security',
+          isSuccess: true
+        })
+      });
+      update();
+    } catch (e) {
+      console.error("Failed to save heist progress");
+    }
   };
 
   const scenario = heistScenarios[currentChapter];
@@ -286,6 +329,35 @@ function HeistContent() {
                 ) : (
                   <>
                     <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Crew Synchronization</h3>
+                    
+                    {isHost && (
+                      <div style={{ background: 'rgba(8, 145, 178, 0.1)', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', border: '1px solid var(--accent-secondary)', textAlign: 'left' }}>
+                        <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--accent-secondary)' }}>HOST SETTINGS</h4>
+                        <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+                          <div>
+                            <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem', fontWeight: 800 }}>TASK TIMER (SECONDS)</label>
+                            <input 
+                              type="number" 
+                              value={baseTime} 
+                              onChange={(e) => updateSettings(parseInt(e.target.value) || 30, missionDifficulty)}
+                              style={{ width: '100px', padding: '0.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'white' }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem', fontWeight: 800 }}>DIFFICULTY</label>
+                            <select 
+                              value={missionDifficulty}
+                              onChange={(e) => updateSettings(baseTime, e.target.value)}
+                              style={{ padding: '0.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'white' }}
+                            >
+                              <option value="standard">Standard Ops</option>
+                              <option value="hard">High Security (Coming Soon)</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div style={{ marginBottom: '2.5rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
                         <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem 1.5rem', borderRadius: '8px', border: '1px dashed var(--accent-secondary)', fontSize: '1.5rem', fontWeight: 900, letterSpacing: '4px', color: 'var(--accent-secondary)' }}>
@@ -306,13 +378,21 @@ function HeistContent() {
                           </div>
                           <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>YOU</span>
                         </div>
-                        {members.filter(m => m.name !== (session?.user?.name || 'HOST')).map(member => (
-                          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={member.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                        {members.filter(m => m.user_id !== (session?.user?.email || session?.user?.id)).map(member => (
+                          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={member.user_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                             <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', position: 'relative' }}>
                               <Users size={24} />
                               <div style={{ position: 'absolute', top: -10, right: -10, background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '50%', width: '24px', height: '24px', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontWeight: 900 }}>
                                 L{calculateLevel(member.xp || 0)}
                               </div>
+                              {isHost && (
+                                <button 
+                                  onClick={() => handleKick(member.user_id)}
+                                  style={{ position: 'absolute', bottom: -5, right: -5, background: 'var(--accent-danger)', borderRadius: '50%', width: '20px', height: '20px', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                >
+                                  <X size={12} />
+                                </button>
+                              )}
                             </div>
                             <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{member.name}</span>
                           </motion.div>
@@ -325,14 +405,20 @@ function HeistContent() {
                       </div>
                     </div>
                     
-                    <button 
-                      disabled={members.length < 2}
-                      onClick={() => setGameState('role-select')} 
-                      className="btn-primary" 
-                      style={{ background: 'var(--accent-secondary)', padding: '1.5rem 3rem', fontSize: '1.2rem', opacity: (members.length < 2) ? 0.5 : 1 }}
-                    >
-                      {members.length < 2 ? 'WAITING FOR SPECIALISTS...' : 'ASSIGN ROLES'}
-                    </button>
+                    {isHost ? (
+                      <button 
+                        disabled={members.length < 2}
+                        onClick={() => setGameState('role-select')} 
+                        className="btn-primary" 
+                        style={{ background: 'var(--accent-secondary)', padding: '1.5rem 3rem', fontSize: '1.2rem', opacity: (members.length < 2) ? 0.5 : 1 }}
+                      >
+                        {members.length < 2 ? 'WAITING FOR SPECIALISTS...' : 'ASSIGN ROLES'}
+                      </button>
+                    ) : (
+                      <div style={{ color: 'var(--text-secondary)', fontStyle: 'italic', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '8px' }}>
+                        Waiting for Host to begin mission...
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -441,7 +527,7 @@ function HeistContent() {
                   {otherRoles.map((role, idx) => (
                     <div key={role}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.5rem', fontWeight: 600 }}>
-                        <span>{isFriendMode ? (members[idx + 1]?.name || role) : role}</span>
+                        <span>{isFriendMode ? (members.filter(m => m.user_id !== (session?.user?.email || session?.user?.id))[idx]?.name || role) : role}</span>
                         <span>{Math.floor(idx === 0 ? teamProgress.role1 : teamProgress.role2)}%</span>
                       </div>
                       <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
@@ -546,7 +632,7 @@ function HeistContent() {
                     <div style={{ fontSize: '0.8rem', fontWeight: 800 }}>CASUALTIES</div>
                   </div>
                 </div>
-                <button onClick={() => window.location.href='/dashboard'} className="btn-primary" style={{ width: '100%' }}>
+                <button onClick={() => window.location.href='/'} className="btn-primary" style={{ width: '100%' }}>
                   RETURN TO SAFEhouse
                 </button>
               </div>

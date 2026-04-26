@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { getPusherClient } from '@/lib/pusher';
 
 export function useMultiplayer(roomCode, isEnabled) {
+  const { data: session } = useSession();
   const [members, setMembers] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const pusherRef = useRef(null);
@@ -32,11 +34,18 @@ export function useMultiplayer(roomCode, isEnabled) {
       setMembers((prev) => prev.filter((m) => m.name !== member.info.name));
     });
 
+    channel.bind('kicked', (data) => {
+      if (data.userId === (session?.user?.email || session?.user?.id)) {
+        alert("You have been removed from the lobby by the host.");
+        window.location.href = '/';
+      }
+    });
+
     return () => {
       channel.unbind_all();
       pusher.unsubscribe(channelName);
     };
-  }, [roomCode, isEnabled]);
+  }, [roomCode, isEnabled, session]);
 
   const broadcast = async (event, data) => {
     if (!roomCode) return;
@@ -47,7 +56,7 @@ export function useMultiplayer(roomCode, isEnabled) {
         body: JSON.stringify({
           channel: `presence-room-${roomCode}`,
           event,
-          data,
+          data: { ...data, senderId: session?.user?.email || session?.user?.id },
         }),
       });
     } catch (err) {
@@ -63,5 +72,7 @@ export function useMultiplayer(roomCode, isEnabled) {
     }, [event, callback]);
   };
 
-  return { members, isConnected, broadcast, on };
+  const me = members.find(m => m.user_id === (session?.user?.email || session?.user?.id));
+
+  return { members, isConnected, broadcast, on, me };
 }

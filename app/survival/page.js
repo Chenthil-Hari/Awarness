@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import { Users, Skull, Trophy, Timer, AlertTriangle, ShieldCheck, ArrowRight, Zap, Heart, Loader2, Link as LinkIcon, UserPlus, Check } from 'lucide-react';
+import { Users, Skull, Trophy, Timer, AlertTriangle, ShieldCheck, ArrowRight, Zap, Heart, Loader2, Link as LinkIcon, UserPlus, Check, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
@@ -21,6 +21,7 @@ function SurvivalContent() {
   const [roomCode, setRoomCode] = useState('');
   const [inputCode, setInputCode] = useState('');
   const [isJoined, setIsJoined] = useState(false);
+  const [isHost, setIsHost] = useState(false);
   
   const { members, broadcast, on } = useMultiplayer(roomCode, isFriendMode && isJoined);
 
@@ -28,6 +29,7 @@ function SurvivalContent() {
   const [players, setPlayers] = useState(100);
   const [selectedOption, setSelectedOption] = useState(null);
   const [timeLeft, setTimeLeft] = useState(15);
+  const [baseTime, setBaseTime] = useState(15);
   const [eliminationText, setEliminationText] = useState('');
   const [isWinning, setIsWinning] = useState(false);
   const [friendEliminations, setFriendEliminations] = useState([]);
@@ -36,12 +38,16 @@ function SurvivalContent() {
   const [heartbeatActive, setHeartbeatActive] = useState(false);
 
   // Multiplayer Event Listeners
-  on('game-start', () => {
-    startGame();
+  on('game-start', (data) => {
+    startGame(data.timer || 15);
   });
 
   on('player-eliminated', (data) => {
     setFriendEliminations(prev => [...prev, data.sender]);
+  });
+
+  on('settings-updated', (data) => {
+    setBaseTime(data.timer);
   });
 
   // Initialize Room
@@ -55,6 +61,7 @@ function SurvivalContent() {
     if (inputCode.trim()) {
       setRoomCode(inputCode.trim().toUpperCase());
       setIsJoined(true);
+      setIsHost(false);
     } else {
       alert("Please enter a room code.");
     }
@@ -62,16 +69,29 @@ function SurvivalContent() {
 
   const handleCreate = () => {
     setIsJoined(true);
+    setIsHost(true);
   };
 
-  const startGame = () => {
-    if (isFriendMode && gameState === 'lobby') {
-      broadcast('game-start', { startedAt: Date.now() });
+  const handleKick = (userId) => {
+    if (confirm("Are you sure you want to remove this player?")) {
+      broadcast('kicked', { userId });
+    }
+  };
+
+  const updateSettings = (newTimer) => {
+    setBaseTime(newTimer);
+    broadcast('settings-updated', { timer: newTimer });
+  };
+
+  const startGame = (timerOverride) => {
+    const finalTimer = timerOverride || baseTime;
+    if (isFriendMode && gameState === 'lobby' && isHost && !timerOverride) {
+      broadcast('game-start', { startedAt: Date.now(), timer: finalTimer });
     }
     setGameState('playing');
     setRound(0);
     setPlayers(100);
-    setTimeLeft(15);
+    setTimeLeft(finalTimer);
     setSelectedOption(null);
     setFriendEliminations([]);
   };
@@ -119,7 +139,7 @@ function SurvivalContent() {
               if (round < survivalScenarios.length - 1) {
                 setRound(prevRound => prevRound + 1);
                 setGameState('playing');
-                setTimeLeft(15);
+                setTimeLeft(baseTime);
                 setSelectedOption(null);
               } else {
                 setGameState('won');
@@ -144,10 +164,17 @@ function SurvivalContent() {
   const handleVictory = async () => {
     setIsWinning(true);
     try {
-      await fetch('/api/user/badges', {
+      // Correct XP saving
+      await fetch('/api/user/complete-simulation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ badgeId: 'survival-champion', xp: 5000 })
+        body: JSON.stringify({ 
+          xpToAdd: 5000, 
+          badgeAwarded: 'survival-champion',
+          scenarioId: 'gauntlet-victory',
+          category: 'Survival',
+          isSuccess: true
+        })
       });
       update();
     } catch (e) {
@@ -257,6 +284,22 @@ function SurvivalContent() {
                 ) : (
                   <>
                     <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{isFriendMode ? 'Room Ready' : 'Ready to risk it all?'}</h3>
+                    
+                    {isFriendMode && isHost && (
+                      <div style={{ background: 'rgba(220, 38, 38, 0.1)', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', border: '1px solid var(--accent-danger)', textAlign: 'left' }}>
+                        <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--accent-danger)' }}>HOST SETTINGS</h4>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem', fontWeight: 800 }}>ROUND TIMER (SECONDS)</label>
+                          <input 
+                            type="number" 
+                            value={baseTime} 
+                            onChange={(e) => updateSettings(parseInt(e.target.value) || 15)}
+                            style={{ width: '100px', padding: '0.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'white' }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
                     {isFriendMode ? (
                       <div style={{ marginBottom: '2.5rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
@@ -278,13 +321,21 @@ function SurvivalContent() {
                             </div>
                             <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>HOST</span>
                           </div>
-                          {members.filter(m => m.name !== (session?.user?.name || 'HOST')).map(f => (
-                            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={f.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                          {members.filter(m => m.user_id !== (session?.user?.email || session?.user?.id)).map(f => (
+                            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={f.user_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                               <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', position: 'relative' }}>
                                 <Users size={20} />
                                 <div style={{ position: 'absolute', top: -10, right: -10, background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '50%', width: '24px', height: '24px', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontWeight: 900 }}>
                                   L{calculateLevel(f.xp || 0)}
                                 </div>
+                                {isHost && (
+                                  <button 
+                                    onClick={() => handleKick(f.user_id)}
+                                    style={{ position: 'absolute', bottom: -5, right: -5, background: 'var(--accent-danger)', borderRadius: '50%', width: '18px', height: '18px', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                  >
+                                    <X size={10} />
+                                  </button>
+                                )}
                               </div>
                               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{f.name}</span>
                             </motion.div>
@@ -300,14 +351,20 @@ function SurvivalContent() {
                       <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Joining global lobby... (100/100 slots filled)</p>
                     )}
                     
-                    <button 
-                      disabled={isFriendMode && members.length === 1}
-                      onClick={startGame} 
-                      className="btn-primary" 
-                      style={{ background: 'var(--accent-danger)', padding: '1.5rem 3rem', fontSize: '1.2rem', opacity: (isFriendMode && members.length === 1) ? 0.5 : 1 }}
-                    >
-                      {isFriendMode && members.length === 1 ? 'WAITING FOR CREW...' : 'ENTER THE ARENA'}
-                    </button>
+                    {(!isFriendMode || isHost) ? (
+                      <button 
+                        disabled={isFriendMode && members.length === 1}
+                        onClick={() => startGame()} 
+                        className="btn-primary" 
+                        style={{ background: 'var(--accent-danger)', padding: '1.5rem 3rem', fontSize: '1.2rem', opacity: (isFriendMode && members.length === 1) ? 0.5 : 1 }}
+                      >
+                        {isFriendMode && members.length === 1 ? 'WAITING FOR CREW...' : 'ENTER THE ARENA'}
+                      </button>
+                    ) : (
+                      <div style={{ color: 'var(--text-secondary)', fontStyle: 'italic', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '8px' }}>
+                        Waiting for Host to start the gauntlet...
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -488,7 +545,7 @@ function SurvivalContent() {
                   </div>
                 </div>
 
-                <button onClick={() => window.location.href='/dashboard'} className="btn-primary" style={{ width: '100%' }}>
+                <button onClick={() => window.location.href='/'} className="btn-primary" style={{ width: '100%' }}>
                   CLAIM REWARDS & EXIT
                 </button>
               </div>
