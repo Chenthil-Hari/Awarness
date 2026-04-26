@@ -165,7 +165,7 @@ export default function Home() {
                 <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem', fontWeight: 800 }}>Active Scenarios</h2>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Tailored to your current level.</p>
               </div>
-              <button style={{ color: 'var(--accent-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>View All</button>
+              <Link href="/scenarios" style={{ color: 'var(--accent-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>View All</Link>
             </div>
 
             <div style={{ 
@@ -173,7 +173,7 @@ export default function Home() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', 
               gap: '1.5rem' 
             }}>
-              {scenarios.map((scenario) => (
+              {scenarios.slice(0, 6).map((scenario) => (
                 <ScenarioCard 
                   key={scenario.id} 
                   scenario={scenario} 
