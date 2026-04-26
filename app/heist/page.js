@@ -7,6 +7,7 @@ import { Shield, Cpu, Binary, Map, Radio, AlertCircle, CheckCircle2, XCircle, Ar
 import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
+import { useMultiplayer } from '@/hooks/useMultiplayer';
 import { heistScenarios } from '../data/heistScenarios';
 
 const RoleCard = ({ role, icon: Icon, description, selected, onClick }) => (
@@ -48,8 +49,9 @@ function HeistContent() {
 
   const [gameState, setGameState] = useState('briefing'); // briefing, lobby, role-select, playing, phase-complete, failed, victory
   const [roomCode, setRoomCode] = useState('');
-  const [crew, setCrew] = useState([]);
   const [isJoined, setIsJoined] = useState(false);
+
+  const { members, broadcast, on } = useMultiplayer(roomCode, isFriendMode && isJoined);
 
   const [selectedRole, setSelectedRole] = useState(null);
   const [currentChapter, setCurrentChapter] = useState(0);
@@ -60,23 +62,33 @@ function HeistContent() {
 
   const chatRef = useRef(null);
 
+  // Multiplayer Event Listeners
+  on('game-start', () => {
+    setGameState('playing');
+    setTimeLeft(30);
+    setTeamProgress({ role1: 0, role2: 0 });
+    setMessages([{ sender: 'System', text: 'CONNECTION ESTABLISHED. MISSION START.', id: Date.now() }]);
+  });
+
+  on('progress-update', (data) => {
+    if (data.senderId !== (searchParams.get('userId') || 'me')) {
+      setTeamProgress(prev => ({
+        ...prev,
+        [data.role]: data.progress
+      }));
+    }
+  });
+
+  on('new-message', (data) => {
+    addMessage(data.sender, data.text);
+  });
+
   // Initialize Room
   useEffect(() => {
     if (isFriendMode && !roomCode) {
       setRoomCode(Math.random().toString(36).substring(2, 8).toUpperCase());
     }
   }, [isFriendMode, roomCode]);
-
-  // Simulate Crew Joining
-  useEffect(() => {
-    if (isFriendMode && isJoined && crew.length < 2) {
-      const timer = setTimeout(() => {
-        const mockCrew = ['Operator_X', 'Ghost_Protocol'];
-        setCrew(prev => [...prev, mockCrew[prev.length]]);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isFriendMode, isJoined, crew]);
 
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode);
@@ -97,48 +109,32 @@ function HeistContent() {
       timer = setInterval(() => {
         setTimeLeft(prev => prev - 1);
         
-        // Random team progress
-        setTeamProgress(prev => ({
-          role1: Math.min(100, prev.role1 + Math.random() * 5),
-          role2: Math.min(100, prev.role2 + Math.random() * 5)
-        }));
+        // In multiplayer, progress is real. Only simulate if solo.
+        if (!isFriendMode) {
+          setTeamProgress(prev => ({
+            role1: Math.min(100, prev.role1 + Math.random() * 5),
+            role2: Math.min(100, prev.role2 + Math.random() * 5)
+          }));
+        }
       }, 1000);
     } else if (timeLeft === 0 && gameState === 'playing') {
       setGameState('failed');
     }
     return () => clearInterval(timer);
-  }, [gameState, timeLeft]);
-
-  // Simulated Team Comms
-  useEffect(() => {
-    if (gameState === 'playing') {
-      const otherRoles = Object.keys(heistScenarios[currentChapter].roles).filter(r => r !== selectedRole);
-      const interval = setInterval(() => {
-        const role = otherRoles[Math.floor(Math.random() * otherRoles.length)];
-        const sender = isFriendMode ? (crew[otherRoles.indexOf(role)] || role) : role;
-        const msgs = [
-          "Checking the perimeter...",
-          "Almost through the encryption...",
-          "I've got eyes on the guards.",
-          "Keep it steady, we're close.",
-          "Signal is getting weak!",
-          "Decrypting phase 2..."
-        ];
-        addMessage(sender, msgs[Math.floor(Math.random() * msgs.length)]);
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [gameState, currentChapter, selectedRole, isFriendMode, crew]);
+  }, [gameState, timeLeft, isFriendMode]);
 
   const addMessage = (sender, text) => {
     setMessages(prev => [...prev, { sender, text, id: Date.now() }]);
   };
 
   const startHeist = () => {
+    if (isFriendMode) {
+      broadcast('game-start', { chapter: 0 });
+    }
     setGameState('playing');
     setTimeLeft(30);
     setTeamProgress({ role1: 0, role2: 0 });
-    setMessages([{ sender: 'System', text: 'CONNECTION ESTABLISHED. MISSION START.', id: 1 }]);
+    setMessages([{ sender: 'System', text: 'CONNECTION ESTABLISHED. MISSION START.', id: Date.now() }]);
   };
 
   const handleAnswer = (option) => {
@@ -146,6 +142,11 @@ function HeistContent() {
       setAnswerState('correct');
       addMessage('System', 'TASK COMPLETE. SYNCHRONIZING WITH TEAM...');
       
+      // Broadcast progress in multiplayer
+      if (isFriendMode) {
+        broadcast('progress-update', { role: selectedRole, progress: 100 });
+      }
+
       // Wait for "Team" to finish
       setTimeout(() => {
         if (currentChapter < heistScenarios.length - 1) {
@@ -281,15 +282,15 @@ function HeistContent() {
                           <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'var(--accent-secondary)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900 }}>HOST</div>
                           <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>YOU</span>
                         </div>
-                        {crew.map(member => (
-                          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={member} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                        {members.filter(m => m.name !== (searchParams.get('userName') || 'HOST')).map(member => (
+                          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={member.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                             <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                               <Users size={24} />
                             </div>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{member}</span>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{member.name}</span>
                           </motion.div>
                         ))}
-                        {Array.from({ length: 2 - crew.length }).map((_, i) => (
+                        {Array.from({ length: Math.max(0, 2 - (members.length - 1)) }).map((_, i) => (
                           <div key={i} style={{ width: '60px', height: '60px', borderRadius: '16px', border: '2px dashed var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
                             <UserPlus size={24} />
                           </div>
@@ -298,12 +299,12 @@ function HeistContent() {
                     </div>
                     
                     <button 
-                      disabled={crew.length < 2}
+                      disabled={members.length < 2}
                       onClick={() => setGameState('role-select')} 
                       className="btn-primary" 
-                      style={{ background: 'var(--accent-secondary)', padding: '1.5rem 3rem', fontSize: '1.2rem', opacity: (crew.length < 2) ? 0.5 : 1 }}
+                      style={{ background: 'var(--accent-secondary)', padding: '1.5rem 3rem', fontSize: '1.2rem', opacity: (members.length < 2) ? 0.5 : 1 }}
                     >
-                      {crew.length < 2 ? 'WAITING FOR SPECIALISTS...' : 'ASSIGN ROLES'}
+                      {members.length < 2 ? 'WAITING FOR SPECIALISTS...' : 'ASSIGN ROLES'}
                     </button>
                   </>
                 )}
@@ -413,7 +414,7 @@ function HeistContent() {
                   {otherRoles.map((role, idx) => (
                     <div key={role}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.5rem', fontWeight: 600 }}>
-                        <span>{isFriendMode ? (crew[idx] || role) : role}</span>
+                        <span>{isFriendMode ? (members[idx + 1]?.name || role) : role}</span>
                         <span>{Math.floor(idx === 0 ? teamProgress.role1 : teamProgress.role2)}%</span>
                       </div>
                       <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>

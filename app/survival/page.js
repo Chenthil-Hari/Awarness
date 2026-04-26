@@ -8,6 +8,7 @@ import { Users, Skull, Trophy, Timer, AlertTriangle, ShieldCheck, ArrowRight, Za
 import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
+import { useMultiplayer } from '@/hooks/useMultiplayer';
 import { survivalScenarios } from '../data/survivalScenarios';
 
 function SurvivalContent() {
@@ -17,18 +18,29 @@ function SurvivalContent() {
 
   const [gameState, setGameState] = useState('lobby'); // lobby, playing, eliminating, won, eliminated
   const [roomCode, setRoomCode] = useState('');
-  const [friends, setFriends] = useState([]);
   const [isJoined, setIsJoined] = useState(false);
   
+  const { members, broadcast, on } = useMultiplayer(roomCode, isFriendMode && isJoined);
+
   const [round, setRound] = useState(0);
   const [players, setPlayers] = useState(100);
   const [selectedOption, setSelectedOption] = useState(null);
   const [timeLeft, setTimeLeft] = useState(15);
   const [eliminationText, setEliminationText] = useState('');
   const [isWinning, setIsWinning] = useState(false);
+  const [friendEliminations, setFriendEliminations] = useState([]);
 
   // Sound effects simulation (visual)
   const [heartbeatActive, setHeartbeatActive] = useState(false);
+
+  // Multiplayer Event Listeners
+  on('game-start', () => {
+    startGame();
+  });
+
+  on('player-eliminated', (data) => {
+    setFriendEliminations(prev => [...prev, data.sender]);
+  });
 
   // Initialize Room
   useEffect(() => {
@@ -37,23 +49,16 @@ function SurvivalContent() {
     }
   }, [isFriendMode, roomCode]);
 
-  // Simulate Friends Joining
-  useEffect(() => {
-    if (isFriendMode && isJoined && friends.length < 3) {
-      const timer = setTimeout(() => {
-        const mockFriends = ['Alex_Cyber', 'Sarah_Dev', 'Matrix_99'];
-        setFriends(prev => [...prev, mockFriends[prev.length]]);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isFriendMode, isJoined, friends]);
-
   const startGame = () => {
+    if (isFriendMode && gameState === 'lobby') {
+      broadcast('game-start', { startedAt: Date.now() });
+    }
     setGameState('playing');
     setRound(0);
     setPlayers(100);
     setTimeLeft(15);
     setSelectedOption(null);
+    setFriendEliminations([]);
   };
 
   const copyRoomCode = () => {
@@ -83,12 +88,10 @@ function SurvivalContent() {
     // Simulate elimination of other players
     let eliminatedCount = Math.floor(players * scenario.eliminationRate);
     if (round === survivalScenarios.length - 1 && isCorrect) {
-      // Final round - eliminate everyone else
       eliminatedCount = players - 1;
     }
 
-    let currentPlayers = players;
-    const targetPlayers = players - eliminatedCount - (isCorrect ? 0 : 1);
+    const targetPlayers = Math.max(1, players - eliminatedCount - (isCorrect ? 0 : 1));
 
     // Dramatic countdown of players
     const interval = setInterval(() => {
@@ -96,7 +99,6 @@ function SurvivalContent() {
         if (prev <= targetPlayers) {
           clearInterval(interval);
           
-          // After elimination animation, check if user survived
           setTimeout(() => {
             if (isCorrect) {
               if (round < survivalScenarios.length - 1) {
@@ -109,6 +111,9 @@ function SurvivalContent() {
                 handleVictory();
               }
             } else {
+              if (isFriendMode) {
+                broadcast('player-eliminated', { round });
+              }
               setEliminationText(option?.eliminationMessage || "Time ran out. You were disconnected. ELIMINATED.");
               setGameState('eliminated');
             }
@@ -123,14 +128,12 @@ function SurvivalContent() {
 
   const handleVictory = async () => {
     setIsWinning(true);
-    // Add logic to update user profile with Legendary Badge
     try {
       await fetch('/api/user/badges', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ badgeId: 'survival-champion', xp: 5000 })
       });
-      // Update session to show new badge
       update();
     } catch (e) {
       console.error("Failed to save victory");
@@ -159,7 +162,7 @@ function SurvivalContent() {
             <h1 style={{ fontSize: '1.5rem', margin: 0, fontWeight: 900 }}>Survival Mode: <span style={{ color: 'var(--accent-danger)' }}>The Gauntlet</span></h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
               <Users size={16} />
-              <span>{players} Players {isFriendMode ? `(${friends.length + 1} Friends)` : ''} Remaining</span>
+              <span>{players} Players {isFriendMode ? `(${members.length} Friends)` : ''} Remaining</span>
             </div>
           </div>
         </div>
@@ -253,15 +256,15 @@ function SurvivalContent() {
                             <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--accent-primary)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900 }}>YOU</div>
                             <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>HOST</span>
                           </div>
-                          {friends.map(f => (
-                            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={f} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                          {members.filter(m => m.name !== (searchParams.get('userName') || 'HOST')).map(f => (
+                            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={f.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                               <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                                 <Users size={20} />
                               </div>
-                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{f}</span>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{f.name}</span>
                             </motion.div>
                           ))}
-                          {Array.from({ length: 3 - friends.length }).map((_, i) => (
+                          {Array.from({ length: Math.max(0, 3 - (members.length - 1)) }).map((_, i) => (
                             <div key={i} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px dashed var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
                               <UserPlus size={20} />
                             </div>
@@ -273,12 +276,12 @@ function SurvivalContent() {
                     )}
                     
                     <button 
-                      disabled={isFriendMode && friends.length === 0}
+                      disabled={isFriendMode && members.length === 1}
                       onClick={startGame} 
                       className="btn-primary" 
-                      style={{ background: 'var(--accent-danger)', padding: '1.5rem 3rem', fontSize: '1.2rem', opacity: (isFriendMode && friends.length === 0) ? 0.5 : 1 }}
+                      style={{ background: 'var(--accent-danger)', padding: '1.5rem 3rem', fontSize: '1.2rem', opacity: (isFriendMode && members.length === 1) ? 0.5 : 1 }}
                     >
-                      {isFriendMode && friends.length === 0 ? 'WAITING FOR CREW...' : 'ENTER THE ARENA'}
+                      {isFriendMode && members.length === 1 ? 'WAITING FOR CREW...' : 'ENTER THE ARENA'}
                     </button>
                   </>
                 )}
@@ -295,6 +298,22 @@ function SurvivalContent() {
             exit={{ opacity: 0, x: -50 }}
             style={{ maxWidth: '900px', margin: '0 auto' }}
           >
+            {/* Friends Elimination Feed */}
+            {isFriendMode && friendEliminations.length > 0 && (
+              <div style={{ position: 'fixed', right: '2rem', top: '6rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 100 }}>
+                {friendEliminations.map((name, i) => (
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    key={i}
+                    style={{ background: 'rgba(220, 38, 38, 0.2)', padding: '0.5rem 1rem', borderRadius: '8px', borderLeft: '4px solid var(--accent-danger)', color: 'white', fontSize: '0.8rem', fontWeight: 800 }}
+                  >
+                    💀 {name} ELIMINATED
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
             <div style={{ marginBottom: '2rem' }}>
               <span style={{ 
                 fontSize: '0.8rem', 
