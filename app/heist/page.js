@@ -1,0 +1,400 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Shield, Cpu, Binary, Map, Radio, AlertCircle, CheckCircle2, XCircle, ArrowRight, Timer, Terminal, Users, Play, Lock } from 'lucide-react';
+import Navbar from '../components/Navbar';
+import BorderGlow from '../components/BorderGlow/BorderGlow';
+import { heistScenarios } from '../data/heistScenarios';
+
+const RoleCard = ({ role, icon: Icon, description, selected, onClick }) => (
+  <motion.div
+    whileHover={{ scale: 1.02, y: -5 }}
+    onClick={onClick}
+    className={`glass-card ${selected ? 'border-accent-primary' : ''}`}
+    style={{
+      padding: '2rem',
+      cursor: 'pointer',
+      border: selected ? '2px solid var(--accent-primary)' : '1px solid var(--glass-border)',
+      background: selected ? 'rgba(124, 58, 237, 0.1)' : 'var(--glass-bg)',
+      flex: 1,
+      minWidth: '280px',
+      transition: 'all 0.3s ease'
+    }}
+  >
+    <div style={{ 
+      width: '60px', 
+      height: '60px', 
+      borderRadius: '16px', 
+      background: selected ? 'var(--accent-primary)' : 'var(--bg-tertiary)', 
+      color: selected ? 'white' : 'var(--text-secondary)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: '1.5rem'
+    }}>
+      <Icon size={32} />
+    </div>
+    <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', fontWeight: 800 }}>{role}</h3>
+    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6 }}>{description}</p>
+  </motion.div>
+);
+
+export default function HeistPage() {
+  const [gameState, setGameState] = useState('briefing'); // briefing, role-select, playing, phase-complete, failed, victory
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [currentChapter, setCurrentChapter] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [teamProgress, setTeamProgress] = useState({ role1: 0, role2: 0 });
+  const [messages, setMessages] = useState([]);
+  const [answerState, setAnswerState] = useState(null); // null, correct, wrong
+
+  const chatRef = useRef(null);
+
+  // Auto-scroll chat
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Game Logic
+  useEffect(() => {
+    let timer;
+    if (gameState === 'playing' && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+        
+        // Random team progress
+        setTeamProgress(prev => ({
+          role1: Math.min(100, prev.role1 + Math.random() * 5),
+          role2: Math.min(100, prev.role2 + Math.random() * 5)
+        }));
+      }, 1000);
+    } else if (timeLeft === 0 && gameState === 'playing') {
+      setGameState('failed');
+    }
+    return () => clearInterval(timer);
+  }, [gameState, timeLeft]);
+
+  // Simulated Team Comms
+  useEffect(() => {
+    if (gameState === 'playing') {
+      const otherRoles = Object.keys(heistScenarios[currentChapter].roles).filter(r => r !== selectedRole);
+      const interval = setInterval(() => {
+        const role = otherRoles[Math.floor(Math.random() * otherRoles.length)];
+        const msgs = [
+          "Checking the perimeter...",
+          "Almost through the encryption...",
+          "I've got eyes on the guards.",
+          "Keep it steady, we're close.",
+          "Signal is getting weak!",
+          "Decrypting phase 2..."
+        ];
+        addMessage(role, msgs[Math.floor(Math.random() * msgs.length)]);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [gameState, currentChapter, selectedRole]);
+
+  const addMessage = (sender, text) => {
+    setMessages(prev => [...prev, { sender, text, id: Date.now() }]);
+  };
+
+  const startHeist = () => {
+    setGameState('playing');
+    setTimeLeft(30);
+    setTeamProgress({ role1: 0, role2: 0 });
+    setMessages([{ sender: 'System', text: 'CONNECTION ESTABLISHED. MISSION START.', id: 1 }]);
+  };
+
+  const handleAnswer = (option) => {
+    if (option.correct) {
+      setAnswerState('correct');
+      addMessage('System', 'TASK COMPLETE. SYNCHRONIZING WITH TEAM...');
+      
+      // Wait for "Team" to finish
+      setTimeout(() => {
+        if (currentChapter < heistScenarios.length - 1) {
+          setGameState('phase-complete');
+        } else {
+          setGameState('victory');
+        }
+      }, 2000);
+    } else {
+      setAnswerState('wrong');
+      addMessage('System', 'CRITICAL FAILURE. SECURITY ALERT TRIGGERED.');
+      setTimeout(() => setGameState('failed'), 1500);
+    }
+  };
+
+  const nextPhase = () => {
+    setCurrentChapter(prev => prev + 1);
+    setGameState('playing');
+    setTimeLeft(30);
+    setTeamProgress({ role1: 0, role2: 0 });
+    setAnswerState(null);
+  };
+
+  const scenario = heistScenarios[currentChapter];
+  const otherRoles = selectedRole ? Object.keys(scenario.roles).filter(r => r !== selectedRole) : [];
+
+  return (
+    <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem' }}>
+      <Navbar />
+
+      <div style={{ marginTop: '3rem', marginBottom: '3rem', textAlign: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
+          <div style={{ padding: '0.5rem', background: 'var(--accent-primary)', borderRadius: '8px', color: 'white' }}>
+            <Shield size={24} />
+          </div>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0 }}>OPERATION: <span className="gradient-text">THE HEIST</span></h1>
+        </div>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>A Cooperative Security Breach Simulation</p>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {gameState === 'briefing' && (
+          <motion.div 
+            key="briefing"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            style={{ maxWidth: '800px', margin: '0 auto' }}
+          >
+            <div className="glass-card" style={{ padding: '3rem', borderRadius: 'var(--radius-xl)', border: '1px solid var(--accent-primary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', color: 'var(--accent-primary)' }}>
+                <Terminal size={32} />
+                <h2 style={{ fontSize: '1.75rem', fontWeight: 800 }}>CLASSIFIED BRIEFING</h2>
+              </div>
+              <p style={{ fontSize: '1.1rem', lineHeight: 1.8, marginBottom: '2.5rem', color: 'var(--text-secondary)' }}>
+                Welcome, operative. We are targeting the central data vault of the "Void" syndicate. 
+                This is a multi-stage operation that requires perfect coordination between three specialists: 
+                The **Hacker**, the **Analyst**, and the **Decoy**. 
+                <br /><br />
+                Success depends on everyone. If one role fails, the security team will descend on us instantly.
+              </p>
+              <button onClick={() => setGameState('role-select')} className="btn-primary" style={{ width: '100%', padding: '1.5rem' }}>
+                INITIALIZE ROLE SELECTION
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {gameState === 'role-select' && (
+          <motion.div 
+            key="role-select"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={{ maxWidth: '1000px', margin: '0 auto' }}
+          >
+            <h2 style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '2rem', fontWeight: 800 }}>Choose Your Role</h2>
+            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+              <RoleCard 
+                role="Hacker" 
+                icon={Cpu} 
+                description="Digital infiltration specialist. Bypasses firewalls and biometric locks."
+                selected={selectedRole === 'Hacker'}
+                onClick={() => setSelectedRole('Hacker')}
+              />
+              <RoleCard 
+                role="Analyst" 
+                icon={Binary} 
+                description="Pattern recognition expert. Identifies guard rotations and decrypts codes."
+                selected={selectedRole === 'Analyst'}
+                onClick={() => setSelectedRole('Analyst')}
+              />
+              <RoleCard 
+                role="Decoy" 
+                icon={Radio} 
+                description="Social engineering and chaos specialist. Creates distractions and jams comms."
+                selected={selectedRole === 'Decoy'}
+                onClick={() => setSelectedRole('Decoy')}
+              />
+            </div>
+            {selectedRole && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: '4rem', textAlign: 'center' }}>
+                <button onClick={startHeist} className="btn-primary" style={{ padding: '1.2rem 3rem', fontSize: '1.2rem' }}>
+                  BEGIN OPERATION: PHASE 1
+                </button>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+
+        {gameState === 'playing' && (
+          <motion.div 
+            key="playing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem', maxWidth: '1200px', margin: '0 auto' }}
+          >
+            {/* Main Action Area */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    {scenario.title}
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: timeLeft < 10 ? 'var(--accent-danger)' : 'var(--text-primary)', fontWeight: 800 }}>
+                    <Timer size={18} />
+                    <span>{timeLeft}s</span>
+                  </div>
+                </div>
+                <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{selectedRole} Task: {scenario.roles[selectedRole].task}</h3>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '2.5rem', lineHeight: 1.6 }}>
+                  {scenario.roles[selectedRole].questions[0].text}
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {scenario.roles[selectedRole].questions[0].options.map((option, i) => (
+                    <button
+                      key={i}
+                      disabled={answerState !== null}
+                      onClick={() => handleAnswer(option)}
+                      style={{
+                        padding: '1.25rem',
+                        textAlign: 'left',
+                        background: answerState === 'correct' && option.correct ? 'rgba(16, 185, 129, 0.1)' : (answerState === 'wrong' && !option.correct ? 'rgba(239, 68, 68, 0.05)' : 'var(--bg-tertiary)'),
+                        border: '1px solid var(--glass-border)',
+                        borderColor: answerState === 'correct' && option.correct ? 'var(--accent-success)' : (answerState === 'wrong' && !option.correct ? 'var(--accent-danger)' : 'var(--glass-border)'),
+                        borderRadius: 'var(--radius-md)',
+                        color: 'var(--text-primary)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {option.text}
+                      {answerState === 'correct' && option.correct && <CheckCircle2 size={20} color="var(--accent-success)" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Team Progress */}
+              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Users size={18} /> TEAM STATUS
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {otherRoles.map((role, idx) => (
+                    <div key={role}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.5rem', fontWeight: 600 }}>
+                        <span>{role}</span>
+                        <span>{Math.floor(idx === 0 ? teamProgress.role1 : teamProgress.role2)}%</span>
+                      </div>
+                      <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${idx === 0 ? teamProgress.role1 : teamProgress.role2}%` }}
+                          style={{ height: '100%', background: 'var(--accent-primary)' }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar: Comms */}
+            <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', height: '600px' }}>
+              <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--accent-primary)', letterSpacing: '1px' }}>SECURE COMMS</h4>
+              <div 
+                ref={chatRef}
+                style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}
+              >
+                {messages.map(msg => (
+                  <div key={msg.id} style={{ fontSize: '0.85rem' }}>
+                    <span style={{ fontWeight: 800, color: msg.sender === 'System' ? 'var(--accent-warning)' : 'var(--accent-primary)', marginRight: '0.5rem' }}>
+                      [{msg.sender}]
+                    </span>
+                    <span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{msg.text}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--glass-border)', fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                ENCRYPTED CONNECTION : ACTIVE
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {gameState === 'phase-complete' && (
+          <motion.div 
+            key="complete"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={{ textAlign: 'center', paddingTop: '6rem' }}
+          >
+            <div style={{ width: '80px', height: '80px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--accent-success)', margin: '0 auto 2rem' }}>
+              <CheckCircle2 size={40} color="var(--accent-success)" />
+            </div>
+            <h2 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>PHASE {currentChapter + 1} CLEAR</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginBottom: '3rem' }}>The team has successfully synchronized. Moving to next objective...</p>
+            <button onClick={nextPhase} className="btn-primary" style={{ padding: '1.2rem 3.5rem', fontSize: '1.1rem' }}>
+              PROCEED TO PHASE {currentChapter + 2} <ArrowRight size={20} />
+            </button>
+          </motion.div>
+        )}
+
+        {gameState === 'failed' && (
+          <motion.div 
+            key="failed"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={{ textAlign: 'center', paddingTop: '6rem', maxWidth: '600px', margin: '0 auto' }}
+          >
+            <div style={{ width: '80px', height: '80px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--accent-danger)', margin: '0 auto 2rem' }}>
+              <XCircle size={40} color="var(--accent-danger)" />
+            </div>
+            <h2 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>HEIST FAILED</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginBottom: '3rem' }}>
+              Security teams have swarmed the building. The connection has been severed.
+            </p>
+            <button onClick={() => window.location.reload()} className="btn-secondary" style={{ width: '100%', padding: '1.2rem' }}>
+              RETRY MISSION
+            </button>
+          </motion.div>
+        )}
+
+        {gameState === 'victory' && (
+          <motion.div 
+            key="victory"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ textAlign: 'center', paddingTop: '4rem', maxWidth: '800px', margin: '0 auto' }}
+          >
+            <div style={{ width: '100px', height: '100px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--accent-success)', margin: '0 auto 2rem' }}>
+              <Lock size={50} color="var(--accent-success)" />
+            </div>
+            <h2 style={{ fontSize: '4rem', fontWeight: 900, marginBottom: '1rem' }}>VAULT BREACHED</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.5rem', marginBottom: '4rem' }}>
+              Mission Accomplished. You and your team have vanished without a trace.
+            </p>
+            
+            <BorderGlow animated={true} glowColor="140 80 50">
+              <div style={{ padding: '3rem' }}>
+                <h3 style={{ fontSize: '1.75rem', marginBottom: '2rem' }}>Mission Rewards</h3>
+                <div style={{ display: 'flex', gap: '3rem', justifyContent: 'center', marginBottom: '3rem' }}>
+                  <div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--accent-primary)' }}>+2,500</div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 800 }}>EXPERIENCE</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--accent-success)' }}>$0</div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 800 }}>CASUALTIES</div>
+                  </div>
+                </div>
+                <button onClick={() => window.location.href='/dashboard'} className="btn-primary" style={{ width: '100%' }}>
+                  RETURN TO SAFEhouse
+                </button>
+              </div>
+            </BorderGlow>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </main>
+  );
+}

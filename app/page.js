@@ -189,49 +189,58 @@ export default function Home() {
           </aside>
         </div>
 
-        {/* Survival Mode Call to Action */}
-        <div style={{ marginTop: '4rem' }}>
+        {/* Heist Mode & Survival Mode Row */}
+        <div className="grid-responsive" style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))',
+          gap: '2rem',
+          marginTop: '4rem'
+        }}>
+          {/* Survival Mode Card */}
           <BorderGlow
             glowColor="0 80 50"
             backgroundColor="var(--bg-secondary)"
             borderRadius={32}
             animated={true}
           >
-            <div className="flex-mobile-column" style={{ 
-              padding: '2.5rem', 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              gap: '2rem' 
-            }}>
-              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                <div style={{ 
-                  width: '64px', 
-                  height: '64px', 
-                  background: 'var(--accent-danger)', 
-                  borderRadius: '16px', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  color: 'white',
-                  boxShadow: '0 0 20px rgba(220, 38, 38, 0.4)'
-                }}>
-                  <Skull size={32} />
+            <div style={{ padding: '2rem', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ width: '56px', height: '56px', background: 'var(--accent-danger)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 0 20px rgba(220, 38, 38, 0.4)' }}>
+                  <Skull size={28} />
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                    <span style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--accent-danger)', letterSpacing: '1px' }}>LIMITED TIME EVENT</span>
-                    <span style={{ padding: '2px 8px', background: 'rgba(220, 38, 38, 0.1)', borderRadius: '4px', fontSize: '0.6rem', fontWeight: 800, color: 'var(--accent-danger)' }}>LIVE</span>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--accent-danger)', letterSpacing: '1px' }}>ELIMINATION EVENT</span>
                   </div>
-                  <h2 style={{ fontSize: '1.75rem', fontWeight: 900 }}>The Gauntlet: <span style={{ color: 'var(--accent-danger)' }}>Survival Mode</span></h2>
-                  <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', fontSize: '0.9rem' }}>
-                    100 players enter, one survives. Can you outlast the global lobby?
-                  </p>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 900 }}>The Gauntlet</h2>
                 </div>
               </div>
-              <Link href="/survival" className="btn-primary" style={{ background: 'var(--accent-danger)', padding: '1rem 2rem', fontSize: '1.1rem', width: 'auto' }}>
-                Enter Arena
-              </Link>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>100 players enter, one survives. Outlast the global lobby in this high-stakes mode.</p>
+              <Link href="/survival" className="btn-primary" style={{ background: 'var(--accent-danger)', padding: '0.8rem', fontSize: '1rem', width: '100%' }}>Enter Arena</Link>
+            </div>
+          </BorderGlow>
+
+          {/* Heist Mode Card */}
+          <BorderGlow
+            glowColor="190 80 50"
+            backgroundColor="var(--bg-secondary)"
+            borderRadius={32}
+            animated={true}
+          >
+            <div style={{ padding: '2rem', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ width: '56px', height: '56px', background: 'var(--accent-secondary)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 0 20px rgba(8, 145, 178, 0.4)' }}>
+                  <Shield size={28} />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--accent-secondary)', letterSpacing: '1px' }}>CO-OP MISSION</span>
+                  </div>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 900 }}>The Heist</h2>
+                </div>
+              </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>Coordinate with a team of specialists to breach the Void Syndicate's data vault.</p>
+              <Link href="/heist" className="btn-primary" style={{ background: 'var(--accent-secondary)', padding: '0.8rem', fontSize: '1rem', width: '100%' }}>Start Operation</Link>
             </div>
           </BorderGlow>
         </div>
