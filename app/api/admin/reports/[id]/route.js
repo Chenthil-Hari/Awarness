@@ -15,7 +15,15 @@ export async function DELETE(req, { params }) {
     const client = await clientPromise;
     const db = client.db();
 
-    await db.collection('reports').deleteOne({ _id: new ObjectId(id) });
+    let reportOid;
+    try {
+      reportOid = new ObjectId(id);
+    } catch (e) {
+      // If it's already an ObjectId or some other format that failed conversion
+      reportOid = id;
+    }
+
+    await db.collection('reports').deleteOne({ _id: reportOid });
 
     return NextResponse.json({ message: 'Report dismissed' });
   } catch (error) {
