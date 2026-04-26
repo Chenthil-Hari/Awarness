@@ -47,14 +47,11 @@ export const authOptions = {
   },
   events: {
     async createUser({ user }) {
-      // This fires for Google signups (where the adapter creates the user)
-      // Manual signups via signup/route.js handle their own email to avoid duplicates
       try {
         const client = await clientPromise;
         const db = client.db();
         const usersCollection = db.collection("users");
 
-        // Check if username already exists (shouldn't for a brand new user, but safety first)
         let baseUsername = user.name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '');
         let username = baseUsername;
         let count = 0;
@@ -63,7 +60,6 @@ export const authOptions = {
           count++;
         }
 
-        // Initialize user with defaults
         await usersCollection.updateOne(
           { email: user.email },
           { 
@@ -78,7 +74,6 @@ export const authOptions = {
         );
 
         await sendWelcomeEmail(user.email, user.name);
-        console.log("Welcome email sent to new Google user:", user.email);
       } catch (error) {
         console.error("Failed to initialize Google user or send email:", error);
       }
@@ -93,60 +88,23 @@ export const authOptions = {
       if (account.provider === "google") {
         const existingUser = await usersCollection.findOne({ email: user.email });
         if (existingUser) {
-          // Update existing user session data
           user.username = existingUser.username;
           user.xp = existingUser.xp || 0;
           user.streak = existingUser.streak || 0;
           user.role = existingUser.role || 'user';
           user.league = existingUser.league || 'Bronze';
-        } else {
-          // New user will be handled by events.createUser
         }
       }
 
-      // STREAK LOGIC for existing users
       const dbUser = await usersCollection.findOne({ email: user.email });
-      if (dbUser) {
-        const now = new Date();
-        const lastLogin = dbUser.lastLoginDate ? new Date(dbUser.lastLoginDate) : null;
-        
-        let newStreak = dbUser.streak || 1;
-        
-        if (lastLogin) {
-          // Normalize both dates to midnight UTC to compare calendar days
-          const lastDate = new Date(Date.UTC(lastLogin.getUTCFullYear(), lastLogin.getUTCMonth(), lastLogin.getUTCDate()));
-          const nowDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-          
-          const diffInTime = nowDate.getTime() - lastDate.getTime();
-          const diffInDays = Math.floor(diffInTime / (1000 * 3600 * 24));
-
-          if (diffInDays === 1) {
-            newStreak += 1;
-          } else if (diffInDays > 1) {
-            newStreak = 1;
-          }
-          // if diffInDays === 0, it's the same day, so streak remains the same
-        }
-
-        await usersCollection.updateOne(
-          { email: user.email },
-          { 
-            $set: { 
-              lastLoginDate: now.toISOString(),
-              streak: newStreak
-            } 
-          }
-        );
-        user.streak = newStreak;
-        user.role = dbUser.role || 'user';
-      }
+      if (dbUser) user.role = dbUser.role || 'user';
 
       return true;
     },
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
-        token.email = user.email; // MASTER KEY
+        token.email = user.email;
         token.username = user.username;
         token.xp = user.xp || 0;
         token.streak = user.streak || 0;
@@ -155,7 +113,6 @@ export const authOptions = {
         token.league = user.league || 'Bronze';
       }
       
-      // Handle manual session updates (trigger: "update")
       if (trigger === "update" && session?.user?.username) {
         token.username = session.user.username;
       }
@@ -164,9 +121,10 @@ export const authOptions = {
     },
     async session({ session, token }) {
       if (token?.email) {
-        // ALWAYS fetch latest data from DB to avoid stale JWT issues
         const client = await clientPromise;
-        const dbUser = await client.db().collection("users").findOne({ email: token.email });
+        const db = client.db();
+        const usersCollection = db.collection("users");
+        const dbUser = await usersCollection.findOne({ email: token.email });
         
         if (dbUser) {
           session.user.id = dbUser._id.toString();
@@ -179,30 +137,48 @@ export const authOptions = {
           session.user.performance = dbUser.performance || {};
           session.user.history = dbUser.history || [];
 
-          // Dynamic League Calculation
           let calculatedLeague = 'Bronze';
           if (session.user.xp >= 3000) calculatedLeague = 'Hacker-Tier';
           else if (session.user.xp >= 1500) calculatedLeague = 'Gold';
           else if (session.user.xp >= 500) calculatedLeague = 'Silver';
-
           session.user.league = calculatedLeague;
 
-          // Update DB if league changed dynamically
+          // --- STREAK LOGIC ---
+          const now = new Date();
+          const lastLogin = dbUser.lastLoginDate ? new Date(dbUser.lastLoginDate) : null;
+          let currentStreak = dbUser.streak || 1;
+          let shouldUpdate = false;
+
+          if (lastLogin) {
+            const lastDate = new Date(Date.UTC(lastLogin.getUTCFullYear(), lastLogin.getUTCMonth(), lastLogin.getUTCDate()));
+            const nowDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+            const diffInDays = Math.floor((nowDate - lastDate) / (1000 * 3600 * 24));
+
+            if (diffInDays === 1) {
+              currentStreak += 1;
+              shouldUpdate = true;
+            } else if (diffInDays > 1) {
+              currentStreak = 1;
+              shouldUpdate = true;
+            }
+          } else {
+            shouldUpdate = true;
+          }
+
+          if (shouldUpdate) {
+            await usersCollection.updateOne(
+              { email: token.email },
+              { $set: { streak: currentStreak, lastLoginDate: now.toISOString() } }
+            );
+          }
+          session.user.streak = currentStreak;
+
           if (dbUser.league !== calculatedLeague) {
-            client.db().collection("users").updateOne(
+            await usersCollection.updateOne(
               { email: token.email },
               { $set: { league: calculatedLeague } }
             );
           }
-        } else {
-          // Fallback to token
-          session.user.id = token.id;
-          session.user.username = token.username;
-          session.user.xp = token.xp || 0;
-          session.user.streak = token.streak || 0;
-          session.user.role = token.role || 'user';
-          session.user.completedMissions = token.completedMissions || [];
-          session.user.league = token.league || 'Bronze';
         }
       }
       return session;
@@ -212,5 +188,4 @@ export const authOptions = {
 };
 
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };

@@ -96,6 +96,13 @@ function HeistContent() {
     setMissionDifficulty(data.difficulty);
   });
 
+  on('role-selected', (data) => {
+    setMembers(prev => prev.map(m => 
+      m.user_id === data.senderId ? { ...m, selectedRole: data.role } : m
+    ));
+    addMessage('System', `${data.senderName} has assumed the role of ${data.role}.`);
+  });
+
   // Initialize Room
   useEffect(() => {
     if (isFriendMode && !roomCode && !isJoined) {
@@ -149,19 +156,27 @@ function HeistContent() {
       timer = setInterval(() => {
         setTimeLeft(prev => prev - 1);
         
-        // In multiplayer, progress is real. Only simulate if solo.
-        if (!isFriendMode) {
-          setTeamProgress(prev => ({
-            role1: Math.min(100, prev.role1 + Math.random() * 5),
-            role2: Math.min(100, prev.role2 + Math.random() * 5)
-          }));
-        }
+        // Simulate progress for roles that are not occupied by human players
+        setTeamProgress(prev => {
+          const newState = { ...prev };
+          const humanRoles = members.map(m => m.selectedRole).filter(Boolean);
+          
+          // If a role index isn't being updated by a human, simulate it
+          // role1 and role2 are the OTHER roles
+          if (!humanRoles.includes(otherRoles[0])) {
+            newState.role1 = Math.min(100, prev.role1 + Math.random() * 8);
+          }
+          if (!humanRoles.includes(otherRoles[1])) {
+            newState.role2 = Math.min(100, prev.role2 + Math.random() * 8);
+          }
+          return newState;
+        });
       }, 1000);
     } else if (timeLeft === 0 && gameState === 'playing') {
       setGameState('failed');
     }
     return () => clearInterval(timer);
-  }, [gameState, timeLeft, isFriendMode]);
+  }, [gameState, timeLeft, isFriendMode, members, otherRoles]);
 
   const addMessage = (sender, text) => {
     setMessages(prev => [...prev, { sender, text, id: Date.now() }]);
@@ -440,21 +455,30 @@ function HeistContent() {
                 icon={Cpu} 
                 description="Digital infiltration specialist. Bypasses firewalls and biometric locks."
                 selected={selectedRole === 'Hacker'}
-                onClick={() => setSelectedRole('Hacker')}
+                onClick={() => {
+                  setSelectedRole('Hacker');
+                  if (isFriendMode) broadcast('role-selected', { role: 'Hacker', senderName: session?.user?.name || 'Operative' });
+                }}
               />
               <RoleCard 
                 role="Analyst" 
                 icon={Binary} 
                 description="Pattern recognition expert. Identifies guard rotations and decrypts codes."
                 selected={selectedRole === 'Analyst'}
-                onClick={() => setSelectedRole('Analyst')}
+                onClick={() => {
+                  setSelectedRole('Analyst');
+                  if (isFriendMode) broadcast('role-selected', { role: 'Analyst', senderName: session?.user?.name || 'Operative' });
+                }}
               />
               <RoleCard 
                 role="Decoy" 
                 icon={Radio} 
                 description="Social engineering and chaos specialist. Creates distractions and jams comms."
                 selected={selectedRole === 'Decoy'}
-                onClick={() => setSelectedRole('Decoy')}
+                onClick={() => {
+                  setSelectedRole('Decoy');
+                  if (isFriendMode) broadcast('role-selected', { role: 'Decoy', senderName: session?.user?.name || 'Operative' });
+                }}
               />
             </div>
             {selectedRole && (
