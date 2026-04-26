@@ -11,7 +11,7 @@ import SettingsIcon from './SettingsIcon';
 import Lottie from 'lottie-react';
 import bellAnimation from '../../images/bell.json';
 import mobileWifiAnimation from '../../images/mobile-wifi.json';
-import PillNav from './PillNav/PillNav';
+import GooeyNav from './GooeyNav/GooeyNav';
 
 export default function Navbar({ score = 0, level = 1 }) {
   const { data: session } = useSession();
@@ -26,6 +26,8 @@ export default function Navbar({ score = 0, level = 1 }) {
     { label: 'Heist', href: '/heist' },
     { label: 'Leaderboard', href: '/leaderboard' },
   ];
+
+  const activeIndex = navItems.findIndex(item => item.href === pathname);
 
   // Right side content (Level, Streak, Profile)
   const RightSide = (
@@ -68,15 +70,9 @@ export default function Navbar({ score = 0, level = 1 }) {
   );
 
   return (
-    <PillNav
-      logo={<Shield size={22} color="white" />}
+    <GooeyNav
       items={navItems}
-      activeHref={pathname}
-      baseColor="rgba(0, 0, 0, 0.3)"
-      pillColor="rgba(255, 255, 255, 0.05)"
-      pillTextColor="white"
-      hoveredPillTextColor="white"
-      initialLoadAnimation={true}
+      initialActiveIndex={activeIndex >= 0 ? activeIndex : 0}
       rightContent={RightSide}
     />
   );
