@@ -560,7 +560,13 @@ function HeistContent() {
             key="playing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem', maxWidth: '1200px', margin: '0 auto' }}
+            style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 700px), 1fr))', 
+              gap: '2rem', 
+              maxWidth: '1200px', 
+              margin: '0 auto' 
+            }}
           >
             {/* Main Action Area */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>

@@ -21,7 +21,7 @@ export default function MobileBottomNav() {
   ];
 
   return (
-    <div className="show-mobile-only" style={{
+    <div className="show-mobile-tablet" style={{
       position: 'fixed',
       bottom: '1rem',
       left: '50%',

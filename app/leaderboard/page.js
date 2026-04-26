@@ -144,7 +144,7 @@ export default function LeaderboardPage() {
               {/* Header */}
               <div style={{ 
                 display: 'grid', 
-                gridTemplateColumns: '60px 1fr 100px', 
+                gridTemplateColumns: '50px 1fr 110px', 
                 padding: '1.25rem 1rem', 
                 borderBottom: '1px solid var(--glass-border)',
                 fontWeight: 700,
@@ -153,7 +153,8 @@ export default function LeaderboardPage() {
                 textTransform: 'uppercase',
                 letterSpacing: '0.05rem'
               }}>
-                <span>Rank</span>
+                <span className="hide-mobile">Rank</span>
+                <span className="show-mobile">#</span>
                 <span>User</span>
                 <span style={{ textAlign: 'right' }}>Total XP</span>
               </div>
@@ -170,8 +171,8 @@ export default function LeaderboardPage() {
                       transition={{ delay: index * 0.1 }}
                       style={{ 
                         display: 'grid', 
-                        gridTemplateColumns: '60px 1fr 120px', 
-                        padding: '1.25rem 1rem', 
+                        gridTemplateColumns: '50px 1fr 110px', 
+                        padding: '1.25rem 0.75rem', 
                         alignItems: 'center',
                         borderBottom: index === users.length - 1 ? 'none' : '1px solid var(--glass-border)',
                         background: 'transparent',
@@ -207,10 +208,10 @@ export default function LeaderboardPage() {
                           <Link 
                             href={`/duels?opponentId=${user._id}&opponentName=${encodeURIComponent(user.name)}`}
                             className="btn-primary"
-                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--accent-danger)' }}
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--accent-danger)' }}
                           >
                             <Swords size={12} />
-                            CHALLENGE
+                            <span className="hide-mobile">CHALLENGE</span>
                           </Link>
                         )}
                         <div>

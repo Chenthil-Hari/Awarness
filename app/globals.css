@@ -269,10 +269,26 @@ button {
   display: none !important;
 }
 
+.hide-tablet {
+  display: flex !important;
+}
+
+.show-mobile-tablet {
+  display: none !important;
+}
+
 /* Responsive Media Queries */
 @media (max-width: 1024px) {
   .container {
     max-width: 900px;
+  }
+  
+  .hide-tablet {
+    display: none !important;
+  }
+
+  .show-mobile-tablet {
+    display: flex !important;
   }
 }
 

@@ -216,7 +216,13 @@ function DuelContent() {
         {gameState === 'playing' && (
           <motion.div key="playing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ maxWidth: '1000px', margin: '2rem auto' }}>
             {/* Progress Bars */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 1fr', gap: '2rem', alignItems: 'center', marginBottom: '3rem' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', 
+              gap: '2rem', 
+              alignItems: 'center', 
+              marginBottom: '3rem' 
+            }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: 800 }}>
                   <span>YOU</span>
@@ -227,7 +233,7 @@ function DuelContent() {
                 </div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 900, color: timeLeft < 10 ? 'var(--accent-danger)' : 'var(--text-primary)' }}>{timeLeft}s</div>
+                <div style={{ fontSize: '2rem', fontWeight: 900, color: timeLeft < 10 ? 'var(--accent-danger)' : 'var(--text-primary)' }}>{timeLeft}s</div>
               </div>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: 800 }}>
@@ -241,11 +247,11 @@ function DuelContent() {
             </div>
 
             {/* Question Card */}
-            <div className="glass-card" style={{ padding: '3rem', borderRadius: '24px', border: '1px solid var(--glass-border)' }}>
+            <div className="glass-card" style={{ padding: '2rem', borderRadius: '24px', border: '1px solid var(--glass-border)' }}>
               <h3 style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>{duelQuestions[currentQuestion].title}</h3>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '3rem', fontSize: '1.1rem' }}>{duelQuestions[currentQuestion].description}</p>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                 {duelQuestions[currentQuestion].options.map((opt, i) => (
                   <button
                     key={i}

@@ -31,8 +31,8 @@ export default function Navbar({ score = 0, level = 1 }) {
       flexWrap: 'wrap',
       gap: '1rem'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'nowrap' }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '0.5rem' }}>
           <div style={{
             width: '32px',
             height: '32px',
@@ -45,13 +45,13 @@ export default function Navbar({ score = 0, level = 1 }) {
           }}>
             <Shield size={18} color="white" />
           </div>
-          <div className="hide-mobile">
+          <div className="hide-mobile hide-tablet">
             <h2 style={{ fontSize: '1.1rem', margin: 0 }}>Awareness <span className="gradient-text">Pro</span></h2>
           </div>
         </Link>
 
         {session && (
-          <Link href="/" title="Home Dashboard" style={{ 
+          <Link href="/" title="Home Dashboard" className="hide-mobile hide-tablet" style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '0.4rem', 
@@ -61,13 +61,13 @@ export default function Navbar({ score = 0, level = 1 }) {
             borderRadius: 'var(--radius-md)', 
             background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid var(--glass-border)'
-          }} className="hover-lift">
+          }}>
             <Home size={16} />
             <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>HOME</span>
           </Link>
         )}
 
-        <Link href="/wiki" title="Learning Hub" style={{ 
+        <Link href="/wiki" title="Learning Hub" className="hide-mobile hide-tablet" style={{ 
           display: 'flex', 
           alignItems: 'center', 
           gap: '0.4rem', 
@@ -77,13 +77,13 @@ export default function Navbar({ score = 0, level = 1 }) {
           borderRadius: 'var(--radius-md)', 
           background: 'rgba(255, 255, 255, 0.05)',
           border: '1px solid var(--glass-border)'
-        }} className="hover-lift">
+        }}>
           <BookOpen size={16} />
           <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>WIKI</span>
         </Link>
 
         {session && (
-          <Link href="/smishing" title="Smishing Simulator" style={{ 
+          <Link href="/smishing" title="Smishing Simulator" className="hide-mobile hide-tablet" style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '0.4rem', 
@@ -93,7 +93,7 @@ export default function Navbar({ score = 0, level = 1 }) {
             borderRadius: 'var(--radius-md)', 
             background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid var(--glass-border)'
-          }} className="hover-lift">
+          }}>
             <div style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Lottie animationData={mobileWifiAnimation} loop={true} style={{ width: '100%', height: '100%' }} />
             </div>
@@ -102,7 +102,7 @@ export default function Navbar({ score = 0, level = 1 }) {
         )}
 
         {session && (
-          <Link href="/architect" title="Mission Designer" style={{ 
+          <Link href="/architect" title="Mission Designer" className="hide-mobile hide-tablet" style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '0.4rem', 
@@ -112,13 +112,13 @@ export default function Navbar({ score = 0, level = 1 }) {
             borderRadius: 'var(--radius-md)', 
             background: 'rgba(255, 120, 0, 0.05)',
             border: '1px solid rgba(255, 120, 0, 0.2)'
-          }} className="hover-lift">
+          }}>
             <Hammer size={16} color="#FF7800" />
             <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#FF7800' }}>ARCHITECT</span>
           </Link>
         )}
 
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }} className="hide-mobile hide-tablet">
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
             title="Notifications" 
@@ -133,7 +133,7 @@ export default function Navbar({ score = 0, level = 1 }) {
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid var(--glass-border)',
               cursor: 'pointer'
-            }} className="hover-lift">
+            }}>
             <div style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '-2px' }}>
               <Lottie animationData={bellAnimation} loop={true} style={{ width: '100%', height: '100%' }} />
             </div>
@@ -152,7 +152,7 @@ export default function Navbar({ score = 0, level = 1 }) {
           )}
         </div>
 
-        <Link href="/inbox" title="Live Drills" style={{ 
+        <Link href="/inbox" title="Live Drills" className="hide-mobile hide-tablet" style={{ 
           display: 'flex', 
           alignItems: 'center', 
           gap: '0.4rem', 
@@ -163,7 +163,7 @@ export default function Navbar({ score = 0, level = 1 }) {
           background: 'rgba(255, 255, 255, 0.05)',
           border: '1px solid var(--glass-border)',
           position: 'relative'
-        }} className="hover-lift">
+        }}>
           <Mail size={16} />
           <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>INBOX</span>
           <span className="pulse" style={{ 
@@ -174,12 +174,7 @@ export default function Navbar({ score = 0, level = 1 }) {
         </Link>
       </div>
 
-      <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1 }}>
-        <div style={{ textAlign: 'right', display: 'none', lg: 'block' }}>
-          <p style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 700 }}>XP</p>
-          <p style={{ fontSize: '0.85rem', fontWeight: 900, margin: 0, color: 'var(--accent-secondary)' }}>{score}</p>
-        </div>
-
+      <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
         <div style={{
           padding: '0.3rem 0.6rem',
           background: 'rgba(255, 255, 255, 0.05)',
@@ -194,39 +189,26 @@ export default function Navbar({ score = 0, level = 1 }) {
         </div>
 
         {session && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Link href="/leaderboard" title="Leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Link href="/leaderboard" title="Leaderboard" className="hide-mobile hide-tablet" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
               <TrophyIcon size={18} />
-              <span className="hide-mobile" style={{ fontSize: '0.65rem', fontWeight: 700 }}>Ranking</span>
             </Link>
 
-            <Link href="/achievements" title="Achievements" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
+            <Link href="/achievements" title="Achievements" className="hide-mobile hide-tablet" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
               <Award size={18} />
-              <span className="hide-mobile" style={{ fontSize: '0.65rem', fontWeight: 700 }}>Badges</span>
-            </Link>
-
-            <Link href="/settings" title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-secondary)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)' }}>
-              <SettingsIcon size={18} />
-              <span className="hide-mobile" style={{ fontSize: '0.65rem', fontWeight: 700 }}>Settings</span>
             </Link>
             
-            <div title="Daily Streak" style={{ display: 'flex', alignItems: 'center', gap: '0.1rem', padding: '0.15rem 0.6rem 0.15rem 0.2rem', background: 'rgba(255, 120, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 120, 0, 0.2)' }}>
-              <StreakIcon size={20} />
-              <span style={{ fontSize: '0.8rem', fontWeight: 900, color: '#FF7800' }}>{session.user.streak || 0}</span>
+            <div title="Daily Streak" style={{ display: 'flex', alignItems: 'center', gap: '0.1rem', padding: '0.15rem 0.5rem 0.15rem 0.2rem', background: 'rgba(255, 120, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 120, 0, 0.2)' }}>
+              <StreakIcon size={18} />
+              <span style={{ fontSize: '0.75rem', fontWeight: 900, color: '#FF7800' }}>{session.user.streak || 0}</span>
             </div>
           </div>
         )}
 
         {session ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '0.75rem', borderLeft: '1px solid var(--glass-border)' }}>
-            <div style={{ textAlign: 'right' }} className="hide-mobile">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.5rem', borderLeft: '1px solid var(--glass-border)' }}>
+            <div style={{ textAlign: 'right' }} className="hide-mobile hide-tablet">
               <p style={{ fontSize: '0.7rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>@{session.user.username || 'user'}</p>
-              <button 
-                onClick={() => signOut()}
-                style={{ fontSize: '0.65rem', color: 'var(--accent-danger)', display: 'flex', alignItems: 'center', gap: '0.2rem', marginLeft: 'auto' }}
-              >
-                <LogOut size={10} /> Out
-              </button>
             </div>
             <Link href="/profile" style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)', overflow: 'hidden', flexShrink: 0 }}>
               <ProfileIcon size={24} />

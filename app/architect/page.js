@@ -155,13 +155,13 @@ export default function ArchitectPage() {
     <main className="container" style={{ minHeight: '100vh', paddingBottom: '6rem' }}>
       <Navbar />
 
-      <div style={{ marginTop: '3rem', marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <div style={{ marginTop: '3rem', marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <Hammer size={20} color="var(--accent-warning)" />
             <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-warning)', letterSpacing: '2px' }}>ARCHITECT STUDIO</span>
           </div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0 }}>MISSION <span className="gradient-text">DESIGNER</span></h1>
+          <h1 className="hero-title" style={{ fontSize: 'min(3rem, 10vw)', fontWeight: 900, margin: 0 }}>MISSION <span className="gradient-text">DESIGNER</span></h1>
         </div>
         <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
           <button 
@@ -180,7 +180,11 @@ export default function ArchitectPage() {
       </div>
 
       {activeTab === 'editor' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem' }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 700px), 1fr))', 
+          gap: '2rem' 
+        }}>
           
           {/* Main Editor */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>

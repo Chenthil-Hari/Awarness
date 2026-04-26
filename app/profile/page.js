@@ -152,7 +152,17 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="glass-card" 
-            style={{ flex: '1 1 500px', padding: '2.5rem', display: 'flex', gap: '2.5rem', alignItems: 'center', position: 'relative', overflow: 'hidden' }}
+            style={{ 
+              flex: '1 1 500px', 
+              padding: '2rem', 
+              display: 'flex', 
+              flexWrap: 'wrap',
+              gap: '2.5rem', 
+              alignItems: 'center', 
+              position: 'relative', 
+              overflow: 'hidden',
+              justifyContent: 'center'
+            }}
           >
             <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '300px', height: '300px', background: 'var(--accent-primary)', filter: 'blur(100px)', opacity: 0.05, zIndex: 0 }} />
 
