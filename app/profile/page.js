@@ -9,9 +9,9 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { 
   Trophy, Target, Zap, Clock, TrendingUp, Shield, 
   BarChart3, Calendar, ChevronRight, Edit2, Save, X, 
-  Mail, LogOut, Settings, Award, Check, AlertCircle 
+  Mail, LogOut, Settings, Award, Check, AlertCircle, Camera, User
 } from 'lucide-react';
-// Removed missing date-fns import
+
 const timeAgo = (date) => {
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
   let interval = seconds / 31536000;
@@ -29,9 +29,17 @@ const timeAgo = (date) => {
 
 const CATEGORIES = ['phishing', 'smishing', 'finance', 'security'];
 
+const AVATARS = [
+  { id: 'neon_hacker', url: '/avatars/neon_hacker.png', name: 'Neon Hacker' },
+  { id: 'cyber_ninja', url: '/avatars/cyber_ninja.png', name: 'Cyber Ninja' },
+  { id: 'digital_ghost', url: '/avatars/digital_ghost.png', name: 'Digital Ghost' },
+  { id: 'tech_operative', url: '/avatars/tech_operative.png', name: 'Tech Operative' },
+];
+
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
   const [isEditing, setIsEditing] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [updateStatus, setUpdateStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
@@ -65,7 +73,6 @@ export default function ProfilePage() {
   const performance = user.performance || {};
   const history = [...(user.history || [])].reverse();
 
-  // Calculate overall accuracy
   let totalAttempts = 0;
   let totalSuccesses = 0;
   CATEGORIES.forEach(cat => {
@@ -107,6 +114,32 @@ export default function ProfilePage() {
     }
   };
 
+  const handleAvatarUpdate = async (avatarUrl) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/user/update-avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarUrl }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      await update({
+        ...session,
+        user: { ...session.user, image: data.image }
+      });
+
+      setIsAvatarModalOpen(false);
+      router.refresh();
+    } catch (err) {
+      alert("Failed to update avatar: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="container" style={{ position: 'relative', zIndex: 1, minHeight: '100vh', paddingBottom: '6rem' }}>
       <Navbar />
@@ -121,20 +154,25 @@ export default function ProfilePage() {
             className="glass-card" 
             style={{ flex: '1 1 500px', padding: '2.5rem', display: 'flex', gap: '2.5rem', alignItems: 'center', position: 'relative', overflow: 'hidden' }}
           >
-            {/* Background Decoration */}
             <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '300px', height: '300px', background: 'var(--accent-primary)', filter: 'blur(100px)', opacity: 0.05, zIndex: 0 }} />
 
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ width: '120px', height: '120px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem', border: '4px solid rgba(255,255,255,0.1)', boxShadow: '0 0 40px rgba(124, 58, 237, 0.3)' }}>
-                {user.name?.charAt(0) || 'U'}
+              <div style={{ width: '120px', height: '120px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '4px solid rgba(255,255,255,0.1)', boxShadow: '0 0 40px rgba(124, 58, 237, 0.2)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {user.image ? (
+                  <img src={user.image} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ fontSize: '3.5rem', fontWeight: 900, color: 'var(--accent-primary)' }}>
+                    {user.name?.charAt(0) || 'U'}
+                  </div>
+                )}
               </div>
               <motion.button 
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => setIsEditing(true)}
-                style={{ position: 'absolute', bottom: 0, right: 0, width: '36px', height: '36px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '2px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', cursor: 'pointer' }}
+                onClick={() => setIsAvatarModalOpen(true)}
+                style={{ position: 'absolute', bottom: 0, right: 0, width: '36px', height: '36px', borderRadius: '50%', background: 'var(--accent-primary)', border: '2px solid var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
               >
-                <Edit2 size={16} />
+                <Camera size={16} />
               </motion.button>
             </div>
 
@@ -145,7 +183,12 @@ export default function ProfilePage() {
                   {user.league || 'Bronze'} League
                 </span>
               </div>
-              <p style={{ color: 'var(--text-secondary)', fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>@{user.username || 'user'}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>@{user.username || 'user'}</p>
+                <button onClick={() => setIsEditing(true)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <Edit2 size={12} />
+                </button>
+              </div>
               
               <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -181,28 +224,14 @@ export default function ProfilePage() {
 
         {/* ANALYTICS GRID */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
-          
-          {/* Skill Matrix Radar */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="glass-card" 
-            style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '400px' }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '400px' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '2.5rem', alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <Target size={22} color="var(--accent-primary)" /> Skill Matrix
             </h3>
             <SkillRadar performance={performance} />
           </motion.div>
 
-          {/* Performance Breakdown */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="glass-card" 
-            style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column' }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <BarChart3 size={22} color="var(--accent-secondary)" /> Category Proficiency
             </h3>
@@ -213,8 +242,6 @@ export default function ProfilePage() {
                 const successes = stats.successes || 0;
                 const attempts = stats.attempts || 0;
                 const catAccuracy = attempts > 0 ? Math.round((successes / attempts) * 100) : 0;
-                
-                // Scale XP for the bar (cap at 2000 for full bar)
                 const percent = Math.min(100, (xp / 2000) * 100);
 
                 return (
@@ -224,12 +251,7 @@ export default function ProfilePage() {
                       <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>{catAccuracy}% Accuracy</span>
                     </div>
                     <div style={{ height: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '5px', overflow: 'hidden' }}>
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${percent}%` }}
-                        transition={{ duration: 1.2, delay: 0.3 }}
-                        style={{ height: '100%', background: getCategoryColor(cat), boxShadow: `0 0 10px ${getCategoryColor(cat)}40` }}
-                      />
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${percent}%` }} transition={{ duration: 1.2, delay: 0.3 }} style={{ height: '100%', background: getCategoryColor(cat), boxShadow: `0 0 10px ${getCategoryColor(cat)}40` }} />
                     </div>
                   </div>
                 );
@@ -238,17 +260,8 @@ export default function ProfilePage() {
           </motion.div>
         </div>
 
-        {/* RECENT ACTIVITY & ACCURACY */}
         <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }} className="flex-mobile-column">
-          
-          {/* History List */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="glass-card" 
-            style={{ padding: '2rem' }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card" style={{ padding: '2rem' }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <Clock size={20} color="var(--accent-primary)" /> Mission Log
             </h3>
@@ -262,13 +275,9 @@ export default function ProfilePage() {
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
                         <p style={{ fontWeight: 800, margin: 0, fontSize: '0.9rem' }}>{item.type} {item.success ? 'Neutralized' : 'Breached'}</p>
-                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>
-                          {timeAgo(item.timestamp)}
-                        </p>
+                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>{timeAgo(item.timestamp)}</p>
                       </div>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 600 }}>
-                        {item.xp > 0 ? `Confirmed +${item.xp} XP gain` : 'Standard drill completed'}
-                      </p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 600 }}>{item.xp > 0 ? `Confirmed +${item.xp} XP gain` : 'Standard drill completed'}</p>
                     </div>
                   </div>
                 ))}
@@ -276,94 +285,103 @@ export default function ProfilePage() {
             ) : (
               <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-muted)' }}>
                 <Calendar size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
-                <p style={{ fontWeight: 700 }}>No mission logs found. Engage in training to populate your history.</p>
+                <p style={{ fontWeight: 700 }}>No mission logs found.</p>
               </div>
             )}
           </motion.div>
 
-          {/* Accuracy Circle */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="glass-card" 
-            style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2.5rem', alignSelf: 'flex-start' }}>Overall Accuracy</h3>
             <div style={{ position: 'relative', width: '220px', height: '220px' }}>
               <svg width="220" height="220" viewBox="0 0 220 220">
                 <circle cx="110" cy="110" r="90" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="15" />
-                <motion.circle 
-                  cx="110" cy="110" r="90" fill="none" 
-                  stroke="var(--accent-success)" strokeWidth="15" 
-                  strokeDasharray="565.5"
-                  initial={{ strokeDashoffset: 565.5 }}
-                  animate={{ strokeDashoffset: 565.5 - (565.5 * accuracy / 100) }}
-                  transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
-                  strokeLinecap="round"
-                  transform="rotate(-90 110 110)"
-                  style={{ filter: 'drop-shadow(0 0 8px var(--accent-success))' }}
-                />
+                <motion.circle cx="110" cy="110" r="90" fill="none" stroke="var(--accent-success)" strokeWidth="15" strokeDasharray="565.5" initial={{ strokeDashoffset: 565.5 }} animate={{ strokeDashoffset: 565.5 - (565.5 * accuracy / 100) }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }} strokeLinecap="round" transform="rotate(-90 110 110)" style={{ filter: 'drop-shadow(0 0 8px var(--accent-success))' }} />
               </svg>
               <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
                 <span style={{ fontSize: '3.5rem', fontWeight: 900, lineHeight: 1 }}>{accuracy}%</span>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Precision</p>
               </div>
             </div>
-            <p style={{ marginTop: '2rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, maxWidth: '200px' }}>
-              Based on {totalAttempts} total decisions made across all platforms.
-            </p>
+            <p style={{ marginTop: '2rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, maxWidth: '200px' }}>Based on {totalAttempts} total decisions.</p>
           </motion.div>
         </div>
       </div>
+
+      {/* AVATAR SELECTION MODAL */}
+      <AnimatePresence>
+        {isAvatarModalOpen && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAvatarModalOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(5, 7, 10, 0.9)', backdropFilter: 'blur(10px)' }} />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} 
+              className="glass-card" style={{ position: 'relative', width: '100%', maxWidth: '600px', padding: '3rem 2.5rem', zIndex: 1001 }}
+            >
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.5rem' }}>Select Identity</h2>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.9rem' }}>Choose your visual representation in the network.</p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+                {AVATARS.map(avatar => (
+                  <motion.div
+                    key={avatar.id}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleAvatarUpdate(avatar.url)}
+                    style={{ 
+                      cursor: 'pointer', 
+                      borderRadius: '16px', 
+                      overflow: 'hidden', 
+                      border: user.image === avatar.url ? '3px solid var(--accent-primary)' : '2px solid var(--glass-border)',
+                      aspectRatio: '1/1',
+                      position: 'relative'
+                    }}
+                  >
+                    <img src={avatar.url} alt={avatar.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', display: 'flex', alignItems: 'flex-end', padding: '0.5rem', opacity: user.image === avatar.url ? 1 : 0.6 }}>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'white', textTransform: 'uppercase' }}>{avatar.name}</span>
+                    </div>
+                    {user.image === avatar.url && (
+                      <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: 'var(--accent-primary)', borderRadius: '50%', padding: '2px', color: 'white' }}>
+                        <Check size={12} />
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+
+              <button onClick={() => setIsAvatarModalOpen(false)} className="btn-secondary" style={{ width: '100%' }}>Cancel</button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* EDIT USERNAME MODAL */}
       <AnimatePresence>
         {isEditing && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditing(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(5, 7, 10, 0.9)', backdropFilter: 'blur(10px)' }} />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }} 
-              animate={{ opacity: 1, scale: 1, y: 0 }} 
-              exit={{ opacity: 0, scale: 0.9, y: 20 }} 
-              className="glass-card" 
-              style={{ position: 'relative', width: '100%', maxWidth: '450px', padding: '3rem 2.5rem', zIndex: 1001 }}
-            >
+            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="glass-card" style={{ position: 'relative', width: '100%', maxWidth: '450px', padding: '3rem 2.5rem', zIndex: 1001 }}>
               <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.5rem' }}>Update Handle</h2>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.9rem' }}>Choose a unique identifier for the leaderboards.</p>
-              
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.9rem' }}>Choose a unique identifier.</p>
               <form onSubmit={handleUsernameUpdate}>
                 <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
                   <span style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', fontWeight: 900, color: 'var(--accent-primary)', fontSize: '1.2rem' }}>@</span>
-                  <input 
-                    type="text" 
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                    placeholder="agent_name"
-                    autoFocus
-                    style={{ width: '100%', padding: '1.25rem 1.25rem 1.25rem 2.75rem', background: 'rgba(255,255,255,0.05)', border: '2px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', fontSize: '1.1rem', fontWeight: 700, outline: 'none' }}
-                  />
+                  <input type="text" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder="agent_name" autoFocus style={{ width: '100%', padding: '1.25rem 1.25rem 1.25rem 2.75rem', background: 'rgba(255,255,255,0.05)', border: '2px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', fontSize: '1.1rem', fontWeight: 700, outline: 'none' }} />
                 </div>
-
                 {updateStatus.message && (
                   <div style={{ padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', background: updateStatus.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: `1px solid ${updateStatus.type === 'success' ? 'var(--accent-success)' : 'var(--accent-danger)'}`, color: updateStatus.type === 'success' ? 'var(--accent-success)' : 'var(--accent-danger)', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     {updateStatus.type === 'success' ? <Check size={18} /> : <AlertCircle size={18} />}
                     {updateStatus.message}
                   </div>
                 )}
-
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <button type="button" onClick={() => setIsEditing(false)} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
-                  <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2, background: 'var(--accent-primary)' }}>
-                    {loading ? 'Processing...' : 'Save Identity'}
-                  </button>
+                  <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2, background: 'var(--accent-primary)' }}>{loading ? 'Processing...' : 'Save Identity'}</button>
                 </div>
               </form>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-
     </main>
   );
 }
@@ -382,14 +400,11 @@ function SkillRadar({ performance }) {
   const size = 260;
   const center = size / 2;
   const radius = 100;
-
   const points = CATEGORIES.map((cat, i) => {
-    // Scale value based on XP and Success rate
     const stats = performance[cat] || {};
-    const xpVal = Math.min(100, (stats.xp || 0) / 15); // Normalize XP
+    const xpVal = Math.min(100, (stats.xp || 0) / 15);
     const accVal = stats.attempts > 0 ? (stats.successes / stats.attempts) * 100 : 0;
-    const value = (xpVal * 0.4) + (accVal * 0.6); // Combined metric
-    
+    const value = (xpVal * 0.4) + (accVal * 0.6);
     const angle = (i / CATEGORIES.length) * 2 * Math.PI - Math.PI / 2;
     const r = (value / 100) * radius;
     return `${center + r * Math.cos(angle)},${center + r * Math.sin(angle)}`;
@@ -398,38 +413,19 @@ function SkillRadar({ performance }) {
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {/* Grids */}
         {[0.2, 0.4, 0.6, 0.8, 1].map(scale => (
           <circle key={scale} cx={center} cy={center} r={radius * scale} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
         ))}
-        {/* Axes */}
         {CATEGORIES.map((_, i) => {
           const angle = (i / CATEGORIES.length) * 2 * Math.PI - Math.PI / 2;
-          return (
-            <line key={i} x1={center} y1={center} x2={center + radius * Math.cos(angle)} y2={center + radius * Math.sin(angle)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-          );
+          return <line key={i} x1={center} y1={center} x2={center + radius * Math.cos(angle)} y2={center + radius * Math.sin(angle)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />;
         })}
-        {/* Shape */}
-        <motion.polygon 
-          points={points}
-          fill="rgba(139, 92, 246, 0.15)"
-          stroke="var(--accent-primary)"
-          strokeWidth="3"
-          strokeLinejoin="round"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 1.5, ease: "backOut", delay: 0.5 }}
-          style={{ filter: 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.4))' }}
-        />
+        <motion.polygon points={points} fill="rgba(139, 92, 246, 0.15)" stroke="var(--accent-primary)" strokeWidth="3" strokeLinejoin="round" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1.5, ease: "backOut", delay: 0.5 }} style={{ filter: 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.4))' }} />
       </svg>
       {CATEGORIES.map((cat, i) => {
         const angle = (i / CATEGORIES.length) * 2 * Math.PI - Math.PI / 2;
         const r = radius + 25;
-        return (
-          <div key={cat} style={{ position: 'absolute', top: center + r * Math.sin(angle), left: center + r * Math.cos(angle), transform: 'translate(-50%, -50%)', fontSize: '0.7rem', fontWeight: 900, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            {cat}
-          </div>
-        );
+        return <div key={cat} style={{ position: 'absolute', top: center + r * Math.sin(angle), left: center + r * Math.cos(angle), transform: 'translate(-50%, -50%)', fontSize: '0.7rem', fontWeight: 900, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>{cat}</div>;
       })}
     </div>
   );
