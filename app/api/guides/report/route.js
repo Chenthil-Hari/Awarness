@@ -22,17 +22,16 @@ export async function POST(req) {
       processedGuideId = guideId.$oid;
     }
 
-    if (typeof processedGuideId !== 'string' || !/^[0-9a-fA-F]{24}$/.test(processedGuideId)) {
-      return NextResponse.json({ 
-        error: `Invalid guide ID format: ${JSON.stringify(guideId)} (Type: ${typeof guideId})` 
-      }, { status: 400 });
+    let dbGuideId = processedGuideId;
+    if (typeof processedGuideId === 'string' && /^[0-9a-fA-F]{24}$/.test(processedGuideId)) {
+      dbGuideId = new ObjectId(processedGuideId);
     }
 
     const client = await clientPromise;
     const db = client.db();
 
     const report = {
-      guideId: new ObjectId(processedGuideId),
+      guideId: dbGuideId,
       reporterId: session.user.id,
       reporterUsername: session.user.username,
       reason,
@@ -45,7 +44,7 @@ export async function POST(req) {
 
     // Also mark the guide as reported (optional, for visual flagging)
     await db.collection('guides').updateOne(
-      { _id: new ObjectId(processedGuideId) },
+      { _id: dbGuideId },
       { $inc: { reportCount: 1 } }
     );
 
