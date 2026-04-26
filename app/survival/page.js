@@ -18,6 +18,7 @@ function SurvivalContent() {
 
   const [gameState, setGameState] = useState('lobby'); // lobby, playing, eliminating, won, eliminated
   const [roomCode, setRoomCode] = useState('');
+  const [inputCode, setInputCode] = useState('');
   const [isJoined, setIsJoined] = useState(false);
   
   const { members, broadcast, on } = useMultiplayer(roomCode, isFriendMode && isJoined);
@@ -44,10 +45,23 @@ function SurvivalContent() {
 
   // Initialize Room
   useEffect(() => {
-    if (isFriendMode && !roomCode) {
+    if (isFriendMode && !roomCode && !isJoined) {
       setRoomCode(Math.random().toString(36).substring(2, 8).toUpperCase());
     }
-  }, [isFriendMode, roomCode]);
+  }, [isFriendMode, roomCode, isJoined]);
+
+  const handleJoin = () => {
+    if (inputCode.trim()) {
+      setRoomCode(inputCode.trim().toUpperCase());
+      setIsJoined(true);
+    } else {
+      alert("Please enter a room code.");
+    }
+  };
+
+  const handleCreate = () => {
+    setIsJoined(true);
+  };
 
   const startGame = () => {
     if (isFriendMode && gameState === 'lobby') {
@@ -224,17 +238,19 @@ function SurvivalContent() {
                           <input 
                             type="text" 
                             placeholder="Enter Code" 
+                            value={inputCode}
+                            onChange={(e) => setInputCode(e.target.value)}
                             style={{ width: '100%', padding: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
                           />
                         </div>
-                        <button onClick={() => setIsJoined(true)} className="btn-primary" style={{ padding: '1rem 2rem' }}>JOIN</button>
+                        <button onClick={handleJoin} className="btn-primary" style={{ padding: '1rem 2rem' }}>JOIN</button>
                       </div>
                       <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>OR</span>
                         <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
                       </div>
-                      <button onClick={() => setIsJoined(true)} className="btn-secondary" style={{ width: '100%', padding: '1rem' }}>CREATE PRIVATE ROOM</button>
+                      <button onClick={handleCreate} className="btn-secondary" style={{ width: '100%', padding: '1rem' }}>CREATE PRIVATE ROOM</button>
                     </div>
                   </div>
                 ) : (

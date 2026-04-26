@@ -49,6 +49,7 @@ function HeistContent() {
 
   const [gameState, setGameState] = useState('briefing'); // briefing, lobby, role-select, playing, phase-complete, failed, victory
   const [roomCode, setRoomCode] = useState('');
+  const [inputCode, setInputCode] = useState('');
   const [isJoined, setIsJoined] = useState(false);
 
   const { members, broadcast, on } = useMultiplayer(roomCode, isFriendMode && isJoined);
@@ -85,10 +86,23 @@ function HeistContent() {
 
   // Initialize Room
   useEffect(() => {
-    if (isFriendMode && !roomCode) {
+    if (isFriendMode && !roomCode && !isJoined) {
       setRoomCode(Math.random().toString(36).substring(2, 8).toUpperCase());
     }
-  }, [isFriendMode, roomCode]);
+  }, [isFriendMode, roomCode, isJoined]);
+
+  const handleJoin = () => {
+    if (inputCode.trim()) {
+      setRoomCode(inputCode.trim().toUpperCase());
+      setIsJoined(true);
+    } else {
+      alert("Please enter a mission code.");
+    }
+  };
+
+  const handleCreate = () => {
+    setIsJoined(true);
+  };
 
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode);
@@ -251,17 +265,19 @@ function HeistContent() {
                           <input 
                             type="text" 
                             placeholder="Enter Code" 
+                            value={inputCode}
+                            onChange={(e) => setInputCode(e.target.value)}
                             style={{ width: '100%', padding: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
                           />
                         </div>
-                        <button onClick={() => setIsJoined(true)} className="btn-primary" style={{ padding: '1rem 2rem', background: 'var(--accent-secondary)' }}>JOIN</button>
+                        <button onClick={handleJoin} className="btn-primary" style={{ padding: '1rem 2rem', background: 'var(--accent-secondary)' }}>JOIN</button>
                       </div>
                       <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>OR</span>
                         <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
                       </div>
-                      <button onClick={() => setIsJoined(true)} className="btn-secondary" style={{ width: '100%', padding: '1rem', borderColor: 'var(--accent-secondary)', color: 'var(--accent-secondary)' }}>GENERATE MISSION LINK</button>
+                      <button onClick={handleCreate} className="btn-secondary" style={{ width: '100%', padding: '1rem', borderColor: 'var(--accent-secondary)', color: 'var(--accent-secondary)' }}>GENERATE MISSION LINK</button>
                     </div>
                   </div>
                 ) : (
