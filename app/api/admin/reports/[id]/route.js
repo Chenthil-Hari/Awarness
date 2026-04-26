@@ -23,7 +23,11 @@ export async function DELETE(req, { params }) {
       reportOid = id;
     }
 
-    await db.collection('reports').deleteOne({ _id: reportOid });
+    const result = await db.collection('reports').deleteOne({ _id: reportOid });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: 'Report not found in database' }, { status: 404 });
+    }
 
     return NextResponse.json({ message: 'Report dismissed' });
   } catch (error) {
