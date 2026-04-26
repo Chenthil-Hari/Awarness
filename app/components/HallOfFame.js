@@ -117,10 +117,10 @@ const HologramPlayer = ({ user, rank }) => {
         </div>
         <div style={{ fontSize: '0.75rem', color: 'var(--accent-secondary)', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
           <Zap size={12} />
-          {user.xp.toLocaleString()} XP
+          {(user.xp || 0).toLocaleString()} XP
         </div>
         <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-          {user.league.toUpperCase()}
+          {(user.league || 'Bronze').toUpperCase()}
         </div>
       </div>
     </motion.div>

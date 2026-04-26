@@ -5,6 +5,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   devIndicators: false,
+  images: {
+    domains: ['lh3.googleusercontent.com', 'avatars.githubusercontent.com', 'i.pravatar.cc'],
+  },
 };
 
 export default nextConfig;

@@ -64,14 +64,30 @@ export function useMultiplayer(roomCode, isEnabled) {
     }
   };
 
+  const listenersRef = useRef([]);
+  listenersRef.current = []; // Clear on each render so children can re-register
+
   const on = (event, callback) => {
-    useEffect(() => {
-      if (!channelRef.current) return;
-      const channel = channelRef.current;
-      channel.bind(event, callback);
-      return () => channel.unbind(event, callback);
-    }, [event, callback, isConnected]); // Re-bind when connection is ready
+    // Just add to listeners ref, no hook call here
+    listenersRef.current.push({ event, callback });
   };
+
+  useEffect(() => {
+    if (!channelRef.current || !isConnected) return;
+    
+    const channel = channelRef.current;
+    const currentListeners = [...listenersRef.current];
+
+    currentListeners.forEach(({ event, callback }) => {
+      channel.bind(event, callback);
+    });
+
+    return () => {
+      currentListeners.forEach(({ event, callback }) => {
+        channel.unbind(event, callback);
+      });
+    };
+  }, [isConnected, roomCode]); // Re-bind when connection status or room changes
 
   const me = members.find(m => m.user_id === (session?.user?.email || session?.user?.id));
 
