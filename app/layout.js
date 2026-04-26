@@ -20,15 +20,24 @@ import { Providers } from "./providers";
 import ChatBot from "./components/ChatBot";
 import GhostBanner from "./components/GhostBanner";
 import SupportWidget from "./components/SupportWidget";
+import ClickSpark from "./components/ClickSpark/ClickSpark";
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${outfit.variable} ${plusJakarta.variable}`} suppressHydrationWarning>
       <body>
         <Providers>
-          <GhostBanner />
-          {children}
-          <ChatBot />
+          <ClickSpark
+            sparkColor='var(--accent-primary)'
+            sparkSize={10}
+            sparkRadius={15}
+            sparkCount={8}
+            duration={400}
+          >
+            <GhostBanner />
+            {children}
+            <ChatBot />
+          </ClickSpark>
         </Providers>
       </body>
     </html>
