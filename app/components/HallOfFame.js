@@ -105,23 +105,23 @@ const HologramPlayer = ({ user, rank }) => {
       <div className="hof-card" style={{
         marginTop: '1.5rem',
         textAlign: 'center',
-        background: 'rgba(255, 255, 255, 0.05)',
+        background: 'var(--bg-secondary)',
         padding: '1rem 1.5rem',
         borderRadius: '16px',
         backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: '1px solid var(--glass-border)',
         minWidth: '170px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+        boxShadow: 'var(--shadow-lg)',
         transition: 'all 0.3s ease'
       }}>
-        <div style={{ fontWeight: 800, fontSize: isFirst ? '1.1rem' : '0.9rem', marginBottom: '0.2rem', color: 'white' }}>
+        <div style={{ fontWeight: 800, fontSize: isFirst ? '1.1rem' : '0.9rem', marginBottom: '0.2rem', color: 'var(--text-primary)' }}>
           {user.username}
         </div>
-        <div style={{ fontSize: '0.75rem', color: 'var(--accent-secondary)', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+        <div style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
           <Zap size={12} />
           {(user.xp || 0).toLocaleString()} XP
         </div>
-        <div style={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '0.4rem', fontWeight: 600, letterSpacing: '0.5px' }}>
+        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '0.4rem', fontWeight: 600, letterSpacing: '0.5px' }}>
           {(user.league || 'Bronze').toUpperCase()}
         </div>
       </div>

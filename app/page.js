@@ -146,8 +146,6 @@ export default function Home() {
             ))}
           </motion.div>
         </header>
-        
-        <HallOfFame />
 
         {/* The Campaign Section */}
         <section style={{ marginBottom: '4rem' }}>
@@ -254,7 +252,6 @@ export default function Home() {
           </BorderGlow>
         </div>
 
-        {/* Daily Challenge Card */}
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -279,6 +276,8 @@ export default function Home() {
           </div>
           <button className="btn-primary" style={{ padding: '0.8rem 1.8rem', width: 'auto' }}>Accept</button>
         </motion.div>
+
+        <HallOfFame />
       </div>
 
       {/* Simulation Overlay */}
