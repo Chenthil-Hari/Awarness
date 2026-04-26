@@ -12,6 +12,7 @@
     "@auth/mongodb-adapter": "^3.11.2",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.38.0",
+    "gsap": "^3.15.0",
     "lottie-react": "^2.4.1",
     "lucide-react": "^1.9.0",
     "mongodb": "^6.21.0",
