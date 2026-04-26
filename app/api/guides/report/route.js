@@ -23,7 +23,9 @@ export async function POST(req) {
     }
 
     if (typeof processedGuideId !== 'string' || !/^[0-9a-fA-F]{24}$/.test(processedGuideId)) {
-      return NextResponse.json({ error: 'Invalid guide ID format' }, { status: 400 });
+      return NextResponse.json({ 
+        error: `Invalid guide ID format: ${JSON.stringify(guideId)} (Type: ${typeof guideId})` 
+      }, { status: 400 });
     }
 
     const client = await clientPromise;
