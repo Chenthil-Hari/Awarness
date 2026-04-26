@@ -91,7 +91,7 @@ const HologramPlayer = ({ user, rank }) => {
         }}
       >
         <Image 
-          src={user.avatar || '/avatars/default.png'} 
+          src={user.avatar || '/avatars/cyber_ninja.png'} 
           alt={user.username} 
           width={120} 
           height={120}
@@ -102,15 +102,17 @@ const HologramPlayer = ({ user, rank }) => {
       </motion.div>
 
       {/* Info Card */}
-      <div style={{
+      <div className="hof-card" style={{
         marginTop: '1.5rem',
         textAlign: 'center',
-        background: 'rgba(0, 0, 0, 0.4)',
-        padding: '0.75rem 1.5rem',
-        borderRadius: '12px',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid var(--glass-border)',
-        minWidth: '160px'
+        background: 'rgba(255, 255, 255, 0.05)',
+        padding: '1rem 1.5rem',
+        borderRadius: '16px',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        minWidth: '170px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+        transition: 'all 0.3s ease'
       }}>
         <div style={{ fontWeight: 800, fontSize: isFirst ? '1.1rem' : '0.9rem', marginBottom: '0.2rem', color: 'white' }}>
           {user.username}
@@ -119,7 +121,7 @@ const HologramPlayer = ({ user, rank }) => {
           <Zap size={12} />
           {(user.xp || 0).toLocaleString()} XP
         </div>
-        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+        <div style={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '0.4rem', fontWeight: 600, letterSpacing: '0.5px' }}>
           {(user.league || 'Bronze').toUpperCase()}
         </div>
       </div>
@@ -185,6 +187,11 @@ export default function HallOfFame() {
       <style jsx global>{`
         .hologram-image {
           filter: brightness(1.2) contrast(1.2) saturate(1.2) drop-shadow(0 0 10px rgba(0, 255, 255, 0.3));
+        }
+        .hof-card:hover {
+          transform: translateY(-5px);
+          background: rgba(255, 255, 255, 0.1) !important;
+          border-color: rgba(255, 255, 255, 0.2) !important;
         }
         .scanlines {
           position: absolute;
