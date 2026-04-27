@@ -51,11 +51,22 @@ function SurvivalContent() {
     setBaseTime(data.timer);
   });
 
-  // Force Dark Mode background for the Arena
+  // Force Dark Mode theme for the entire page in the Arena
   useEffect(() => {
+    const html = document.querySelector('html');
+    const originalTheme = html.getAttribute('data-theme');
+    html.setAttribute('data-theme', 'dark');
+    
+    // Also force body background to be deep black
     const originalBg = document.body.style.backgroundColor;
     document.body.style.backgroundColor = '#050101';
+    
     return () => {
+      if (originalTheme) {
+        html.setAttribute('data-theme', originalTheme);
+      } else {
+        html.removeAttribute('data-theme');
+      }
       document.body.style.backgroundColor = originalBg;
     };
   }, []);
@@ -217,11 +228,7 @@ function SurvivalContent() {
       paddingBottom: '5rem', 
       position: 'relative', 
       background: 'transparent', 
-      zIndex: 1, 
-      color: 'white',
-      '--text-secondary': 'rgba(255,255,255,0.7)',
-      '--text-muted': 'rgba(255,255,255,0.5)',
-      '--glass-border': 'rgba(255,255,255,0.1)'
+      zIndex: 1
     }}>
       <ThreeBackground theme="danger" {...bgProps} />
       <Navbar />
