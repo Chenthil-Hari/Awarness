@@ -185,9 +185,26 @@ function SurvivalContent() {
     }
   };
 
+  const getBgProps = () => {
+    switch (gameState) {
+      case 'playing':
+        return { speed: 1, intensity: 1, shake: 0 };
+      case 'eliminating':
+        return { speed: 5, intensity: 3, shake: 0.1 };
+      case 'eliminated':
+        return { speed: 0.2, intensity: 0.5, shake: 0 };
+      case 'won':
+        return { speed: 10, intensity: 5, shake: 0 };
+      default:
+        return { speed: 0.5, intensity: 0.8, shake: 0 };
+    }
+  };
+
+  const bgProps = getBgProps();
+
   return (
     <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem', position: 'relative' }}>
-      <ThreeBackground theme="danger" />
+      <ThreeBackground theme="danger" {...bgProps} />
       <Navbar />
 
       {/* Header Info */}

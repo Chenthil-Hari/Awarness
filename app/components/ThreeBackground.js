@@ -11,7 +11,7 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-function Particles({ count = 2000, color = "#8b5cf6" }) {
+function Particles({ count = 2000, color = "#8b5cf6", speed = 1 }) {
   const points = useMemo(() => {
     const p = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -37,7 +37,7 @@ function Particles({ count = 2000, color = "#8b5cf6" }) {
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
     if (pointsRef.current) {
-      pointsRef.current.rotation.y = time * 0.05 + mouse.current.x * 0.1;
+      pointsRef.current.rotation.y = time * 0.05 * speed + mouse.current.x * 0.1;
       pointsRef.current.rotation.x = Math.sin(time * 0.1) * 0.1 - mouse.current.y * 0.1;
     }
   });
@@ -56,47 +56,47 @@ function Particles({ count = 2000, color = "#8b5cf6" }) {
   );
 }
 
-function FloatingShapes({ primaryColor = "#ec4899", secondaryColor = "#06b6d4", accentColor = "#7c3aed" }) {
+function FloatingShapes({ primaryColor = "#ec4899", secondaryColor = "#06b6d4", accentColor = "#7c3aed", intensity = 1 }) {
   const groupRef = useRef();
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
     if (groupRef.current) {
-      groupRef.current.rotation.y = time * 0.1;
+      groupRef.current.rotation.y = time * 0.1 * intensity;
     }
   });
 
   return (
     <group ref={groupRef}>
-      <Float speed={2} rotationIntensity={1} floatIntensity={1}>
+      <Float speed={2 * intensity} rotationIntensity={1} floatIntensity={1}>
         <Sphere args={[1, 64, 64]} position={[-4, 2, -5]}>
           <MeshDistortMaterial
             color={primaryColor}
-            speed={3}
+            speed={3 * intensity}
             distort={0.4}
             radius={1}
           />
         </Sphere>
       </Float>
 
-      <Float speed={1.5} rotationIntensity={2} floatIntensity={2}>
+      <Float speed={1.5 * intensity} rotationIntensity={2} floatIntensity={2}>
         <Sphere args={[1.5, 64, 64]} position={[5, -2, -8]}>
           <MeshDistortMaterial
             color={secondaryColor}
-            speed={2}
+            speed={2 * intensity}
             distort={0.3}
             radius={1}
           />
         </Sphere>
       </Float>
       
-      <Float speed={3} rotationIntensity={0.5} floatIntensity={0.5}>
+      <Float speed={3 * intensity} rotationIntensity={0.5} floatIntensity={0.5}>
         <mesh position={[0, 0, -10]}>
           <torusKnotGeometry args={[3, 0.8, 128, 32]} />
           <meshStandardMaterial 
             color={accentColor} 
             emissive={accentColor} 
-            emissiveIntensity={0.5} 
+            emissiveIntensity={0.5 * intensity} 
             wireframe 
           />
         </mesh>
@@ -105,7 +105,7 @@ function FloatingShapes({ primaryColor = "#ec4899", secondaryColor = "#06b6d4", 
   );
 }
 
-function SceneContent({ theme = 'default' }) {
+function SceneContent({ theme = 'default', speed = 1, intensity = 1, shake = 0 }) {
   const cameraRef = useRef();
   
   const colors = useMemo(() => {
@@ -126,6 +126,13 @@ function SceneContent({ theme = 'default' }) {
       fog: '#09090b'
     };
   }, [theme]);
+
+  useFrame((state) => {
+    if (cameraRef.current && shake > 0) {
+      cameraRef.current.position.x += (Math.random() - 0.5) * shake;
+      cameraRef.current.position.y += (Math.random() - 0.5) * shake;
+    }
+  });
 
   useEffect(() => {
     // Scroll orchestration
@@ -160,17 +167,17 @@ function SceneContent({ theme = 'default' }) {
   return (
     <>
       <PerspectiveCamera ref={cameraRef} makeDefault position={[0, 0, 10]} />
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} intensity={1} color={colors.primary} />
-      <pointLight position={[-10, -10, -10]} intensity={0.5} color={colors.secondary} />
-      <Particles color={colors.particles} />
-      <FloatingShapes primaryColor={colors.primary} secondaryColor={colors.secondary} accentColor={colors.accent} />
+      <ambientLight intensity={0.5 * intensity} />
+      <pointLight position={[10, 10, 10]} intensity={1 * intensity} color={colors.primary} />
+      <pointLight position={[-10, -10, -10]} intensity={0.5 * intensity} color={colors.secondary} />
+      <Particles color={colors.particles} speed={speed} />
+      <FloatingShapes primaryColor={colors.primary} secondaryColor={colors.secondary} accentColor={colors.accent} intensity={intensity} />
       <fog attach="fog" args={[colors.fog, 5, 25]} />
     </>
   );
 }
 
-export default function ThreeBackground({ theme = 'default' }) {
+export default function ThreeBackground({ theme = 'default', speed = 1, intensity = 1, shake = 0 }) {
   return (
     <div style={{
       position: 'fixed',
@@ -180,10 +187,11 @@ export default function ThreeBackground({ theme = 'default' }) {
       height: '100vh',
       zIndex: -1,
       pointerEvents: 'none',
+      transition: 'background 1s ease-in-out',
       background: theme === 'danger' ? '#050101' : '#09090b'
     }}>
       <Canvas dpr={[1, 2]}>
-        <SceneContent theme={theme} />
+        <SceneContent theme={theme} speed={speed} intensity={intensity} shake={shake} />
       </Canvas>
     </div>
   );
