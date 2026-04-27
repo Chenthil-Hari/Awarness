@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import BorderGlow from './BorderGlow/BorderGlow';
 import TextPressure from './TextPressure/TextPressure';
-import ThreeBackground from './ThreeBackground';
+// import ThreeBackground from './ThreeBackground';
 
 const features = [
   {

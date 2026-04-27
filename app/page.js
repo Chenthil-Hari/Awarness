@@ -16,6 +16,7 @@ import LandingPage from './components/LandingPage';
 import LoadingSpinner from './components/LoadingSpinner';
 import CampaignTracker from './components/CampaignTracker';
 import HallOfFame from './components/HallOfFame';
+// import ThreeBackground from './components/ThreeBackground';
 
 export default function Home() {
   const { data: session, status } = useSession();
