@@ -212,7 +212,7 @@ function SurvivalContent() {
   const bgProps = getBgProps();
 
   return (
-    <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem', position: 'relative', background: 'transparent' }}>
+    <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem', position: 'relative', background: 'transparent', zIndex: 1 }}>
       <ThreeBackground theme="danger" {...bgProps} />
       <Navbar />
 

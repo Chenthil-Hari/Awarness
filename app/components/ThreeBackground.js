@@ -11,7 +11,7 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-function Particles({ count = 2000, color = "#8b5cf6", speed = 1 }) {
+function Particles({ count = 5000, color = "#ff0000", speed = 1 }) {
   const points = useMemo(() => {
     const p = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -47,7 +47,7 @@ function Particles({ count = 2000, color = "#8b5cf6", speed = 1 }) {
       <PointMaterial
         transparent
         color={color}
-        size={0.15}
+        size={0.4}
         sizeAttenuation={true}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
@@ -185,12 +185,12 @@ export default function ThreeBackground({ theme = 'default', speed = 1, intensit
       left: 0,
       width: '100%',
       height: '100vh',
-      zIndex: -1,
+      zIndex: 0,
       pointerEvents: 'none',
       transition: 'background 1s ease-in-out',
       background: theme === 'danger' ? '#050101' : '#09090b'
     }}>
-      <Canvas dpr={[1, 2]}>
+      <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 10], fov: 50 }}>
         <SceneContent theme={theme} speed={speed} intensity={intensity} shake={shake} />
       </Canvas>
     </div>
