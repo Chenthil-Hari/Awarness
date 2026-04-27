@@ -235,44 +235,57 @@ function SurvivalContent() {
       <Navbar />
 
       {/* Header Info */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem', marginBottom: '3rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginTop: '5rem', // Huge margin to clear Navbar
+        marginBottom: '4rem', 
+        position: 'relative',
+        zIndex: 100, // Force it above everything
+        color: 'white' // Force white text
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <div style={{ 
-            padding: '0.75rem', 
-            background: 'var(--accent-danger)', 
-            borderRadius: '12px', 
+            padding: '1rem', 
+            background: '#ef4444', 
+            borderRadius: '16px', 
             color: 'white',
-            boxShadow: '0 0 20px rgba(220, 38, 38, 0.4)'
+            boxShadow: '0 0 30px rgba(239, 68, 68, 0.6)'
           }}>
-            <Skull size={24} />
+            <Skull size={32} />
           </div>
           <div>
-            <h1 style={{ fontSize: '1.5rem', margin: 0, fontWeight: 900 }}>Survival Mode: <span style={{ color: 'var(--accent-danger)' }}>The Gauntlet</span></h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-              <Users size={16} />
+            <h1 style={{ fontSize: '2rem', margin: 0, fontWeight: 900, color: 'white', letterSpacing: '-0.5px' }}>
+              Survival Mode: <span style={{ color: '#ef4444' }}>The Gauntlet</span>
+            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', color: 'rgba(255,255,255,0.8)', fontWeight: 600, marginTop: '0.25rem' }}>
+              <Users size={18} />
               <span>{players} Players {isFriendMode ? `(${members.length} Friends)` : ''} Remaining</span>
             </div>
           </div>
         </div>
 
         <motion.div 
-          animate={heartbeatActive ? { scale: [1, 1.2, 1] } : {}}
+          animate={heartbeatActive ? { scale: [1, 1.1, 1] } : {}}
           transition={{ repeat: Infinity, duration: 0.5 }}
           style={{ 
             display: 'flex', 
             alignItems: 'center', 
-            gap: '0.75rem', 
-            background: timeLeft < 5 ? '#ef4444' : 'rgba(0,0,0,0.6)',
-            padding: '0.75rem 1.5rem',
+            gap: '1rem', 
+            background: timeLeft < 5 ? '#ef4444' : 'rgba(0,0,0,0.8)',
+            padding: '1rem 2rem',
             borderRadius: 'var(--radius-full)',
-            fontWeight: 800,
-            fontSize: '1.25rem',
+            fontWeight: 900,
+            fontSize: '1.75rem',
             color: 'white',
-            border: `2px solid ${timeLeft < 5 ? '#ef4444' : 'rgba(255,255,255,0.2)'}`,
-            boxShadow: timeLeft < 5 ? '0 0 20px rgba(239, 68, 68, 0.4)' : 'none'
+            border: `3px solid ${timeLeft < 5 ? '#ef4444' : '#ef4444'}`, // Always red border for timer
+            boxShadow: '0 0 20px rgba(239, 68, 68, 0.4)',
+            minWidth: '140px',
+            justifyContent: 'center'
           }}
         >
-          <Timer size={20} />
+          <Timer size={24} />
           <span style={{ fontFamily: 'monospace' }}>{timeLeft}s</span>
         </motion.div>
       </div>
