@@ -54,8 +54,8 @@ export default function LandingPage() {
 
   return (
     <div style={{ overflow: 'hidden', position: 'relative' }}>
-      {/* 3D Dashboard Background */}
-      <ThreeBackground mode="dashboard" scrollProgress={scrollProgress} />
+      {/* 3D Dashboard Background - Temporarily disabled for diagnosis */}
+      {/* <ThreeBackground mode="dashboard" scrollProgress={scrollProgress} /> */}
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         {/* Hero Section */}
