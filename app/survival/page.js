@@ -144,7 +144,7 @@ function SurvivalContent() {
         if (prev <= targetPlayers) {
           clearInterval(interval);
           
-          setTimeout(() => {
+              setTimeout(() => {
             if (isCorrect) {
               if (round < survivalScenarios.length - 1) {
                 setRound(prevRound => prevRound + 1);
@@ -162,7 +162,7 @@ function SurvivalContent() {
               setEliminationText(option?.eliminationMessage || "Time ran out. You were disconnected. ELIMINATED.");
               setGameState('eliminated');
             }
-          }, 1500);
+          }, 3000); // Increased from 1500 to 3000ms
           
           return targetPlayers;
         }
@@ -279,7 +279,7 @@ function SurvivalContent() {
             style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto', paddingTop: '4rem' }}
           >
             <div style={{ height: '100px', marginBottom: '2rem' }}>
-              <TextPressure text={isFriendMode ? "FRIEND LOBBY" : "SURVIVAL"} textColor="var(--accent-danger)" minFontSize={80} />
+              <TextPressure text={isFriendMode ? "FRIEND LOBBY" : "SURVIVAL"} textColor="#ef4444" minFontSize={80} />
             </div>
             
             <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', marginBottom: '3rem', lineHeight: 1.6 }}>
@@ -290,7 +290,7 @@ function SurvivalContent() {
 
             <BorderGlow
               glowColor="0 80 50"
-              backgroundColor="var(--bg-secondary)"
+              backgroundColor="rgba(0,0,0,0.8)"
               borderRadius={32}
               animated={true}
             >
@@ -451,7 +451,7 @@ function SurvivalContent() {
 
             <BorderGlow
               glowColor="0 0 50"
-              backgroundColor="var(--bg-secondary)"
+              backgroundColor="rgba(0,0,0,0.8)"
               borderRadius={24}
             >
               <div style={{ padding: '2.5rem' }}>
@@ -524,9 +524,9 @@ function SurvivalContent() {
             style={{ textAlign: 'center', paddingTop: '6rem', maxWidth: '600px', margin: '0 auto' }}
           >
             <div style={{ height: '100px', marginBottom: '2rem' }}>
-              <TextPressure text="ELIMINATED" textColor="var(--accent-danger)" minFontSize={80} />
+              <TextPressure text="ELIMINATED" textColor="#ef4444" minFontSize={80} />
             </div>
-            <div className="glass-card" style={{ padding: '3rem', borderRadius: 'var(--radius-xl)', border: '2px solid var(--accent-danger)' }}>
+            <div className="glass-card" style={{ padding: '3rem', borderRadius: 'var(--radius-xl)', border: '2px solid var(--accent-danger)', background: 'rgba(0,0,0,0.8)' }}>
               <AlertTriangle size={48} color="var(--accent-danger)" style={{ marginBottom: '1.5rem' }} />
               <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Game Over</h3>
               <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginBottom: '2rem', lineHeight: 1.6 }}>
