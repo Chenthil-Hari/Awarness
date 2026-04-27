@@ -25,6 +25,11 @@ const DashboardNode = ({ position, label, color, description, onClick, index }) 
     }
   });
 
+  useEffect(() => {
+    document.body.style.cursor = hovered ? 'pointer' : 'auto';
+    return () => { document.body.style.cursor = 'auto'; };
+  }, [hovered]);
+
   return (
     <group position={position}>
       <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
@@ -33,7 +38,6 @@ const DashboardNode = ({ position, label, color, description, onClick, index }) 
           onPointerOver={() => setHovered(true)}
           onPointerOut={() => setHovered(false)}
           onClick={onClick}
-          style={{ cursor: 'pointer' }}
         >
           <sphereGeometry args={[1.2, 64, 64]} />
           <MeshDistortMaterial
