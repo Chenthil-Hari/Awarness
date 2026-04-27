@@ -11,7 +11,7 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-function Particles({ count = 2000 }) {
+function Particles({ count = 2000, color = "#8b5cf6" }) {
   const points = useMemo(() => {
     const p = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -46,7 +46,7 @@ function Particles({ count = 2000 }) {
     <Points ref={pointsRef} positions={points} stride={3} frustumCulled={false}>
       <PointMaterial
         transparent
-        color="#8b5cf6"
+        color={color}
         size={0.15}
         sizeAttenuation={true}
         depthWrite={false}
@@ -56,7 +56,7 @@ function Particles({ count = 2000 }) {
   );
 }
 
-function FloatingShapes() {
+function FloatingShapes({ primaryColor = "#ec4899", secondaryColor = "#06b6d4", accentColor = "#7c3aed" }) {
   const groupRef = useRef();
 
   useFrame((state) => {
@@ -71,7 +71,7 @@ function FloatingShapes() {
       <Float speed={2} rotationIntensity={1} floatIntensity={1}>
         <Sphere args={[1, 64, 64]} position={[-4, 2, -5]}>
           <MeshDistortMaterial
-            color="#ec4899"
+            color={primaryColor}
             speed={3}
             distort={0.4}
             radius={1}
@@ -82,7 +82,7 @@ function FloatingShapes() {
       <Float speed={1.5} rotationIntensity={2} floatIntensity={2}>
         <Sphere args={[1.5, 64, 64]} position={[5, -2, -8]}>
           <MeshDistortMaterial
-            color="#06b6d4"
+            color={secondaryColor}
             speed={2}
             distort={0.3}
             radius={1}
@@ -94,8 +94,8 @@ function FloatingShapes() {
         <mesh position={[0, 0, -10]}>
           <torusKnotGeometry args={[3, 0.8, 128, 32]} />
           <meshStandardMaterial 
-            color="#7c3aed" 
-            emissive="#7c3aed" 
+            color={accentColor} 
+            emissive={accentColor} 
             emissiveIntensity={0.5} 
             wireframe 
           />
@@ -105,9 +105,28 @@ function FloatingShapes() {
   );
 }
 
-function SceneContent() {
+function SceneContent({ theme = 'default' }) {
   const cameraRef = useRef();
   
+  const colors = useMemo(() => {
+    if (theme === 'danger') {
+      return {
+        particles: '#dc2626',
+        primary: '#991b1b',
+        secondary: '#450a0a',
+        accent: '#dc2626',
+        fog: '#050101'
+      };
+    }
+    return {
+      particles: '#8b5cf6',
+      primary: '#ec4899',
+      secondary: '#06b6d4',
+      accent: '#7c3aed',
+      fog: '#09090b'
+    };
+  }, [theme]);
+
   useEffect(() => {
     // Scroll orchestration
     const tl = gsap.timeline({
@@ -142,16 +161,16 @@ function SceneContent() {
     <>
       <PerspectiveCamera ref={cameraRef} makeDefault position={[0, 0, 10]} />
       <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} intensity={1} color="#8b5cf6" />
-      <pointLight position={[-10, -10, -10]} intensity={0.5} color="#06b6d4" />
-      <Particles />
-      <FloatingShapes />
-      <fog attach="fog" args={['#09090b', 5, 25]} />
+      <pointLight position={[10, 10, 10]} intensity={1} color={colors.primary} />
+      <pointLight position={[-10, -10, -10]} intensity={0.5} color={colors.secondary} />
+      <Particles color={colors.particles} />
+      <FloatingShapes primaryColor={colors.primary} secondaryColor={colors.secondary} accentColor={colors.accent} />
+      <fog attach="fog" args={[colors.fog, 5, 25]} />
     </>
   );
 }
 
-export default function ThreeBackground() {
+export default function ThreeBackground({ theme = 'default' }) {
   return (
     <div style={{
       position: 'fixed',
@@ -161,10 +180,10 @@ export default function ThreeBackground() {
       height: '100vh',
       zIndex: -1,
       pointerEvents: 'none',
-      background: '#09090b'
+      background: theme === 'danger' ? '#050101' : '#09090b'
     }}>
       <Canvas dpr={[1, 2]}>
-        <SceneContent />
+        <SceneContent theme={theme} />
       </Canvas>
     </div>
   );

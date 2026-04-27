@@ -11,6 +11,7 @@ import TextPressure from '../components/TextPressure/TextPressure';
 import { useMultiplayer } from '@/hooks/useMultiplayer';
 import { survivalScenarios } from '../data/survivalScenarios';
 import { calculateLevel } from '@/lib/game';
+import ThreeBackground from '../components/ThreeBackground';
 
 function SurvivalContent() {
   const { data: session, update } = useSession();
@@ -185,7 +186,8 @@ function SurvivalContent() {
   };
 
   return (
-    <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem' }}>
+    <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem', position: 'relative' }}>
+      <ThreeBackground theme="danger" />
       <Navbar />
 
       {/* Header Info */}

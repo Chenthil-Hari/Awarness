@@ -6,14 +6,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import BorderGlow from './BorderGlow/BorderGlow';
 import TextPressure from './TextPressure/TextPressure';
-import ThreeBackground from './ThreeBackground';
-import { useEffect } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
-}
 
 const features = [
   {
@@ -44,80 +36,17 @@ const stats = [
 ];
 
 export default function LandingPage() {
-  useEffect(() => {
-    // Reveal animations for sections
-    const sections = document.querySelectorAll('section');
-    sections.forEach((section) => {
-      gsap.fromTo(section, 
-        { opacity: 0, y: 50 },
-        { 
-          opacity: 1, 
-          y: 0, 
-          duration: 1,
-          scrollTrigger: {
-            trigger: section,
-            start: 'top 80%',
-            toggleActions: 'play none none reverse'
-          }
-        }
-      );
-    });
-
-    // Stat card animations
-    gsap.from('.stat-card', {
-      scale: 0.8,
-      opacity: 0,
-      stagger: 0.1,
-      duration: 0.8,
-      scrollTrigger: {
-        trigger: '.stat-card',
-        start: 'top 85%',
-      }
-    });
-    // Magnetic button effect
-    const magneticButtons = document.querySelectorAll('.btn-primary, .btn-secondary');
-    magneticButtons.forEach((btn) => {
-      btn.addEventListener('mousemove', (e) => {
-        const rect = btn.getBoundingClientRect();
-        const x = e.clientX - rect.left - rect.width / 2;
-        const y = e.clientY - rect.top - rect.height / 2;
-        
-        gsap.to(btn, {
-          x: x * 0.3,
-          y: y * 0.3,
-          duration: 0.3,
-          ease: 'power2.out'
-        });
-      });
-      
-      btn.addEventListener('mouseleave', () => {
-        gsap.to(btn, {
-          x: 0,
-          y: 0,
-          duration: 0.5,
-          ease: 'elastic.out(1, 0.3)'
-        });
-      });
-    });
-
-    return () => {
-      ScrollTrigger.getAll().forEach(t => t.kill());
-    };
-  }, []);
-
   return (
-    <div style={{ overflow: 'hidden', position: 'relative' }}>
-      <ThreeBackground />
+    <div style={{ overflow: 'hidden' }}>
       {/* Hero Section */}
       <section style={{ 
         padding: '8rem 0 6rem', 
         position: 'relative',
-        minHeight: '100vh',
+        minHeight: '90vh',
         display: 'flex',
-        alignItems: 'center',
-        zIndex: 1
+        alignItems: 'center'
       }}>
-        {/* Static gradient removed in favor of ThreeBackground */}
+        <div className="hero-gradient-bg" />
         
         <div className="container" style={{ 
           display: 'grid', 
@@ -345,14 +274,9 @@ export default function LandingPage() {
             gap: '2rem' 
           }}>
             {stats.map((stat, i) => (
-              <div key={i} className="stat-card glass" style={{ 
-                background: 'rgba(255, 255, 255, 0.03)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                padding: '3rem 2rem'
-              }}>
-                <div className="stat-number gradient-text" style={{ fontSize: '3.5rem', marginBottom: '0.5rem' }}>{stat.value}</div>
-                <div style={{ fontWeight: 800, color: 'var(--text-secondary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
+              <div key={i} className="stat-card">
+                <div className="stat-number gradient-text">{stat.value}</div>
+                <div style={{ fontWeight: 600, color: 'var(--text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                   {stat.label}
                 </div>
               </div>
