@@ -311,6 +311,7 @@ export default function Home() {
           onExit={handleScenarioComplete} 
         />
       )}
+      </div>
     </main>
   );
 }
