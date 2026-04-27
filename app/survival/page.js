@@ -225,6 +225,7 @@ function SurvivalContent() {
   return (
     <main className="container" style={{ 
       minHeight: '100vh', 
+      paddingTop: '4rem',
       paddingBottom: '5rem', 
       position: 'relative', 
       background: 'transparent', 
@@ -254,26 +255,26 @@ function SurvivalContent() {
           </div>
         </div>
 
-        {gameState === 'playing' && (
-          <motion.div 
-            animate={heartbeatActive ? { scale: [1, 1.2, 1] } : {}}
-            transition={{ repeat: Infinity, duration: 0.5 }}
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '0.5rem', 
-              background: timeLeft < 5 ? 'var(--accent-danger)' : 'var(--bg-secondary)',
-              padding: '0.5rem 1rem',
-              borderRadius: 'var(--radius-full)',
-              fontWeight: 800,
-              color: timeLeft < 5 ? 'white' : 'var(--text-primary)',
-              border: '1px solid var(--glass-border)'
-            }}
-          >
-            <Timer size={18} />
-            <span>{timeLeft}s</span>
-          </motion.div>
-        )}
+        <motion.div 
+          animate={heartbeatActive ? { scale: [1, 1.2, 1] } : {}}
+          transition={{ repeat: Infinity, duration: 0.5 }}
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.75rem', 
+            background: timeLeft < 5 ? '#ef4444' : 'rgba(0,0,0,0.6)',
+            padding: '0.75rem 1.5rem',
+            borderRadius: 'var(--radius-full)',
+            fontWeight: 800,
+            fontSize: '1.25rem',
+            color: 'white',
+            border: `2px solid ${timeLeft < 5 ? '#ef4444' : 'rgba(255,255,255,0.2)'}`,
+            boxShadow: timeLeft < 5 ? '0 0 20px rgba(239, 68, 68, 0.4)' : 'none'
+          }}
+        >
+          <Timer size={20} />
+          <span style={{ fontFamily: 'monospace' }}>{timeLeft}s</span>
+        </motion.div>
       </div>
 
       <AnimatePresence mode="wait">
