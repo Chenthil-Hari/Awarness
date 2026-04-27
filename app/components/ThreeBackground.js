@@ -111,10 +111,10 @@ function SceneContent({ theme = 'default', speed = 1, intensity = 1, shake = 0 }
   const colors = useMemo(() => {
     if (theme === 'danger') {
       return {
-        particles: '#dc2626',
-        primary: '#991b1b',
-        secondary: '#450a0a',
-        accent: '#dc2626',
+        particles: '#ff0000',
+        primary: '#ff4d4d',
+        secondary: '#ff0000',
+        accent: '#ff0000',
         fog: '#050101'
       };
     }
@@ -167,9 +167,9 @@ function SceneContent({ theme = 'default', speed = 1, intensity = 1, shake = 0 }
   return (
     <>
       <PerspectiveCamera ref={cameraRef} makeDefault position={[0, 0, 10]} />
-      <ambientLight intensity={0.5 * intensity} />
-      <pointLight position={[10, 10, 10]} intensity={1 * intensity} color={colors.primary} />
-      <pointLight position={[-10, -10, -10]} intensity={0.5 * intensity} color={colors.secondary} />
+      <ambientLight intensity={1 * intensity} />
+      <pointLight position={[10, 10, 10]} intensity={2 * intensity} color={colors.primary} />
+      <pointLight position={[-10, -10, -10]} intensity={1 * intensity} color={colors.secondary} />
       <Particles color={colors.particles} speed={speed} />
       <FloatingShapes primaryColor={colors.primary} secondaryColor={colors.secondary} accentColor={colors.accent} intensity={intensity} />
       <fog attach="fog" args={[colors.fog, 5, 25]} />

@@ -51,6 +51,15 @@ function SurvivalContent() {
     setBaseTime(data.timer);
   });
 
+  // Force Dark Mode background for the Arena
+  useEffect(() => {
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = '#050101';
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+    };
+  }, []);
+
   // Initialize Room
   useEffect(() => {
     if (isFriendMode && !roomCode && !isJoined) {
@@ -203,7 +212,7 @@ function SurvivalContent() {
   const bgProps = getBgProps();
 
   return (
-    <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem', position: 'relative' }}>
+    <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem', position: 'relative', background: 'transparent' }}>
       <ThreeBackground theme="danger" {...bgProps} />
       <Navbar />
 
