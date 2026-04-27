@@ -72,6 +72,27 @@ export default function Home() {
     setSelectedScenario(null);
   };
 
+  // Force Dark Mode theme for the Dashboard
+  useEffect(() => {
+    if (status === 'authenticated') {
+      const html = document.querySelector('html');
+      const originalTheme = html.getAttribute('data-theme');
+      html.setAttribute('data-theme', 'dark');
+      
+      const originalBg = document.body.style.backgroundColor;
+      document.body.style.backgroundColor = '#050101';
+      
+      return () => {
+        if (originalTheme) {
+          html.setAttribute('data-theme', originalTheme);
+        } else {
+          html.removeAttribute('data-theme');
+        }
+        document.body.style.backgroundColor = originalBg;
+      };
+    }
+  }, [status]);
+
   const level = calculateLevel(userXp);
 
   // Show landing page if not authenticated
@@ -87,7 +108,7 @@ export default function Home() {
   // Show loading while checking session
   if (status === 'loading') {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050101' }}>
         <LoadingSpinner />
       </div>
     );
@@ -95,8 +116,11 @@ export default function Home() {
 
   // Authenticated Dashboard View
   return (
-    <main style={{ minHeight: '100vh', paddingBottom: '5rem' }}>
-      <Navbar score={userXp} level={level} />
+    <main style={{ minHeight: '100vh', paddingBottom: '5rem', position: 'relative' }}>
+      <ThreeBackground mode="arena" speed={0.5} intensity={0.5} />
+      
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <Navbar score={userXp} level={level} />
 
       <div className="container" style={{ padding: '0 1rem' }}>
         {/* Hero Section */}
