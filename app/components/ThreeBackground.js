@@ -22,6 +22,7 @@ function Particles({ count = 2000 }) {
     return p;
   }, [count]);
 
+  const pointsRef = useRef();
   const mouse = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
