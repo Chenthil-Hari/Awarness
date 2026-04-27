@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useMemo, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, Sphere, MeshDistortMaterial, PerspectiveCamera, Points, PointMaterial } from '@react-three/drei';
+import { useRef, useMemo, useEffect, useState } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Float, Sphere, MeshDistortMaterial, PerspectiveCamera, Points, PointMaterial, Text, Center } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
@@ -10,6 +10,129 @@ import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
+
+// --- Dashboard Node Component ---
+const DashboardNode = ({ position, label, color, description, onClick, index }) => {
+  const meshRef = useRef();
+  const [hovered, setHovered] = useState(false);
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
+    if (meshRef.current) {
+      meshRef.current.rotation.x = Math.cos(t / 4) / 4;
+      meshRef.current.rotation.y = Math.sin(t / 4) / 4;
+      meshRef.current.position.y = position[1] + Math.sin(t + index) * 0.2;
+    }
+  });
+
+  return (
+    <group position={position}>
+      <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+        <mesh 
+          ref={meshRef} 
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
+          onClick={onClick}
+          style={{ cursor: 'pointer' }}
+        >
+          <sphereGeometry args={[1.2, 64, 64]} />
+          <MeshDistortMaterial
+            color={hovered ? '#ffffff' : color}
+            speed={2}
+            distort={0.4}
+            radius={1}
+            emissive={color}
+            emissiveIntensity={hovered ? 2 : 0.5}
+            roughness={0.2}
+            metalness={0.8}
+          />
+        </mesh>
+      </Float>
+
+      {/* Label */}
+      <Center top position={[0, 2, 0]}>
+        <Text
+          fontSize={0.4}
+          color="white"
+          anchorX="center"
+          anchorY="middle"
+          fontWeight={900}
+        >
+          {label.toUpperCase()}
+        </Text>
+      </Center>
+
+      {/* Glow Ring */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.5, 1.6, 64]} />
+        <meshBasicMaterial color={color} transparent opacity={0.3} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+};
+
+// --- Dashboard Scene Content ---
+const DashboardScene = ({ scrollProgress }) => {
+  const { camera } = useThree();
+  const groupRef = useRef();
+
+  // Nodes Data
+  const nodes = [
+    { 
+      id: 'survival', 
+      label: 'Survival', 
+      color: '#ef4444', 
+      position: [0, 0, 0],
+      description: 'The Gauntlet: 100 Players, 1 Winner'
+    },
+    { 
+      id: 'heist', 
+      label: 'The Heist', 
+      color: '#06b6d4', 
+      position: [8, -4, -12],
+      description: 'Co-op Tactical Infiltration'
+    },
+    { 
+      id: 'duels', 
+      label: 'Duels', 
+      color: '#8b5cf6', 
+      position: [-8, 3, -20],
+      description: '1v1 Knowledge Battles'
+    }
+  ];
+
+  useFrame(() => {
+    // Smoothly animate camera based on scroll progress
+    const targetZ = 12 - scrollProgress * 30;
+    const targetX = Math.sin(scrollProgress * Math.PI) * 8;
+    const targetY = -scrollProgress * 4;
+
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.05);
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetX, 0.05);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, 0.05);
+    
+    // Look slightly towards the center of activity
+    camera.lookAt(0, -scrollProgress * 2, -scrollProgress * 8);
+  });
+
+  return (
+    <group ref={groupRef}>
+      {nodes.map((node, i) => (
+        <DashboardNode key={node.id} {...node} index={i} />
+      ))}
+      
+      {/* Connector Lines */}
+      <line>
+        <bufferGeometry attach="geometry" {...new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(0,0,0),
+          new THREE.Vector3(8,-4,-12),
+          new THREE.Vector3(-8,3,-20)
+        ])} />
+        <lineBasicMaterial attach="material" color="#ffffff" transparent opacity={0.15} />
+      </line>
+    </group>
+  );
+};
 
 function Particles({ count = 5000, color = "#ff0000", speed = 1 }) {
   const points = useMemo(() => {
@@ -177,7 +300,14 @@ function SceneContent({ theme = 'default', speed = 1, intensity = 1, shake = 0 }
   );
 }
 
-export default function ThreeBackground({ theme = 'default', speed = 1, intensity = 1, shake = 0 }) {
+export default function ThreeBackground({ 
+  theme = 'default', 
+  speed = 1, 
+  intensity = 1, 
+  shake = 0,
+  mode = 'arena',
+  scrollProgress = 0
+}) {
   return (
     <div style={{
       position: 'fixed',
@@ -186,12 +316,22 @@ export default function ThreeBackground({ theme = 'default', speed = 1, intensit
       width: '100%',
       height: '100vh',
       zIndex: 0,
-      pointerEvents: 'none',
+      pointerEvents: mode === 'dashboard' ? 'auto' : 'none', // Enable interaction in dashboard
       transition: 'background 1s ease-in-out',
       background: theme === 'danger' ? '#050101' : '#09090b'
     }}>
       <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 10], fov: 50 }}>
-        <SceneContent theme={theme} speed={speed} intensity={intensity} shake={shake} />
+        {mode === 'dashboard' ? (
+          <>
+            <ambientLight intensity={0.5} />
+            <pointLight position={[10, 10, 10]} intensity={2} color="#8b5cf6" />
+            <pointLight position={[-10, -10, -10]} intensity={1} color="#06b6d4" />
+            <Particles color="#4a4a4a" speed={0.5} count={4000} />
+            <DashboardScene scrollProgress={scrollProgress} />
+          </>
+        ) : (
+          <SceneContent theme={theme} speed={speed} intensity={intensity} shake={shake} />
+        )}
       </Canvas>
     </div>
   );
