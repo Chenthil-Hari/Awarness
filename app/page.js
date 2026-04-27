@@ -117,7 +117,7 @@ export default function Home() {
   // Authenticated Dashboard View
   return (
     <main style={{ minHeight: '100vh', paddingBottom: '5rem', position: 'relative' }}>
-      <ThreeBackground mode="arena" speed={0.5} intensity={0.5} />
+      {/* <ThreeBackground mode="arena" speed={0.5} intensity={0.5} /> */}
       
       <div style={{ position: 'relative', zIndex: 1 }}>
         <Navbar score={userXp} level={level} />
