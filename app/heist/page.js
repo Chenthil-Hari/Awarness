@@ -184,6 +184,19 @@ function HeistContent() {
     }
   }, [messages]);
 
+  // Get active scenario
+  const getScenario = () => {
+    if (selectedMissionId === 'default') {
+      return heistScenarios[currentChapter];
+    }
+    const custom = customMissions.find(m => m._id === selectedMissionId);
+    if (!custom) return heistScenarios[0];
+    return custom.phases[currentChapter];
+  };
+
+  const scenario = getScenario();
+  const otherRoles = selectedRole ? Object.keys(scenario.roles || { Hacker: {}, Analyst: {}, Decoy: {} }).filter(r => r !== selectedRole) : [];
+
   // Game Logic
   useEffect(() => {
     let timer;
@@ -286,18 +299,7 @@ function HeistContent() {
     }
   };
 
-  // Get active scenario
-  const getScenario = () => {
-    if (selectedMissionId === 'default') {
-      return heistScenarios[currentChapter];
-    }
-    const custom = customMissions.find(m => m._id === selectedMissionId);
-    if (!custom) return heistScenarios[0];
-    return custom.phases[currentChapter];
-  };
 
-  const scenario = getScenario();
-  const otherRoles = selectedRole ? Object.keys(scenario.roles || { Hacker: {}, Analyst: {}, Decoy: {} }).filter(r => r !== selectedRole) : [];
 
   return (
     <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem' }}>
