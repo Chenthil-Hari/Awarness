@@ -1777,6 +1777,7 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
