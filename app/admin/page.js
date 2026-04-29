@@ -1808,7 +1808,9 @@ export default function AdminPage() {
           </div>
           </motion.div>
         </AnimatePresence>
-        {/* System Shell Terminal */}
+      </div>
+
+      {/* System Shell Terminal */}
       <div style={{
         position: 'fixed',
         bottom: '2rem',
