@@ -33,9 +33,11 @@ export async function POST(req) {
 
     const result = await db.collection('polls').insertOne({
       ...pollData,
-      options: pollData.options.map(opt => ({ text: opt, votes: 0 })),
+      options: pollData.options.map((opt, index) => ({ id: index + 1, text: opt, votes: 0 })),
       active: true,
-      createdAt: new Date()
+      createdAt: new Date(),
+      status: 'active',
+      votedBy: []
     });
 
     await logAudit(session.user.id, session.user.name, 'CREATE_POLL', `Created community poll: ${pollData.question}`);
@@ -52,10 +54,12 @@ export async function DELETE(req) {
     const { pollId } = await req.json();
     const client = await clientPromise;
     const db = client.db();
+    const { ObjectId } = require('mongodb');
 
-    await db.collection('polls').deleteOne({ _id: pollId });
+    await db.collection('polls').deleteOne({ _id: new ObjectId(pollId) });
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Delete error:', error);
     return NextResponse.json({ error: error.message }, { status: 403 });
   }
 }

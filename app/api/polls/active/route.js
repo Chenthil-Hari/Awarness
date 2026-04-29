@@ -66,7 +66,7 @@ export async function POST(req) {
 
     // Update the vote count for the specific option and record the specific vote
     await pollsCollection.updateOne(
-      { _id: new ObjectId(pollId), "options.id": optionId },
+      { _id: new ObjectId(pollId), "options.id": Number(optionId) },
       { 
         $inc: { "options.$.votes": 1 },
         $push: { votedBy: { userId: session.user.id, optionId, votedAt: new Date() } }
