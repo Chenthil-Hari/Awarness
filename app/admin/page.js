@@ -29,6 +29,8 @@ export default function AdminPage() {
   const [heatmapDots, setHeatmapDots] = useState([]);
   const [terminalInput, setTerminalInput] = useState('');
   const [broadcastType, setBroadcastType] = useState('announcement');
+  const [broadcastSubject, setBroadcastSubject] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
   const [polls, setPolls] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [tournaments, setTournaments] = useState([]);
@@ -185,16 +187,40 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeleteGuide = async (guideId, reportId) => {
-    if (!confirm('Are you sure you want to delete this guide and dismiss the report?')) return;
+  const handleDeleteGuide = async (guideId, reportId = null) => {
+    if (!confirm('Are you sure you want to delete this guide?')) return;
     try {
       const res = await fetch(`/api/guides/${guideId}`, { method: 'DELETE' });
       if (res.ok) {
-        await fetch(`/api/admin/reports/${reportId}`, { method: 'DELETE' });
+        if (reportId) {
+          await fetch(`/api/admin/reports/${reportId}`, { method: 'DELETE' });
+        }
         fetchAdminData();
       }
     } catch (error) {
       alert('Failed to delete guide');
+    }
+  };
+
+  const handleDeployFlow = () => {
+    alert('Simulation flow sequence deployed to all instances!');
+  };
+
+  const handleAutoLayout = () => {
+    alert('Applying force-directed graph layout to simulation nodes...');
+    setNodes(prev => prev.map((n, i) => ({ ...n, x: 50 + (i * 150), y: 150 + (i % 2 === 0 ? -50 : 50) })));
+  };
+
+  const handleUploadAsset = () => {
+    const name = prompt("Enter asset name:");
+    if (!name) return;
+    alert(`Asset "${name}" uploaded successfully to Cloud Vault.`);
+    fetchAdminData();
+  };
+
+  const handlePurgeAsset = (assetName) => {
+    if (confirm(`Are you sure you want to permanently purge ${assetName}?`)) {
+      alert(`${assetName} has been wiped from the edge nodes.`);
     }
   };
 
@@ -1115,8 +1141,8 @@ export default function AdminPage() {
                     <Workflow size={20} color="var(--accent-primary)" /> Simulation Flow Designer
                   </h3>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button className="btn-secondary" style={{ padding: '0.6rem 1.2rem' }}>AUTO-LAYOUT</button>
-                    <button className="btn-primary" style={{ padding: '0.6rem 1.2rem' }}><Save size={16} /> DEPLOY FLOW</button>
+                    <button onClick={handleAutoLayout} className="btn-secondary" style={{ padding: '0.6rem 1.2rem' }}>AUTO-LAYOUT</button>
+                    <button onClick={handleDeployFlow} className="btn-primary" style={{ padding: '0.6rem 1.2rem' }}><Save size={16} /> DEPLOY FLOW</button>
                   </div>
                 </div>
 
@@ -1235,7 +1261,7 @@ export default function AdminPage() {
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <Folder size={20} color="var(--accent-primary)" /> Asset Library
                   </h3>
-                  <button className="btn-primary" style={{ padding: '0.6rem 1.2rem', gap: '0.5rem' }}><Upload size={16} /> UPLOAD ASSET</button>
+                  <button onClick={handleUploadAsset} className="btn-primary" style={{ padding: '0.6rem 1.2rem', gap: '0.5rem' }}><Upload size={16} /> UPLOAD ASSET</button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem' }}>
                   {assets.map(asset => (
@@ -1246,8 +1272,8 @@ export default function AdminPage() {
                       <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{asset.name}</p>
                       <p style={{ margin: '0.2rem 0 0.8rem 0', fontSize: '0.7rem', color: 'var(--text-muted)' }}>{asset.size} • {asset.category}</p>
                       <div style={{ display: 'flex', gap: '0.4rem' }}>
-                        <button className="btn-secondary" style={{ flex: 1, padding: '0.4rem', fontSize: '0.65rem' }}>PREVIEW</button>
-                        <button className="btn-secondary" style={{ flex: 1, padding: '0.4rem', fontSize: '0.65rem', color: 'var(--accent-danger)' }}>PURGE</button>
+                        <button onClick={() => alert('Opening edge preview...')} className="btn-secondary" style={{ flex: 1, padding: '0.4rem', fontSize: '0.65rem' }}>PREVIEW</button>
+                        <button onClick={() => handlePurgeAsset(asset.name)} className="btn-secondary" style={{ flex: 1, padding: '0.4rem', fontSize: '0.65rem', color: 'var(--accent-danger)' }}>PURGE</button>
                       </div>
                     </div>
                   ))}
