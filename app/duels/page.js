@@ -34,9 +34,10 @@ function DuelContent() {
 
   const { members, broadcast, on, isConnected } = useMultiplayer(roomCode, !!myId);
 
-  // Send invitation if we are the challenger
+  // Send invitation if we are the challenger (not joining an existing room)
   useEffect(() => {
-    if (opponentId && roomCode && session?.user?.id) {
+    // Only send invite if we are the one WHO INITIATED (no room param)
+    if (opponentId && roomCode && session?.user?.id && !urlRoom) {
       const sendInvite = async () => {
         try {
           await fetch('/api/duels/invite', {
@@ -50,7 +51,7 @@ function DuelContent() {
       };
       sendInvite();
     }
-  }, [opponentId, roomCode, session]);
+  }, [opponentId, roomCode, session, urlRoom]);
 
   // Use a subset of scenarios for the duel
   const duelQuestions = survivalScenarios.slice(0, 3);

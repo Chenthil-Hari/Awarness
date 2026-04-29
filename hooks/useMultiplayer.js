@@ -6,8 +6,11 @@ export function useMultiplayer(roomCode, isEnabled) {
   const { data: session } = useSession();
   const [members, setMembers] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [forceRebind, setForceRebind] = useState(0);
+  
   const pusherRef = useRef(null);
   const channelRef = useRef(null);
+  const listenersRef = useRef({});
 
   useEffect(() => {
     if (!isEnabled || !roomCode) return;
@@ -64,15 +67,16 @@ export function useMultiplayer(roomCode, isEnabled) {
     }
   };
 
-  const listenersRef = useRef({});
-
   const on = (event, callback) => {
     if (!listenersRef.current[event]) {
       listenersRef.current[event] = new Set();
+      // Trigger a re-bind if the channel is already active
+      if (channelRef.current && isConnected) {
+        setForceRebind(prev => prev + 1);
+      }
     }
     listenersRef.current[event].add(callback);
     
-    // Cleanup function if called in a useEffect
     return () => {
       listenersRef.current[event].delete(callback);
     };
@@ -82,8 +86,6 @@ export function useMultiplayer(roomCode, isEnabled) {
     if (!channelRef.current || !isConnected) return;
     
     const channel = channelRef.current;
-
-    // Bind a single dispatcher for each unique event
     const events = Object.keys(listenersRef.current);
     
     const dispatchers = {};
@@ -100,7 +102,7 @@ export function useMultiplayer(roomCode, isEnabled) {
         channel.unbind(event, dispatchers[event]);
       });
     };
-  }, [isConnected, roomCode]);
+  }, [isConnected, roomCode, forceRebind]);
 
   const me = members.find(m => m.user_id === session?.user?.id);
 
