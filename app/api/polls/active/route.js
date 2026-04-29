@@ -65,13 +65,17 @@ export async function POST(req) {
     }
 
     // Update the vote count for the specific option and record the specific vote
-    await pollsCollection.updateOne(
+    const result = await pollsCollection.updateOne(
       { _id: new ObjectId(pollId), "options.id": Number(optionId) },
       { 
         $inc: { "options.$.votes": 1 },
         $push: { votedBy: { userId: session.user.id, optionId, votedAt: new Date() } }
       }
     );
+
+    if (result.modifiedCount === 0) {
+      return NextResponse.json({ error: "Failed to record vote. Option may be invalid." }, { status: 400 });
+    }
 
     const updatedPoll = await pollsCollection.findOne({ _id: new ObjectId(pollId) });
     return NextResponse.json(updatedPoll);
