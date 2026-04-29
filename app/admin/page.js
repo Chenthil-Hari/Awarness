@@ -229,6 +229,24 @@ export default function AdminPage() {
       const analyticsData = await analyticsRes.json();
       const guidesData = await guidesRes.json();
 
+      // Fetch Email Templates from DB
+      try {
+        const templatesRes = await fetch('/api/admin/email-templates');
+        if (templatesRes.ok) {
+          const tData = await templatesRes.json();
+          if (tData.length > 0) {
+            // Load templates from DB if they exist
+            tData.forEach(t => {
+              TEMPLATES[t.name] = t.html;
+            });
+            // Also update the initial state if the current selected matches
+            if (TEMPLATES[selectedTemplate]) {
+              setTemplateCode(TEMPLATES[selectedTemplate]);
+            }
+          }
+        }
+      } catch (err) {}
+
       setStats(statsData);
       setReports(reportsData);
       setUsers(Array.isArray(usersData) ? usersData : (usersData.users || []));
@@ -665,6 +683,25 @@ export default function AdminPage() {
       }
     } catch (error) {
       alert('Failed to issue reward');
+    }
+  };
+
+  const handleSaveTemplate = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/email-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: selectedTemplate, html: templateCode })
+      });
+      if (res.ok) {
+        TEMPLATES[selectedTemplate] = templateCode;
+        alert('Template saved to database');
+      }
+    } catch (err) {
+      alert('Failed to save template');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1260,7 +1297,7 @@ export default function AdminPage() {
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Template Architect</h3>
                   <div style={{ display: 'flex', gap: '0.75rem' }}>
                     <button onClick={handleTestEmail} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>Send Test</button>
-                    <button className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}><Save size={14} /> Save</button>
+                    <button onClick={handleSaveTemplate} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}><Save size={14} /> Save</button>
                   </div>
                 </div>
                 <textarea 
