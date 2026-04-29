@@ -41,6 +41,9 @@ export default function AdminPage() {
   const [newTournament, setNewTournament] = useState({ title: '', prizePool: 1000, duration: 24 });
   const [theme, setTheme] = useState('dark');
   const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
+  const [configPoll, setConfigPoll] = useState(null);
+  const [selectedCorrectOptions, setSelectedCorrectOptions] = useState([]);
+  const [rewardXP, setRewardXP] = useState(50);
   const [blockedIPs, setBlockedIPs] = useState(['192.168.1.1', '45.76.12.33']);
   const [newBadge, setNewBadge] = useState({ name: '', icon: 'Zap', color: '#f59e0b', xpRequired: 500 });
   const [newScenario, setNewScenario] = useState({
@@ -238,27 +241,28 @@ export default function AdminPage() {
   const handlePublishPoll = async (pollId) => {
     const poll = polls.find(p => p._id === pollId);
     if (!poll) return;
+    setConfigPoll(poll);
+    setSelectedCorrectOptions([]);
+    setRewardXP(50);
+  };
 
-    const optionsList = poll.options.map((opt, i) => `${i + 1}. ${opt.text}`).join('\n');
-    const choice = prompt(`WHICH OPTION IS CORRECT? (Enter number 1-${poll.options.length})\n\n${optionsList}\n\nEnter 0 to close without correct answer:`);
+  const finalizePublication = async () => {
+    if (!configPoll) return;
     
-    if (choice === null) return;
-    const choiceIdx = parseInt(choice) - 1;
-    const correctOptionId = choiceIdx >= 0 ? poll.options[choiceIdx].id : undefined;
-
-    if (!confirm(choiceIdx >= 0 
-      ? `Publish results and reward users who chose "${poll.options[choiceIdx].text}"?` 
-      : 'Publish results without rewards?')) return;
-
     try {
-      const res = await fetch(`/api/admin/polls/${pollId}`, {
+      const res = await fetch(`/api/admin/polls/${configPoll._id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'published', correctOptionId })
+        body: JSON.stringify({ 
+          status: 'published', 
+          correctOptionIds: selectedCorrectOptions,
+          xpAmount: rewardXP
+        })
       });
       const data = await res.json();
       if (res.ok) {
-        alert(`Success! Results published. ${data.rewardedCount || 0} users rewarded with +50 XP.`);
+        alert(`Success! Results published. ${data.rewardedCount || 0} users rewarded with +${rewardXP} XP.`);
+        setConfigPoll(null);
         fetchAdminData();
       }
     } catch (err) {
@@ -1929,5 +1933,63 @@ export default function AdminPage() {
         </div>
       </div>
     </main>
+
+    {/* Poll Publication & Reward Modal */}
+    <AnimatePresence>
+      {configPoll && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="glass-card" 
+            style={{ width: '500px', padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--accent-primary)' }}
+          >
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>Challenge <span className="gradient-text">Configuration</span></h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '2rem' }}>Define the correct answers and set the XP reward for this community challenge.</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2.5rem' }}>
+              <div>
+                <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', marginBottom: '1rem' }}>Correct Options</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  {configPoll.options.map(opt => (
+                    <label key={opt.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--glass-border)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedCorrectOptions.includes(opt.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedCorrectOptions([...selectedCorrectOptions, opt.id]);
+                          else setSelectedCorrectOptions(selectedCorrectOptions.filter(id => id !== opt.id));
+                        }}
+                        style={{ width: '18px', height: '18px', accentColor: 'var(--accent-primary)' }}
+                      />
+                      <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{opt.text}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', marginBottom: '0.6rem' }}>XP Reward Amount</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <input 
+                    type="number" 
+                    value={rewardXP}
+                    onChange={(e) => setRewardXP(parseInt(e.target.value))}
+                    style={{ flex: 1, padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'white', fontWeight: 800, fontSize: '1.2rem' }}
+                  />
+                  <div style={{ padding: '0.8rem 1.2rem', background: 'var(--accent-primary)', borderRadius: '8px', color: 'white', fontWeight: 900, fontSize: '0.8rem' }}>XP</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setConfigPoll(null)} className="btn-secondary" style={{ flex: 1, padding: '1rem' }}>CANCEL</button>
+              <button onClick={finalizePublication} className="btn-primary" style={{ flex: 2, padding: '1rem' }}>FINALIZE & REWARD</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }

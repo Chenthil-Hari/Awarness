@@ -17,32 +17,36 @@ export async function PATCH(req, { params }) {
   try {
     const session = await checkAdmin();
     const { id } = params;
-    const { status, correctOptionId } = await req.json();
+    const { status, correctOptionIds, xpAmount } = await req.json();
     const client = await clientPromise;
     const db = client.db();
 
     const poll = await db.collection('polls').findOne({ _id: new ObjectId(id) });
     if (!poll) return NextResponse.json({ error: 'Poll not found' }, { status: 404 });
 
-    // Update poll status and correct answer
+    // Update poll status and correct answers
     await db.collection('polls').updateOne(
       { _id: new ObjectId(id) },
-      { $set: { status, correctOptionId, updatedAt: new Date() } }
+      { $set: { status, correctOptionIds, xpAmount: xpAmount || 50, updatedAt: new Date() } }
     );
 
-    // Reward users if a correct option was selected
+    // Reward users if correct options were selected
     let rewardedCount = 0;
-    if (correctOptionId !== undefined) {
+    if (correctOptionIds && correctOptionIds.length > 0) {
+      const rewardValue = xpAmount || 50;
       const winners = poll.votedBy
-        .filter(v => typeof v === 'object' && v.optionId === correctOptionId)
+        .filter(v => typeof v === 'object' && correctOptionIds.includes(v.optionId))
         .map(v => new ObjectId(v.userId));
 
       if (winners.length > 0) {
+        // Use a Set to avoid double rewarding if a user somehow voted twice (though logic prevents it)
+        const uniqueWinners = [...new Set(winners.map(w => w.toString()))].map(id => new ObjectId(id));
+        
         await db.collection('users').updateMany(
-          { _id: { $in: winners } },
-          { $inc: { xp: 50 } }
+          { _id: { $in: uniqueWinners } },
+          { $inc: { xp: rewardValue } }
         );
-        rewardedCount = winners.length;
+        rewardedCount = uniqueWinners.length;
       }
     }
 
@@ -50,7 +54,7 @@ export async function PATCH(req, { params }) {
       session.user.id, 
       session.user.name, 
       'PUBLISH_POLL_RESULT', 
-      `Published poll: ${poll.question}. Correct option: ${correctOptionId}. Rewards: ${rewardedCount} users (+50 XP each)`
+      `Published poll: ${poll.question}. Correct options: ${correctOptionIds?.join(',')}. Rewards: ${rewardedCount} users (+${xpAmount || 50} XP each)`
     );
 
     return NextResponse.json({ success: true, rewardedCount });
