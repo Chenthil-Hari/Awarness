@@ -20,8 +20,16 @@ function DuelContent() {
   const urlRoom = searchParams.get('room');
   
   // Room code is derived from both IDs to ensure they land in the same room
+  // Stable Room Code
   const myId = session?.user?.id;
-  const roomCode = urlRoom || [myId, opponentId].sort().join('-').substring(0, 10).toUpperCase();
+  const [roomCode, setRoomCode] = useState(urlRoom || '');
+
+  useEffect(() => {
+    if (!urlRoom && myId && opponentId) {
+      const code = [myId, opponentId].sort().join('-').substring(0, 10).toUpperCase();
+      setRoomCode(code);
+    }
+  }, [myId, opponentId, urlRoom]);
 
   const [gameState, setGameState] = useState('waiting'); // waiting, countdown, playing, result
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -57,10 +65,17 @@ function DuelContent() {
   const duelQuestions = survivalScenarios.slice(0, 3);
 
   useEffect(() => {
-    if (!isConnected || !opponentId) return;
+    if (!isConnected || !opponentId || !roomCode) return;
+
+    console.log(`Duel: Listening for events in room ${roomCode}`);
 
     const offReady = on('player-ready', (data) => {
-      if (data.senderId === opponentId) setOpponentReady(true);
+      console.log('Duel: Received player-ready from:', data.senderId);
+      if (data.senderId === opponentId) {
+        setOpponentReady(true);
+        // If we are also ready, acknowledge back to ensure they know
+        if (isReady) broadcast('player-ready', { senderId: myId });
+      }
     });
 
     const offProgress = on('duel-progress', (data) => {
@@ -73,8 +88,12 @@ function DuelContent() {
       }
     });
 
-    const offSync = on('request-sync', () => {
-      if (isReady) broadcast('player-ready', { senderId: myId });
+    const offSync = on('request-sync', (data) => {
+      console.log('Duel: Received sync request from:', data.senderId);
+      if (isReady) {
+        console.log('Duel: Responding to sync with ready status');
+        broadcast('player-ready', { senderId: myId });
+      }
     });
 
     return () => {
@@ -83,13 +102,15 @@ function DuelContent() {
       offFinished();
       offSync();
     };
-  }, [isConnected, opponentId, isReady, gameState, myId]);
+  }, [isConnected, opponentId, roomCode, isReady, gameState, myId]);
 
+  // Initial Sync Request
   useEffect(() => {
-    if (isConnected) {
-      broadcast('request-sync', {});
+    if (isConnected && roomCode) {
+      console.log('Duel: Connected. Broadcasting sync request...');
+      broadcast('request-sync', { senderId: myId });
     }
-  }, [isConnected]);
+  }, [isConnected, roomCode]);
 
   useEffect(() => {
     if (isReady && opponentReady && gameState === 'waiting') {
