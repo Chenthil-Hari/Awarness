@@ -10,7 +10,7 @@ import StreakIcon from '../components/StreakIcon';
 import { 
   Trophy, Target, Zap, Clock, TrendingUp, Shield, 
   BarChart3, Calendar, ChevronRight, Edit2, Save, X, 
-  Mail, LogOut, Settings, Award, Check, AlertCircle, Camera, User
+  Mail, LogOut, Settings, Award, Check, AlertCircle, Camera, User, MessageSquare, Send, Bell
 } from 'lucide-react';
 
 const timeAgo = (date) => {
@@ -46,11 +46,78 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const [tickets, setTickets] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [newTicket, setNewTicket] = useState({ subject: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     if (session?.user?.username) {
       setUsername(session.user.username);
+      fetchTickets();
+      fetchNotifications();
     }
   }, [session]);
+
+  const fetchTickets = async () => {
+    try {
+      const res = await fetch('/api/support/ticket');
+      if (res.ok) {
+        const data = await res.json();
+        setTickets(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch tickets");
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('/api/notifications');
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch notifications");
+    }
+  };
+
+  const markNotificationRead = async (id = null) => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          notificationId: id, 
+          action: id ? 'read' : 'read_all' 
+        }),
+      });
+      fetchNotifications();
+    } catch (err) {}
+  };
+
+  const handleSubmitTicket = async (e) => {
+    e.preventDefault();
+    if (!newTicket.subject || !newTicket.message) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/support/ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTicket),
+      });
+      if (res.ok) {
+        setNewTicket({ subject: '', message: '' });
+        fetchTickets();
+        setUpdateStatus({ type: 'success', message: 'Mission query sent to Command!' });
+      }
+    } catch (err) {
+      setUpdateStatus({ type: 'error', message: 'Broadcast failed.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (status === 'loading') {
     return (
@@ -317,6 +384,119 @@ export default function ProfilePage() {
               </div>
             </div>
             <p style={{ marginTop: '2rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, maxWidth: '200px' }}>Based on {totalAttempts} total decisions.</p>
+          </motion.div>
+        </div>
+
+        </div>
+
+        {/* NOTIFICATIONS SECTION */}
+        <div style={{ marginTop: '4rem' }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card" style={{ padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Bell size={22} color="var(--accent-primary)" /> Command Alerts
+              </h3>
+              {notifications.some(n => !n.read) && (
+                <button onClick={() => markNotificationRead()} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase' }}>Mark all as read</button>
+              )}
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '300px', overflowY: 'auto' }} className="no-scrollbar">
+              {notifications.length > 0 ? notifications.map((n, idx) => (
+                <div 
+                  key={idx} 
+                  onClick={() => !n.read && markNotificationRead(n._id)}
+                  style={{ 
+                    padding: '1rem 1.5rem', 
+                    borderRadius: '12px', 
+                    background: n.read ? 'rgba(255,255,255,0.02)' : 'rgba(124, 58, 237, 0.05)', 
+                    border: `1px solid ${n.read ? 'var(--glass-border)' : 'rgba(124, 58, 237, 0.2)'}`,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    cursor: n.read ? 'default' : 'pointer'
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+                      <p style={{ margin: 0, fontWeight: 800, fontSize: '0.9rem', color: n.read ? 'var(--text-primary)' : 'white' }}>{n.title}</p>
+                      {!n.read && <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-primary)' }} />}
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{n.message}</p>
+                  </div>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>{timeAgo(n.createdAt)}</span>
+                </div>
+              )) : (
+                <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-muted)' }}>
+                  <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700 }}>Systems clear. No new alerts.</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* SUPPORT SECTION */}
+        <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '2rem' }} className="flex-mobile-column">
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="glass-card" style={{ padding: '2.5rem' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Shield size={20} color="var(--accent-primary)" /> Command Support
+            </h3>
+            <form onSubmit={handleSubmitTicket} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Subject</label>
+                <input type="text" value={newTicket.subject} onChange={(e) => setNewTicket(prev => ({ ...prev, subject: e.target.value }))} placeholder="Brief description of the issue" style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'white', outline: 'none' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Mission Query</label>
+                <textarea value={newTicket.message} onChange={(e) => setNewTicket(prev => ({ ...prev, message: e.target.value }))} placeholder="Describe your query in detail..." rows={4} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'white', outline: 'none', resize: 'none' }} />
+              </div>
+              <button type="submit" disabled={isSubmitting} className="btn-primary" style={{ width: '100%', padding: '1rem', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
+                <Send size={18} /> {isSubmitting ? 'TRANSMITTING...' : 'TRANSMIT QUERY'}
+              </button>
+            </form>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className="glass-card" style={{ padding: '2.5rem' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Mail size={20} color="var(--accent-secondary)" /> Mission Comms
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '500px', overflowY: 'auto' }} className="no-scrollbar">
+              {tickets.length > 0 ? tickets.map((ticket, idx) => (
+                <div key={idx} style={{ padding: '1.5rem', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 900, padding: '2px 8px', borderRadius: '4px', background: ticket.status === 'pending' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: ticket.status === 'pending' ? '#f59e0b' : '#10b981', border: `1px solid ${ticket.status === 'pending' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`, textTransform: 'uppercase', marginBottom: '0.5rem', display: 'inline-block' }}>
+                        {ticket.status}
+                      </span>
+                      <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>{ticket.subject}</h4>
+                    </div>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{timeAgo(ticket.createdAt)}</span>
+                  </div>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.6 }}>{ticket.message}</p>
+                  
+                  {ticket.replies && ticket.replies.length > 0 && (
+                    <div style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(124, 58, 237, 0.05)', borderLeft: '3px solid var(--accent-primary)' }}>
+                      {ticket.replies.map((reply, ridx) => (
+                        <div key={ridx} style={{ marginBottom: ridx < ticket.replies.length - 1 ? '1rem' : 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <div style={{ padding: '4px', background: 'var(--accent-primary)', borderRadius: '4px' }}>
+                              <Shield size={12} color="white" />
+                            </div>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--accent-primary)' }}>COMMAND REPLY</span>
+                          </div>
+                          <p style={{ fontSize: '0.85rem', margin: 0, fontWeight: 600 }}>{reply.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )) : (
+                <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
+                  <MessageSquare size={48} style={{ opacity: 0.1, marginBottom: '1rem' }} />
+                  <p style={{ fontWeight: 700 }}>No active mission queries.</p>
+                </div>
+              )}
+            </div>
           </motion.div>
         </div>
       </div>
