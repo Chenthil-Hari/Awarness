@@ -1200,7 +1200,7 @@ export default function AdminPage() {
                           }}>
                             {ticket.status}
                           </span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>From @{ticket.userName}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>From @{ticket.userName} <span style={{ color: 'var(--accent-primary)', opacity: 0.8 }}>({ticket.userEmail})</span></span>
                         </div>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(ticket.createdAt).toLocaleString()}</span>
                       </div>
@@ -1221,10 +1221,20 @@ export default function AdminPage() {
                       <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
                         <button
                           onClick={() => handleReplyTicket(ticket._id)}
-                          className="btn-secondary"
+                          className="btn-primary"
                           style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem', gap: '0.5rem' }}
                         >
                           <Send size={16} /> {ticket.status === 'pending' ? 'Send Reply' : 'Send Another Reply'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setActiveTab('email');
+                            alert(`Redirecting to Email Architect for ${ticket.userEmail}`);
+                          }}
+                          className="btn-secondary"
+                          style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem', gap: '0.5rem' }}
+                        >
+                          <Mail size={16} /> Contact Operative
                         </button>
                       </div>
                     </motion.div>
