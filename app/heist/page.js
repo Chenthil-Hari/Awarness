@@ -192,13 +192,21 @@ function HeistContent() {
   };
 
   const getScenario = () => {
-    if (selectedMissionId === 'default') return heistScenarios[currentChapter];
-    const custom = customMissions.find(m => m._id === selectedMissionId);
-    return custom?.phases?.[currentChapter] || heistScenarios[0];
+    try {
+      if (selectedMissionId === 'default') {
+        return heistScenarios[currentChapter] || heistScenarios[0];
+      }
+      const custom = customMissions.find(m => m._id === selectedMissionId);
+      return custom?.phases?.[currentChapter] || heistScenarios[0];
+    } catch (e) {
+      console.error("Scenario lookup error:", e);
+      return heistScenarios[0];
+    }
   };
 
   const scenario = getScenario();
-  const otherRoles = selectedRole ? Object.keys(scenario.roles).filter(r => r !== selectedRole) : ['Hacker', 'Analyst', 'Decoy'].filter(r => r !== selectedRole);
+  const currentRole = selectedRole || 'Hacker'; // Safety fallback
+  const otherRoles = Object.keys(scenario?.roles || {}).filter(r => r !== currentRole);
 
   // 4. Combat Logic
   useEffect(() => {
@@ -392,16 +400,16 @@ function HeistContent() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               <div className="glass-card" style={{ padding: '2.5rem', borderRadius: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
-                  <span style={{ fontWeight: 900, color: 'var(--accent-primary)', letterSpacing: '2px' }}>{scenario.title.toUpperCase()}</span>
+                  <span style={{ fontWeight: 900, color: 'var(--accent-primary)', letterSpacing: '2px' }}>{scenario?.title?.toUpperCase() || 'MISSION ACTIVE'}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: timeLeft < 10 ? 'var(--accent-danger)' : 'white', fontWeight: 900 }}>
                     <Timer size={20} /> {timeLeft}s
                   </div>
                 </div>
-                <h3 style={{ fontSize: '1.8rem', marginBottom: '1rem' }}>{selectedRole}: {scenario.roles[selectedRole].task}</h3>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '3rem', lineHeight: 1.6, fontSize: '1.1rem' }}>{scenario.roles[selectedRole].questions[0].text}</p>
+                <h3 style={{ fontSize: '1.8rem', marginBottom: '1rem' }}>{currentRole}: {scenario?.roles?.[currentRole]?.task || 'Synchronizing...'}</h3>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '3rem', lineHeight: 1.6, fontSize: '1.1rem' }}>{scenario?.roles?.[currentRole]?.questions?.[0]?.text || 'Wait for mission data to stabilize...'}</p>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-                  {scenario.roles[selectedRole].questions[0].options.map((opt, i) => (
+                  {scenario?.roles?.[currentRole]?.questions?.[0]?.options?.map((opt, i) => (
                     <button key={i} onClick={() => handleAnswer(opt)} className="btn-secondary" style={{ padding: '1.5rem', textAlign: 'left', background: answerState === 'correct' && opt.correct ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-tertiary)', borderColor: answerState === 'correct' && opt.correct ? 'var(--accent-success)' : 'var(--glass-border)' }}>
                       {opt.text}
                     </button>
@@ -473,7 +481,7 @@ function HeistContent() {
             <BorderGlow animated={true} glowColor="140 80 50">
               <div style={{ padding: '3rem' }}>
                 <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--accent-primary)', marginBottom: '1rem' }}>+2,500 XP</div>
-                <button onClick={() => router.push('/')} className="btn-primary" style={{ width: '100%' }}>RETURN TO SAFEhouse</button>
+                <button onClick={() => window.location.href = '/'} className="btn-primary" style={{ width: '100%' }}>RETURN TO SAFEhouse</button>
               </div>
             </BorderGlow>
           </motion.div>
