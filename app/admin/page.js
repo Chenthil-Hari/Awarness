@@ -44,6 +44,7 @@ export default function AdminPage() {
   const [configPoll, setConfigPoll] = useState(null);
   const [selectedCorrectOptions, setSelectedCorrectOptions] = useState([]);
   const [rewardXP, setRewardXP] = useState(50);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [blockedIPs, setBlockedIPs] = useState(['192.168.1.1', '45.76.12.33']);
   const [newBadge, setNewBadge] = useState({ name: '', icon: 'Zap', color: '#f59e0b', xpRequired: 500 });
   const [newScenario, setNewScenario] = useState({
@@ -247,8 +248,14 @@ export default function AdminPage() {
   };
 
   const finalizePublication = async () => {
-    if (!configPoll) return;
+    if (!configPoll || isPublishing) return;
+    setIsPublishing(true);
     
+    console.log('Finalizing Poll:', configPoll._id, {
+      correctOptionIds: selectedCorrectOptions,
+      xpAmount: rewardXP
+    });
+
     try {
       const res = await fetch(`/api/admin/polls/${configPoll._id}`, {
         method: 'PATCH',
@@ -259,14 +266,22 @@ export default function AdminPage() {
           xpAmount: rewardXP
         })
       });
+      
       const data = await res.json();
+      console.log('Publication Response:', data);
+
       if (res.ok) {
         alert(`Success! Results published. ${data.rewardedCount || 0} users rewarded with +${rewardXP} XP.`);
         setConfigPoll(null);
         fetchAdminData();
+      } else {
+        alert(`Error: ${data.error || 'Failed to publish results'}`);
       }
     } catch (err) {
-      alert('Failed to publish results');
+      console.error('Publication Error:', err);
+      alert('Failed to publish results. Check console for details.');
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -1985,8 +2000,15 @@ export default function AdminPage() {
             </div>
 
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <button onClick={() => setConfigPoll(null)} className="btn-secondary" style={{ flex: 1, padding: '1rem' }}>CANCEL</button>
-              <button onClick={finalizePublication} className="btn-primary" style={{ flex: 2, padding: '1rem' }}>FINALIZE & REWARD</button>
+              <button onClick={() => setConfigPoll(null)} className="btn-secondary" style={{ flex: 1, padding: '1rem' }} disabled={isPublishing}>CANCEL</button>
+              <button 
+                onClick={finalizePublication} 
+                className="btn-primary" 
+                style={{ flex: 2, padding: '1rem', opacity: isPublishing ? 0.7 : 1 }}
+                disabled={isPublishing}
+              >
+                {isPublishing ? 'PROCESSING...' : 'FINALIZE & REWARD'}
+              </button>
             </div>
           </motion.div>
         </div>
