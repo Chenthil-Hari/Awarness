@@ -707,20 +707,67 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem', overflowX: 'auto' }}>
-          {['overview', 'analytics', 'users', 'cms', 'missions', 'reports', 'democracy', 'designer', 'tournaments', 'assets', 'permissions', 'security', 'achievements', 'audit', 'config', 'email', 'support', 'broadcast', 'sentinel'].map(tab => (
+        {/* Tab Navigation */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '0.8rem', 
+          marginBottom: '2.5rem', 
+          padding: '0.5rem',
+          background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
+          borderRadius: '16px',
+          overflowX: 'auto',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+          border: '1px solid var(--glass-border)',
+          whiteSpace: 'nowrap'
+        }} className="no-scrollbar">
+          {[
+            { id: 'overview', icon: <Globe size={16} />, label: 'Overview' },
+            { id: 'analytics', icon: <BarChart3 size={16} />, label: 'Analytics' },
+            { id: 'users', icon: <Users size={16} />, label: 'Citizens' },
+            { id: 'cms', icon: <BookOpen size={16} />, label: 'Wiki CMS' },
+            { id: 'missions', icon: <Zap size={16} />, label: 'Missions' },
+            { id: 'reports', icon: <ShieldAlert size={16} />, label: 'Reports' },
+            { id: 'democracy', icon: <Vote size={16} />, label: 'Democracy' },
+            { id: 'designer', icon: <Workflow size={16} />, label: 'Designer' },
+            { id: 'tournaments', icon: <Trophy size={16} />, label: 'Sprints' },
+            { id: 'assets', icon: <Folder size={16} />, label: 'Cloud Vault' },
+            { id: 'permissions', icon: <Key size={16} />, label: 'Permissions' },
+            { id: 'security', icon: <Shield size={16} />, label: 'Security' },
+            { id: 'achievements', icon: <Sparkles size={16} />, label: 'Badges' },
+            { id: 'audit', icon: <Activity size={16} />, label: 'Audit' },
+            { id: 'config', icon: <Settings size={16} />, label: 'Config' },
+            { id: 'email', icon: <Mail size={16} />, label: 'Email' },
+            { id: 'support', icon: <Bot size={16} />, label: 'Support' },
+            { id: 'broadcast', icon: <Send size={16} />, label: 'Broadcast' },
+            { id: 'sentinel', icon: <Eye size={16} />, label: 'Sentinel' }
+          ].map(tab => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
               style={{
-                background: 'none', border: 'none', color: activeTab === tab ? (isDark ? 'var(--text-primary)' : '#7c3aed') : 'var(--text-muted)',
-                fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', position: 'relative', padding: '0.5rem 1rem',
-                textTransform: 'uppercase', whiteSpace: 'nowrap'
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                padding: '0.75rem 1.25rem',
+                borderRadius: '12px',
+                border: '1px solid transparent',
+                background: activeTab === tab.id 
+                  ? 'var(--accent-primary)' 
+                  : 'transparent',
+                color: activeTab === tab.id ? 'white' : 'var(--text-muted)',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: activeTab === tab.id ? '0 10px 20px rgba(124, 58, 237, 0.3)' : 'none'
               }}
+              className={activeTab === tab.id ? '' : 'nav-hover'}
             >
-              {tab === 'cms' ? 'Wiki CMS' : tab}
-              {activeTab === tab && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1rem', left: 0, right: 0, height: '3px', background: 'var(--accent-primary)' }} />}
+              {tab.icon}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -1338,7 +1385,7 @@ export default function AdminPage() {
                         value={newTournament.title} 
                         onChange={e => setNewTournament({...newTournament, title: e.target.value})} 
                         placeholder="e.g. Summer Awareness Sprint" 
-                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
+                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }} 
                       />
                     </div>
                     <div>
@@ -1347,7 +1394,7 @@ export default function AdminPage() {
                         type="number" 
                         value={newTournament.prizePool} 
                         onChange={e => setNewTournament({...newTournament, prizePool: parseInt(e.target.value) || 0})} 
-                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
+                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }} 
                       />
                     </div>
                   </div>
@@ -1401,7 +1448,7 @@ export default function AdminPage() {
                       value={newPoll.question} 
                       onChange={e => setNewPoll({...newPoll, question: e.target.value})} 
                       placeholder="e.g. Which awareness topic should we focus on next?" 
-                      style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'white' }} 
+                      style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: isDark ? 'white' : '#0f172a' }} 
                     />
                   </div>
                   <div>
@@ -1417,7 +1464,7 @@ export default function AdminPage() {
                               setNewPoll({...newPoll, options: newOpts});
                             }}
                             placeholder={`Option ${i+1}`} 
-                            style={{ flex: 1, padding: '0.8rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
+                            style={{ flex: 1, padding: '0.8rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }} 
                           />
                           {newPoll.options.length > 2 && (
                             <button onClick={() => setNewPoll({...newPoll, options: newPoll.options.filter((_, idx) => idx !== i)})} style={{ color: 'var(--accent-danger)', background: 'none', border: 'none', cursor: 'pointer' }}><Minus size={16} /></button>
@@ -1520,7 +1567,7 @@ export default function AdminPage() {
                     <input 
                       id="ip-input"
                       placeholder="Add IP to ban..." 
-                      style={{ flex: 1, padding: '0.6rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
+                      style={{ flex: 1, padding: '0.6rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }} 
                     />
                     <button 
                       onClick={() => {
@@ -1543,11 +1590,11 @@ export default function AdminPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     <div>
                       <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>BADGE NAME</label>
-                      <input value={newBadge.name} onChange={e => setNewBadge({...newBadge, name: e.target.value})} placeholder="e.g. Master Cipher" style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} />
+                      <input value={newBadge.name} onChange={e => setNewBadge({...newBadge, name: e.target.value})} placeholder="e.g. Master Cipher" style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }} />
                     </div>
                     <div>
                       <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>XP THRESHOLD</label>
-                      <input type="number" value={newBadge.xpRequired} onChange={e => setNewBadge({...newBadge, xpRequired: parseInt(e.target.value) || 0})} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} />
+                      <input type="number" value={newBadge.xpRequired} onChange={e => setNewBadge({...newBadge, xpRequired: parseInt(e.target.value) || 0})} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }} />
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(124, 58, 237, 0.03)', borderRadius: '16px', border: '2px dashed rgba(124, 58, 237, 0.2)' }}>
@@ -1858,7 +1905,7 @@ export default function AdminPage() {
                   onChange={(e) => setTerminalInput(e.target.value)}
                   onKeyDown={handleTerminalCommand}
                   placeholder="Execute override..."
-                  style={{ background: 'none', border: 'none', outline: 'none', color: 'white', width: '100%', fontSize: '0.8rem' }}
+                  style={{ background: 'none', border: 'none', outline: 'none', color: '#10b981', width: '100%', fontSize: '0.8rem' }}
                 />
               </div>
             </motion.div>
