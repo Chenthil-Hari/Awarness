@@ -33,7 +33,6 @@ export default function RealTimeDuelHandler() {
 
     return () => {
       pusher.unsubscribe(channelName);
-      pusher.disconnect();
     };
   }, [session]);
 

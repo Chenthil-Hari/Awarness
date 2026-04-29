@@ -55,25 +55,34 @@ function DuelContent() {
   // Use a subset of scenarios for the duel
   const duelQuestions = survivalScenarios.slice(0, 3);
 
-  // Sync state
-  on('player-ready', (data) => {
-    if (data.senderId === opponentId) setOpponentReady(true);
-  });
+  useEffect(() => {
+    if (!isConnected || !opponentId) return;
 
-  on('duel-progress', (data) => {
-    if (data.senderId === opponentId) setOpponentProgress(data.progress);
-  });
+    const offReady = on('player-ready', (data) => {
+      if (data.senderId === opponentId) setOpponentReady(true);
+    });
 
-  on('duel-finished', (data) => {
-    if (data.senderId === opponentId && gameState === 'playing') {
-      // Opponent finished first!
-      finishDuel('loss');
-    }
-  });
+    const offProgress = on('duel-progress', (data) => {
+      if (data.senderId === opponentId) setOpponentProgress(data.progress);
+    });
 
-  on('request-sync', () => {
-    if (isReady) broadcast('player-ready', { senderId: myId });
-  });
+    const offFinished = on('duel-finished', (data) => {
+      if (data.senderId === opponentId && gameState === 'playing') {
+        finishDuel('loss');
+      }
+    });
+
+    const offSync = on('request-sync', () => {
+      if (isReady) broadcast('player-ready', { senderId: myId });
+    });
+
+    return () => {
+      offReady();
+      offProgress();
+      offFinished();
+      offSync();
+    };
+  }, [isConnected, opponentId, isReady, gameState, myId]);
 
   useEffect(() => {
     if (isConnected) {

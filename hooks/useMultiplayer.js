@@ -64,30 +64,43 @@ export function useMultiplayer(roomCode, isEnabled) {
     }
   };
 
-  const listenersRef = useRef([]);
-  listenersRef.current = []; // Clear on each render so children can re-register
+  const listenersRef = useRef({});
 
   const on = (event, callback) => {
-    // Just add to listeners ref, no hook call here
-    listenersRef.current.push({ event, callback });
+    if (!listenersRef.current[event]) {
+      listenersRef.current[event] = new Set();
+    }
+    listenersRef.current[event].add(callback);
+    
+    // Cleanup function if called in a useEffect
+    return () => {
+      listenersRef.current[event].delete(callback);
+    };
   };
 
   useEffect(() => {
     if (!channelRef.current || !isConnected) return;
     
     const channel = channelRef.current;
-    const currentListeners = [...listenersRef.current];
 
-    currentListeners.forEach(({ event, callback }) => {
-      channel.bind(event, callback);
+    // Bind a single dispatcher for each unique event
+    const events = Object.keys(listenersRef.current);
+    
+    const dispatchers = {};
+    events.forEach(event => {
+      const dispatcher = (data) => {
+        listenersRef.current[event].forEach(cb => cb(data));
+      };
+      channel.bind(event, dispatcher);
+      dispatchers[event] = dispatcher;
     });
 
     return () => {
-      currentListeners.forEach(({ event, callback }) => {
-        channel.unbind(event, callback);
+      events.forEach(event => {
+        channel.unbind(event, dispatchers[event]);
       });
     };
-  }, [isConnected, roomCode]); // Re-bind when connection status or room changes
+  }, [isConnected, roomCode]);
 
   const me = members.find(m => m.user_id === session?.user?.id);
 
