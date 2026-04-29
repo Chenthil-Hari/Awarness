@@ -21,6 +21,12 @@ export default function AdminPage() {
   const [config, setConfig] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [allGuides, setAllGuides] = useState([]);
+  const [activityLog, setActivityLog] = useState([
+    { id: 1, type: 'login', user: 'System', time: 'Just now', msg: 'Core protocols initialized' },
+    { id: 2, type: 'security', user: 'Sentinel', time: '1m ago', msg: 'Neural firewall active' }
+  ]);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [terminalInput, setTerminalInput] = useState('');
   const [broadcastSubject, setBroadcastSubject] = useState('');
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [broadcastType, setBroadcastType] = useState('announcement');
@@ -92,7 +98,7 @@ export default function AdminPage() {
 
   const fetchAdminData = async () => {
     try {
-      const [statsRes, reportsRes, usersRes, ticketsRes, auditRes, configRes, analyticsRes, guidesRes] = await Promise.all([
+      const [statsRes, reportsRes, usersRes, ticketsRes, missionsRes, auditRes, configRes, analyticsRes, guidesRes] = await Promise.all([
         fetch('/api/admin/stats'),
         fetch('/api/admin/reports'),
         fetch('/api/admin/users'),
@@ -108,18 +114,11 @@ export default function AdminPage() {
       const reportsData = await reportsRes.json();
       const usersData = await usersRes.json();
       const ticketsData = await ticketsRes.json();
+      const missionsData = await missionsRes.json();
       const auditData = await auditRes.json();
       const configData = await configRes.json();
       const analyticsData = await analyticsRes.json();
       const guidesData = await guidesRes.json();
-
-      let missionsData = { missions: [] };
-      try {
-        const missionsRes = await fetch('/api/admin/pending-missions');
-        if (missionsRes.ok) missionsData = await missionsRes.json();
-      } catch (err) {
-        console.error("Missions fetch error:", err);
-      }
 
       setStats(statsData);
       setReports(reportsData);
@@ -246,7 +245,7 @@ export default function AdminPage() {
         // Refresh data
         const guidesRes = await fetch('/api/guides');
         const guidesData = await guidesRes.json();
-        setGuides(guidesData);
+        setAllGuides(guidesData);
       }
     } catch (error) {
       alert('Failed to authorize content');
@@ -303,6 +302,38 @@ export default function AdminPage() {
       alert('Failed to issue reward');
     }
   };
+
+  const handleTerminalCommand = (e) => {
+    if (e.key !== 'Enter') return;
+    const cmd = terminalInput.toLowerCase().trim();
+    setTerminalInput('');
+
+    const logEntry = (msg, type = 'system') => {
+      setActivityLog(prev => [{ id: Date.now(), type, user: 'Admin', time: 'Just now', msg }, ...prev.slice(0, 19)]);
+    };
+
+    if (cmd === '/clear') {
+      setActivityLog([]);
+      return;
+    }
+
+    if (cmd === '/maintenance on') {
+      handleUpdateConfig({ ...config, maintenanceMode: true });
+      logEntry('Maintenance mode activated via shell', 'security');
+    } else if (cmd === '/maintenance off') {
+      handleUpdateConfig({ ...config, maintenanceMode: false });
+      logEntry('Maintenance mode deactivated via shell', 'security');
+    } else if (cmd.startsWith('/reward')) {
+      const parts = cmd.split(' ');
+      if (parts.length >= 3) {
+        logEntry(`Issued reward of ${parts[2]} XP via shell`, 'reward');
+        alert('Reward command queued. Processing...');
+      }
+    } else {
+      logEntry(`Unknown command: ${cmd}`, 'error');
+    }
+  };
+
 
   const handleExportUsers = () => {
     try {
@@ -400,35 +431,65 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-          {[
-            { label: 'Total Citizens', value: stats.users, icon: <Users />, color: 'var(--accent-primary)' },
-            { label: 'Strategies Shared', value: stats.guides, icon: <BookOpen />, color: 'var(--accent-secondary)' },
-            { label: 'Pending Reports', value: stats.reports, icon: <AlertTriangle />, color: 'var(--accent-danger)' },
-            { label: 'System Health', value: 'Optimal', icon: <CheckCircle />, color: 'var(--accent-success)' }
-          ].map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="glass-card"
-              style={{
-                padding: '1.5rem', borderRadius: 'var(--radius-xl)',
-                borderLeft: `4px solid ${stat.color}`,
-                background: isDark ? 'var(--glass-bg)' : 'white',
-                boxShadow: isDark ? 'none' : '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <div style={{ color: stat.color }}>{stat.icon}</div>
-                <BarChart3 size={16} style={{ opacity: 0.3 }} />
-              </div>
-              <h3 style={{ fontSize: '2rem', fontWeight: 900, margin: 0, color: isDark ? 'white' : '#0f172a' }}>{stat.value}</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', marginTop: '0.4rem' }}>{stat.label}</p>
-            </motion.div>
-          ))}
+        {/* Main Workspace Layout */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem', alignItems: 'start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {/* Stats Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+              {[
+                { label: 'Total Citizens', value: stats.users, icon: <Users />, color: 'var(--accent-primary)' },
+                { label: 'Strategies Shared', value: stats.guides, icon: <BookOpen />, color: 'var(--accent-secondary)' },
+                { label: 'Pending Reports', value: stats.reports, icon: <AlertTriangle />, color: 'var(--accent-danger)' },
+                { label: 'System Health', value: 'Optimal', icon: <CheckCircle />, color: 'var(--accent-success)' }
+              ].map((stat, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="glass-card"
+                  style={{
+                    padding: '1.5rem', borderRadius: 'var(--radius-xl)',
+                    borderLeft: `4px solid ${stat.color}`,
+                    background: isDark ? 'var(--glass-bg)' : 'white',
+                    boxShadow: isDark ? 'none' : '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div style={{ color: stat.color }}>{stat.icon}</div>
+                    <BarChart3 size={16} style={{ opacity: 0.3 }} />
+                  </div>
+                  <h3 style={{ fontSize: '1.8rem', fontWeight: 900, margin: 0, color: isDark ? 'white' : '#0f172a' }}>{stat.value}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', marginTop: '0.4rem' }}>{stat.label}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* Guardian Pulse Sidebar */}
+          <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 'var(--radius-xl)', height: '100%', minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.5rem' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-success)', boxShadow: '0 0 10px var(--accent-success)' }} />
+              <h3 style={{ fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>Guardian Pulse</h3>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto', maxHeight: '400px', paddingRight: '0.5rem' }}>
+              {activityLog.map(log => (
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }} 
+                  animate={{ opacity: 1, x: 0 }} 
+                  key={log.id} 
+                  style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', marginBottom: '0.3rem' }}>
+                    <span style={{ color: log.type === 'error' ? 'var(--accent-danger)' : 'var(--accent-primary)', fontWeight: 800 }}>{log.type.toUpperCase()}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{log.time}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 500, lineHeight: 1.4 }}>{log.msg}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -1222,6 +1283,86 @@ export default function AdminPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* System Shell Terminal */}
+      <div style={{
+        position: 'fixed',
+        bottom: '2rem',
+        right: '2rem',
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end'
+      }}>
+        <AnimatePresence>
+          {isTerminalOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="glass-card"
+              style={{
+                width: '400px',
+                height: '300px',
+                marginBottom: '1rem',
+                background: 'rgba(0,0,0,0.9)',
+                border: '1px solid var(--accent-primary)',
+                borderRadius: '12px',
+                padding: '1rem',
+                fontFamily: 'monospace',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+                <span style={{ color: 'var(--accent-primary)', fontSize: '0.7rem', fontWeight: 800 }}>SYSTEM_SHELL v2.4</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem' }}>CONNECTED</span>
+              </div>
+              
+              <div style={{ flex: 1, overflowY: 'auto', fontSize: '0.8rem', color: '#10b981', marginBottom: '1rem' }}>
+                <p style={{ margin: '0 0 0.5rem 0', opacity: 0.6 }}>// Type /help for commands</p>
+                {activityLog.slice(0, 5).reverse().map(log => (
+                  <p key={log.id} style={{ margin: '0 0 0.2rem 0' }}>
+                    <span style={{ opacity: 0.4 }}>[{new Date(log.id).toLocaleTimeString()}]</span> {log.msg}
+                  </p>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem', borderRadius: '4px' }}>
+                <span style={{ color: 'var(--accent-primary)' }}>&gt;</span>
+                <input 
+                  value={terminalInput}
+                  onChange={(e) => setTerminalInput(e.target.value)}
+                  onKeyDown={handleTerminalCommand}
+                  placeholder="Execute override..."
+                  style={{ background: 'none', border: 'none', outline: 'none', color: 'white', width: '100%', fontSize: '0.8rem' }}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <button
+          onClick={() => setIsTerminalOpen(!isTerminalOpen)}
+          style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: isTerminalOpen ? 'var(--accent-danger)' : 'var(--accent-primary)',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 10px 20px rgba(124, 58, 237, 0.4)',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          <Command size={24} />
+        </button>
       </div>
     </main>
   );
