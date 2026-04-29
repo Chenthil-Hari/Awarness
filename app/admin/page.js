@@ -1777,9 +1777,8 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
-          )}
-        </div>
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* System Shell Terminal */}
