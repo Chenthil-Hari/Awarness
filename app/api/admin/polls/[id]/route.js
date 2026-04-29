@@ -3,6 +3,7 @@ import clientPromise from '@/lib/mongodb';
 import { getServerSession } from 'next-auth';
 import { authOptions } from "@/app/api/auth/[...nextauth]/route.js";
 import { logAudit } from '@/lib/audit';
+import { pusherServer } from '@/lib/pusher';
 import { ObjectId } from 'mongodb';
 
 async function checkAdmin() {
@@ -56,6 +57,8 @@ export async function PATCH(req, { params }) {
       'PUBLISH_POLL_RESULT', 
       `Published poll: ${poll.question}. Correct options: ${correctOptionIds?.join(',')}. Rewards: ${rewardedCount} users (+${xpAmount || 50} XP each)`
     );
+
+    await pusherServer.trigger('polls', 'poll-updated', { type: 'published', pollId: id });
 
     return NextResponse.json({ success: true, rewardedCount });
   } catch (error) {

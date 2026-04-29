@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { BarChart3, Users, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { getPusherClient } from '../lib/pusher';
 
 export default function CommunityPoll() {
   const { data: session } = useSession();
@@ -27,6 +28,21 @@ export default function CommunityPoll() {
 
   useEffect(() => {
     fetchPoll();
+
+    // Subscribe to real-time updates
+    const pusher = getPusherClient();
+    if (pusher) {
+      const channel = pusher.subscribe('polls');
+      channel.bind('poll-updated', (data) => {
+        console.log('Real-time poll update received:', data);
+        fetchPoll();
+      });
+
+      return () => {
+        channel.unbind_all();
+        channel.unsubscribe();
+      };
+    }
   }, [session]);
 
   const fetchPoll = async () => {

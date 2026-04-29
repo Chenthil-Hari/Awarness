@@ -3,6 +3,7 @@ import clientPromise from '@/lib/mongodb';
 import { getServerSession } from 'next-auth';
 import { authOptions } from "@/app/api/auth/[...nextauth]/route.js";
 import { logAudit } from '@/lib/audit';
+import { pusherServer } from '@/lib/pusher';
 
 async function checkAdmin() {
   const session = await getServerSession(authOptions);
@@ -41,6 +42,8 @@ export async function POST(req) {
     });
 
     await logAudit(session.user.id, session.user.name, 'CREATE_POLL', `Created community poll: ${pollData.question}`);
+    
+    await pusherServer.trigger('polls', 'poll-updated', { type: 'created', pollId: result.insertedId });
 
     return NextResponse.json({ success: true, pollId: result.insertedId });
   } catch (error) {
@@ -57,6 +60,8 @@ export async function DELETE(req) {
     const { ObjectId } = require('mongodb');
 
     await db.collection('polls').deleteOne({ _id: new ObjectId(pollId) });
+    
+    await pusherServer.trigger('polls', 'poll-updated', { type: 'deleted', pollId });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Delete error:', error);
