@@ -32,6 +32,8 @@ export default function AdminPage() {
   const [broadcastType, setBroadcastType] = useState('announcement');
   const [theme, setTheme] = useState('dark');
   const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
+  const [blockedIPs, setBlockedIPs] = useState(['192.168.1.1', '45.76.12.33']);
+  const [newBadge, setNewBadge] = useState({ name: '', icon: 'Zap', color: '#f59e0b', xpRequired: 500 });
   const [newScenario, setNewScenario] = useState({
     title: '',
     category: 'Cybersecurity',
@@ -129,6 +131,18 @@ export default function AdminPage() {
       setConfig(configData);
       setAnalytics(analyticsData);
       setAllGuides(guidesData || []);
+      
+      // Fetch new modules data
+      try {
+        const [ipRes, badgeRes] = await Promise.all([
+          fetch('/api/admin/security/blocklist'),
+          fetch('/api/admin/badges')
+        ]);
+        if (ipRes.ok) setBlockedIPs(await ipRes.json());
+      } catch (err) {
+        console.error("New modules fetch error:", err);
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch admin data');
@@ -235,6 +249,40 @@ export default function AdminPage() {
       }
     } catch (error) {
       alert('Failed to authorize content');
+    }
+  };
+
+  const handleBlockIP = async (ip, action = 'block') => {
+    try {
+      const res = await fetch('/api/admin/security/blocklist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip, action })
+      });
+      if (res.ok) {
+        if (action === 'block') setBlockedIPs(prev => [...prev, ip]);
+        else setBlockedIPs(prev => prev.filter(x => x !== ip));
+        alert(`IP ${action === 'block' ? 'banned' : 'unbanned'} successfully`);
+      }
+    } catch (err) {
+      alert('Security update failed');
+    }
+  };
+
+  const handlePublishBadge = async () => {
+    if (!newBadge.name) return alert('Badge name required');
+    try {
+      const res = await fetch('/api/admin/badges', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newBadge)
+      });
+      if (res.ok) {
+        alert('Badge published and added to vault!');
+        setNewBadge({ name: '', icon: 'Zap', color: '#f59e0b', xpRequired: 500 });
+      }
+    } catch (err) {
+      alert('Failed to publish badge');
     }
   };
 
@@ -492,7 +540,7 @@ export default function AdminPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem', overflowX: 'auto' }}>
-          {['overview', 'analytics', 'users', 'cms', 'missions', 'reports', 'audit', 'config', 'email', 'support', 'broadcast', 'sentinel'].map(tab => (
+          {['overview', 'analytics', 'users', 'cms', 'missions', 'reports', 'security', 'achievements', 'audit', 'config', 'email', 'support', 'broadcast', 'sentinel'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -919,6 +967,95 @@ export default function AdminPage() {
                     </motion.div>
                   ))
                 )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <ShieldAlert color="var(--accent-danger)" /> Threat Intelligence
+                </h3>
+                <div style={{ height: '300px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ position: 'absolute', inset: 0, opacity: 0.2, background: 'radial-gradient(circle, var(--accent-danger) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+                  <div style={{ padding: '1rem', position: 'relative', zIndex: 1 }}>
+                    <p style={{ color: 'var(--accent-danger)', fontSize: '0.7rem', fontWeight: 900, marginBottom: '1rem' }}>LIVE ATTACK VECTORS</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                      {[1,2,3].map(i => (
+                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', padding: '0.5rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '4px' }}>
+                          <span style={{ fontFamily: 'monospace' }}>182.44.{Math.floor(Math.random()*255)}.{Math.floor(Math.random()*255)}</span>
+                          <span style={{ color: 'var(--accent-danger)', fontWeight: 800 }}>BLOCKED</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem' }}>IP Blocklist</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {blockedIPs.map(ip => (
+                    <div key={ip} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                      <span style={{ fontWeight: 700, fontFamily: 'monospace' }}>{ip}</span>
+                      <button onClick={() => handleBlockIP(ip, 'unblock')} style={{ color: 'var(--accent-danger)', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                    <input 
+                      id="ip-input"
+                      placeholder="Add IP to ban..." 
+                      style={{ flex: 1, padding: '0.6rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
+                    />
+                    <button 
+                      onClick={() => {
+                        const val = document.getElementById('ip-input').value;
+                        if (val) handleBlockIP(val, 'block');
+                      }}
+                      className="btn-primary" style={{ padding: '0.6rem 1rem' }}
+                    >BAN</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'achievements' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '2rem' }}>Badge Architect</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>BADGE NAME</label>
+                      <input value={newBadge.name} onChange={e => setNewBadge({...newBadge, name: e.target.value})} placeholder="e.g. Master Cipher" style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>XP THRESHOLD</label>
+                      <input type="number" value={newBadge.xpRequired} onChange={e => setNewBadge({...newBadge, xpRequired: parseInt(e.target.value) || 0})} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(124, 58, 237, 0.03)', borderRadius: '16px', border: '2px dashed rgba(124, 58, 237, 0.2)' }}>
+                    <p style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '1rem' }}>LIVE PREVIEW</p>
+                    <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: newBadge.color, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 10px 25px ${newBadge.color}44` }}>
+                      <Bot size={40} color="white" />
+                    </div>
+                    <h4 style={{ margin: '1rem 0 0.2rem 0', fontWeight: 900 }}>{newBadge.name || 'Untitled Badge'}</h4>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{newBadge.xpRequired} XP Required</p>
+                  </div>
+                </div>
+                <button onClick={handlePublishBadge} className="btn-primary" style={{ width: '100%', marginTop: '2rem', padding: '1rem' }}>PUBLISH ACHIEVEMENT</button>
+              </div>
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Active Badges</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  {['Bug Hunter', 'Security First', 'Top Scholar'].map(b => (
+                    <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkles size={16} color="white" /></div>
+                      <span style={{ fontWeight: 700 }}>{b}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
