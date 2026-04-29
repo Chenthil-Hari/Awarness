@@ -17,7 +17,78 @@ export default function AdminPage() {
   const [users, setUsers] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [pendingMissions, setPendingMissions] = useState([]);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedTemplate, setSelectedTemplate] = useState('Welcome Email');
+  const [templateCode, setTemplateCode] = useState(`<!DOCTYPE html>
+<html>
+  <body style="background: #0f172a; color: white; font-family: sans-serif; padding: 40px;">
+    <h1 style="color: #8b5cf6;">Welcome to Awareness Pro, {{name}}!</h1>
+    <p>Your journey to cybersecurity mastery begins here.</p>
+    <div style="background: #1e293b; padding: 20px; border-radius: 10px; border: 1px solid #334155; margin-top: 20px;">
+      <p style="margin: 0;">Identity Verified: <strong>{{username}}</strong></p>
+    </div>
+  </body>
+</html>`);
+
+  const TEMPLATES = {
+    'Welcome Email': `<!DOCTYPE html>
+<html>
+  <body style="background: #0f172a; color: white; font-family: sans-serif; padding: 40px;">
+    <h1 style="color: #8b5cf6;">Welcome to Awareness Pro, {{name}}!</h1>
+    <p>Your journey to cybersecurity mastery begins here.</p>
+    <div style="background: #1e293b; padding: 20px; border-radius: 10px; border: 1px solid #334155; margin-top: 20px;">
+      <p style="margin: 0;">Identity Verified: <strong>{{username}}</strong></p>
+    </div>
+  </body>
+</html>`,
+    'Password Reset': `<!DOCTYPE html>
+<html>
+  <body style="background: #0f172a; color: white; font-family: sans-serif; padding: 40px;">
+    <h1 style="color: #ef4444;">Access Restoration Required</h1>
+    <p>A password reset was requested for your account.</p>
+    <p style="color: #94a3b8; margin: 20px 0;">If you did not request this, please secure your account immediately.</p>
+    <a href="#" style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Reset Password</a>
+  </body>
+</html>`,
+    'Security Alert': `<!DOCTYPE html>
+<html>
+  <body style="background: #0f172a; color: white; font-family: sans-serif; padding: 40px;">
+    <h1 style="color: #f59e0b;">⚠️ Security Alert Detected</h1>
+    <p>A new login was detected from a previously unknown device or location.</p>
+    <div style="background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #f59e0b; margin: 20px 0;">
+      <p style="margin: 0; font-size: 14px;">Location: Unknown Area<br/>Device: Nexus Terminal</p>
+    </div>
+    <p>Was this you? If not, lock your account immediately.</p>
+  </body>
+</html>`,
+    'Reward Earned': `<!DOCTYPE html>
+<html>
+  <body style="background: #0f172a; color: white; font-family: sans-serif; padding: 40px;">
+    <h1 style="color: #10b981;">🏆 Commendation Earned</h1>
+    <p>Operative, you have been awarded <strong>{{xp}} XP</strong> for excellence in {{reason}}.</p>
+    <p>Your level and status have been updated in the network.</p>
+    <div style="text-align: center; margin: 30px 0;">
+      <div style="font-size: 48px;">🎖️</div>
+    </div>
+  </body>
+</html>`,
+    'Support Response': `<!DOCTYPE html>
+<html>
+  <body style="background: #0f172a; color: white; font-family: sans-serif; padding: 40px;">
+    <h1 style="color: #8b5cf6;">Command Briefing: Support Resolved</h1>
+    <p>Hello Operative {{name}},</p>
+    <div style="background: #1e293b; padding: 20px; border-radius: 10px; border: 1px solid #334155; margin: 20px 0;">
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">YOUR QUERY:</p>
+      <p style="margin: 0; font-style: italic;">"{{original_query}}"</p>
+    </div>
+    <div style="background: rgba(139, 92, 246, 0.1); padding: 20px; border-radius: 10px; border: 1px solid #8b5cf6; margin: 20px 0;">
+      <p style="color: #8b5cf6; font-size: 12px; margin-bottom: 5px;">COMMAND RESOLUTION:</p>
+      <p style="margin: 0; font-weight: bold;">{{reply_message}}</p>
+    </div>
+    <p>Systems are now clear. Return to your station.</p>
+  </body>
+</html>`
+  };
   const [auditLogs, setAuditLogs] = useState([]);
   const [config, setConfig] = useState(null);
   const [analytics, setAnalytics] = useState(null);
@@ -1134,28 +1205,94 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'email' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
-              <div className="glass-card" style={{ padding: '2rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Template Vault</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {['Welcome Email', 'Password Reset', 'Security Alert', 'Reward Earned', 'Support Response'].map(t => (
-                    <button key={t} style={{ textAlign: 'left', padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{t}</button>
+            <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr 1fr', gap: '2rem' }} className="flex-mobile-column">
+              {/* LEFT: TEMPLATE VAULT */}
+              <div className="glass-card" style={{ padding: '1.5rem', height: 'calc(100vh - 250px)', overflowY: 'auto' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Award size={18} color="var(--accent-primary)" /> Template Vault
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {Object.keys(TEMPLATES).map(t => (
+                    <button 
+                      key={t} 
+                      onClick={() => {
+                        setSelectedTemplate(t);
+                        setTemplateCode(TEMPLATES[t]);
+                      }}
+                      style={{ 
+                        textAlign: 'left', 
+                        padding: '1rem', 
+                        background: selectedTemplate === t ? 'rgba(124, 58, 237, 0.1)' : 'rgba(255,255,255,0.03)', 
+                        border: `1px solid ${selectedTemplate === t ? 'var(--accent-primary)' : 'var(--glass-border)'}`, 
+                        borderRadius: '12px', 
+                        fontSize: '0.85rem', 
+                        color: selectedTemplate === t ? 'white' : 'var(--text-secondary)',
+                        fontWeight: selectedTemplate === t ? 800 : 600,
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {t}
+                    </button>
                   ))}
                 </div>
+
+                <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                  <p style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Available Tokens</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                    {['name', 'username', 'xp', 'reason', 'reset_url'].map(token => (
+                      <code key={token} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', color: 'var(--accent-secondary)' }}>&#123;&#123;{token}&#125;&#125;</code>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="glass-card" style={{ padding: '2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+
+              {/* MIDDLE: ARCHITECT EDITOR */}
+              <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Template Architect</h3>
-                  <button className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}><Save size={16} /> Save Changes</button>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button onClick={handleTestEmail} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>Send Test</button>
+                    <button className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}><Save size={14} /> Save</button>
+                  </div>
                 </div>
-                <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '1.5rem', minHeight: '400px', border: '1px solid var(--glass-border)', fontFamily: 'monospace', fontSize: '0.9rem', color: '#10b981' }}>
-                  &lt;!DOCTYPE html&gt;<br/>
-                  &lt;html&gt;<br/>
-                  &nbsp;&nbsp;&lt;body style="background: #0f172a; color: white;"&gt;<br/>
-                  &nbsp;&nbsp;&nbsp;&nbsp;&lt;h1&gt;Welcome to Awareness Pro, &#123;&#123;name&#125;&#125;!&lt;/h1&gt;<br/>
-                  &nbsp;&nbsp;&lt;/body&gt;<br/>
-                  &lt;/html&gt;
+                <textarea 
+                  value={templateCode}
+                  onChange={(e) => setTemplateCode(e.target.value)}
+                  style={{ 
+                    flex: 1, 
+                    width: '100%', 
+                    background: 'rgba(0,0,0,0.3)', 
+                    border: '1px solid var(--glass-border)', 
+                    borderRadius: '12px', 
+                    padding: '1.5rem', 
+                    color: '#10b981', 
+                    fontFamily: 'monospace', 
+                    fontSize: '0.9rem', 
+                    outline: 'none',
+                    resize: 'none',
+                    lineHeight: 1.6
+                  }}
+                />
+              </div>
+
+              {/* RIGHT: LIVE VISUAL UPLINK */}
+              <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-muted)' }}>Visual Uplink</h3>
+                <div style={{ 
+                  flex: 1, 
+                  background: 'white', 
+                  borderRadius: '12px', 
+                  overflow: 'hidden',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+                }}>
+                  <div 
+                    dangerouslySetInnerHTML={{ __html: templateCode }}
+                    style={{ width: '100%', height: '100%', overflowY: 'auto' }}
+                  />
                 </div>
+                <p style={{ marginTop: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                  Real-time rendering of the operative's briefing view.
+                </p>
               </div>
             </div>
           )}
