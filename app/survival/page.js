@@ -231,7 +231,7 @@ function SurvivalContent() {
       background: 'transparent', 
       zIndex: 1
     }}>
-      <ThreeBackground theme="danger" {...bgProps} />
+      {/* <ThreeBackground theme="danger" {...bgProps} /> */}
       <Navbar />
 
       {/* Header Info */}
