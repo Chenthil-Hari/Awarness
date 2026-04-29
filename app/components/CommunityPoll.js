@@ -59,6 +59,8 @@ export default function CommunityPoll() {
       
       if (userVote) {
         setHasVoted(true);
+      } else {
+        setHasVoted(false);
       }
     } catch (error) {
       console.error("Failed to fetch poll:", error);
