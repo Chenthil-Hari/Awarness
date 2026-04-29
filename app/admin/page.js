@@ -202,8 +202,32 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeployFlow = () => {
-    alert('Simulation flow sequence deployed to all instances!');
+  const handleDeployFlow = async () => {
+    try {
+      const scenario = {
+        title: `Flow_${Date.now()}`,
+        category: 'Custom Flow',
+        difficulty: 'Advanced',
+        description: 'Visual flow designed via Admin Designer',
+        xpReward: 250,
+        steps: nodes.reduce((acc, node) => {
+          acc[node.id] = { text: node.title, options: [] };
+          return acc;
+        }, {})
+      };
+      
+      const res = await fetch('/api/admin/scenarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(scenario)
+      });
+      if (res.ok) {
+        alert('Simulation flow sequence deployed and saved to database!');
+        fetchAdminData();
+      }
+    } catch (err) {
+      alert('Failed to deploy simulation flow');
+    }
   };
 
   const handleAutoLayout = () => {
@@ -211,11 +235,29 @@ export default function AdminPage() {
     setNodes(prev => prev.map((n, i) => ({ ...n, x: 50 + (i * 150), y: 150 + (i % 2 === 0 ? -50 : 50) })));
   };
 
-  const handleUploadAsset = () => {
+  const handleUploadAsset = async () => {
     const name = prompt("Enter asset name:");
     if (!name) return;
-    alert(`Asset "${name}" uploaded successfully to Cloud Vault.`);
-    fetchAdminData();
+    
+    try {
+      const res = await fetch('/api/admin/assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          type: 'image/png',
+          size: '1.5 MB',
+          url: '/images/custom-asset.png',
+          category: 'Admin Upload'
+        })
+      });
+      if (res.ok) {
+        alert(`Asset "${name}" successfully registered in Cloud Vault.`);
+        fetchAdminData();
+      }
+    } catch (err) {
+      alert('Failed to upload asset');
+    }
   };
 
   const handlePurgeAsset = (assetName) => {

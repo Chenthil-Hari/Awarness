@@ -14,22 +14,33 @@ async function checkAdmin() {
 export async function GET() {
   try {
     await checkAdmin();
-    // In a real app, this would use a machine learning model or statistical regression
-    // on top of simulation_logs and user_stats.
+    const client = await clientPromise;
+    const db = client.db();
+    
+    const userStats = await db.collection('users').aggregate([
+      { $group: { _id: null, avgXP: { $avg: "$xp" }, total: { $sum: 1 } } }
+    ]).toArray();
+    
+    const { avgXP = 0, total = 0 } = userStats[0] || {};
+    
+    // Risk Score: Inverse of average XP relative to a 'safe' benchmark of 5000 XP
+    const riskScore = Math.max(10, Math.min(95, 100 - (avgXP / 50)));
+    
     const forecast = {
-      riskScore: 68,
-      riskTrend: 'down',
+      riskScore: Math.round(riskScore),
+      riskTrend: avgXP > 1000 ? 'down' : 'up',
       predictedActiveUsers: [
-        { day: 'Mon', count: 120 },
-        { day: 'Tue', count: 145 },
-        { day: 'Wed', count: 160 },
-        { day: 'Thu', count: 130 },
-        { day: 'Fri', count: 190 },
-        { day: 'Sat', count: 210 },
-        { day: 'Sun', count: 180 }
+        { day: 'Mon', count: Math.round(total * 0.8) },
+        { day: 'Tue', count: Math.round(total * 0.95) },
+        { day: 'Wed', count: total },
+        { day: 'Thu', count: Math.round(total * 1.1) },
+        { day: 'Fri', count: Math.round(total * 1.3) },
+        { day: 'Sat', count: Math.round(total * 1.5) },
+        { day: 'Sun', count: Math.round(total * 1.2) }
       ],
-      contentGaps: ['Deepfake Detection', 'Ransomware Recovery', 'Cloud Security']
+      contentGaps: avgXP < 2000 ? ['Social Engineering', 'Password Security'] : ['Advanced Phishing', 'Incident Response']
     };
+    
     return NextResponse.json(forecast);
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 403 });

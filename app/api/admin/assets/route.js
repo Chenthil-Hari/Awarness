@@ -14,14 +14,41 @@ async function checkAdmin() {
 export async function GET() {
   try {
     await checkAdmin();
-    // Mocked asset library
-    const assets = [
-      { id: 1, name: 'Phishing_Banner.png', type: 'image/png', size: '1.2 MB', url: '/images/phishing.png', category: 'Simulations' },
-      { id: 2, name: 'Badge_Expert.svg', type: 'image/svg+xml', size: '45 KB', url: '/images/badge.svg', category: 'Badges' },
-      { id: 3, name: 'Tutorial_Video.mp4', type: 'video/mp4', size: '24.8 MB', url: '/videos/tutorial.mp4', category: 'Wiki' }
-    ];
+    const client = await clientPromise;
+    const db = client.db();
+    
+    let assets = await db.collection('assets').find({}).toArray();
+    
+    // Default fallback for demo if empty
+    if (assets.length === 0) {
+      assets = [
+        { id: 'def_1', name: 'Security_Shield.png', type: 'image/png', size: '1.2 MB', url: '/images/shield.png', category: 'Simulations' },
+        { id: 'def_2', name: 'Master_Badge.svg', type: 'image/svg+xml', size: '45 KB', url: '/images/badge.svg', category: 'Badges' }
+      ];
+    }
+    
     return NextResponse.json(assets);
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 403 });
+  }
+}
+
+export async function POST(req) {
+  try {
+    await checkAdmin();
+    const client = await clientPromise;
+    const db = client.db();
+    const data = await req.json();
+    
+    const newAsset = {
+      ...data,
+      id: `asset_${Date.now()}`,
+      createdAt: new Date()
+    };
+    
+    await db.collection('assets').insertOne(newAsset);
+    return NextResponse.json({ success: true, asset: newAsset });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
