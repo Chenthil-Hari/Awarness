@@ -644,7 +644,15 @@ export default function AdminPage() {
     }
   };
 
-  const handleRewardUser = async (userId, xpAmount, reason) => {
+  const handleRewardUser = async (userId, initialXp = 100, initialReason = 'Manual Admin Reward') => {
+    const amountStr = prompt("Enter XP amount to grant:", initialXp);
+    if (!amountStr) return;
+    const xpAmount = parseInt(amountStr);
+    if (isNaN(xpAmount)) return alert("Invalid XP amount");
+
+    const reason = prompt("Enter reason for reward:", initialReason);
+    if (!reason) return;
+
     try {
       const res = await fetch('/api/admin/users/reward', {
         method: 'POST',
@@ -1006,8 +1014,8 @@ export default function AdminPage() {
                           {user.role !== 'admin' && (
                             <div style={{ display: 'flex', gap: '0.4rem' }}>
                               <button
-                                onClick={() => handleRewardUser(user._id, 100, 'Manual Admin Reward')}
-                                title="Reward 100 XP"
+                                onClick={() => handleRewardUser(user._id)}
+                                title="Grant Custom Reward"
                                 style={{ color: 'var(--accent-success)', opacity: 0.8 }}
                               >
                                 <Zap size={16} />
