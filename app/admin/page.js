@@ -612,6 +612,7 @@ export default function AdminPage() {
   }
 
   return (
+    <>
     <main style={{ 
       minHeight: '100vh', 
       background: isDark ? 'var(--bg-main)' : '#f8fafc', 
@@ -1991,5 +1992,6 @@ export default function AdminPage() {
         </div>
       )}
     </AnimatePresence>
+    </>
   );
 }
