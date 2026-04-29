@@ -5,7 +5,9 @@ import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save, Globe, Send } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import AdminCommandBar from '../components/AdminCommandBar';
+
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -110,7 +112,7 @@ export default function AdminPage() {
       
       setStats(statsData);
       setReports(reportsData);
-      setUsers(usersData.users || []);
+      setUsers(usersData || []);
       setTickets(ticketsData.tickets || []);
       setPendingMissions(missionsData.missions || []);
       setLoading(false);
@@ -252,6 +254,48 @@ export default function AdminPage() {
       }
     } catch (error) {
       alert('Failed to send reply');
+    }
+  };
+
+  const handleExportUsers = () => {
+    if (!users || users.length === 0) {
+      alert('No user data available to export.');
+      return;
+    }
+
+    try {
+      // Prepare the data for Excel
+      const dataToExport = users.map(user => ({
+        'Full Name': user.name || 'N/A',
+        'Email Address': user.email || 'N/A',
+        'Username': user.username || 'N/A',
+        'Experience (XP)': user.xp || 0,
+        'Role': (user.role || 'user').toUpperCase(),
+        'Joined Date': user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'
+      }));
+
+      // Create a worksheet
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      
+      // Create a workbook
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Citizens");
+
+      // Auto-size columns (optional but nice)
+      const maxWidths = {};
+      dataToExport.forEach(row => {
+        Object.keys(row).forEach(key => {
+          const val = String(row[key]);
+          maxWidths[key] = Math.max(maxWidths[key] || key.length, val.length);
+        });
+      });
+      worksheet['!cols'] = Object.keys(maxWidths).map(key => ({ wch: maxWidths[key] + 2 }));
+
+      // Trigger download
+      XLSX.writeFile(workbook, `Awareness_Citizens_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to generate Excel file.');
     }
   };
 
@@ -483,8 +527,18 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'users' && (
-            <div className="glass-card" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button 
+                  onClick={handleExportUsers}
+                  className="btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-primary)', color: 'white', border: 'none' }}
+                >
+                  <Users size={16} /> Download Citizen Roster (Excel)
+                </button>
+              </div>
+              <div className="glass-card" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: isDark ? 'var(--bg-tertiary)' : '#f1f5f9', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.05)' }}>
                     <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>CITIZEN</th>
@@ -676,9 +730,14 @@ export default function AdminPage() {
                   <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
                     <Shield size={18} /> Clear Audit Logs
                   </button>
-                  <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
-                    <Users size={18} /> Export User Data
+                  <button 
+                    onClick={handleExportUsers}
+                    className="btn-secondary" 
+                    style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}
+                  >
+                    <Users size={18} /> Export User Data (Excel)
                   </button>
+
                 </div>
               </div>
             </div>
