@@ -285,6 +285,23 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeletePoll = async (pollId) => {
+    if (!confirm('PERMANENTLY PURGE THIS POLL? This action cannot be undone.')) return;
+    try {
+      const res = await fetch('/api/admin/polls', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pollId })
+      });
+      if (res.ok) {
+        alert('Poll successfully purged from system.');
+        fetchAdminData();
+      }
+    } catch (err) {
+      alert('Failed to delete poll');
+    }
+  };
+
   const handleUploadAsset = async () => {
     const name = prompt("Enter asset name:");
     if (!name) return;
@@ -1483,15 +1500,28 @@ export default function AdminPage() {
                           })}
                         </div>
                         
-                        {poll.status !== 'published' && (
+                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                          {poll.status !== 'published' ? (
+                            <button 
+                              onClick={() => handlePublishPoll(poll._id)}
+                              className="btn-secondary" 
+                              style={{ flex: 2, background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}
+                            >
+                              <CheckCircle size={16} /> PUBLISH RESULTS
+                            </button>
+                          ) : (
+                            <div style={{ flex: 2, textAlign: 'center', padding: '0.8rem', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '8px', color: '#10b981', fontSize: '0.7rem', fontWeight: 800 }}>
+                              RESULTS PUBLISHED
+                            </div>
+                          )}
                           <button 
-                            onClick={() => handlePublishPoll(poll._id)}
+                            onClick={() => handleDeletePoll(poll._id)}
                             className="btn-secondary" 
-                            style={{ width: '100%', marginTop: '1.5rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}
+                            style={{ flex: 1, color: 'var(--accent-danger)', borderColor: 'rgba(239, 68, 68, 0.2)' }}
                           >
-                            <CheckCircle size={16} /> PUBLISH RESULTS
+                            <Trash2 size={16} />
                           </button>
-                        )}
+                        </div>
                       </div>
                     ))}
                   </div>

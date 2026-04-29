@@ -18,9 +18,15 @@ export default function CommunityPoll() {
   const [rewardClaimed, setRewardClaimed] = useState(false);
 
   useEffect(() => {
+    if (poll?._id && session?.user?.id) {
+      const claimed = localStorage.getItem(`poll_claimed_${poll._id}_${session.user.id}`);
+      if (claimed) setRewardClaimed(true);
+      else setRewardClaimed(false);
+    }
+  }, [poll, session]);
+
+  useEffect(() => {
     fetchPoll();
-    const claimed = localStorage.getItem(`poll_claimed_${session?.user?.id}`);
-    if (claimed) setRewardClaimed(true);
   }, [session]);
 
   const fetchPoll = async () => {
@@ -46,8 +52,9 @@ export default function CommunityPoll() {
   };
 
   const handleClaimReward = () => {
+    if (!poll?._id || !session?.user?.id) return;
     setRewardClaimed(true);
-    localStorage.setItem(`poll_claimed_${session?.user?.id}`, 'true');
+    localStorage.setItem(`poll_claimed_${poll._id}_${session.user.id}`, 'true');
   };
 
   const handleVote = async (optionId) => {
