@@ -5,9 +5,8 @@ import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save, Globe, Send } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import AdminCommandBar from '../components/AdminCommandBar';
-
+import * as XLSX from 'xlsx';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -93,7 +92,7 @@ export default function AdminPage() {
 
   const fetchAdminData = async () => {
     try {
-      const [statsRes, reportsRes, usersRes, ticketsRes] = await Promise.all([
+      const [statsRes, reportsRes, usersRes, ticketsRes, auditRes, configRes, analyticsRes, guidesRes] = await Promise.all([
         fetch('/api/admin/stats'),
         fetch('/api/admin/reports'),
         fetch('/api/admin/users'),
@@ -104,7 +103,7 @@ export default function AdminPage() {
         fetch('/api/admin/analytics'),
         fetch('/api/guides')
       ]);
-      
+
       const statsData = await statsRes.json();
       const reportsData = await reportsRes.json();
       const usersData = await usersRes.json();
@@ -113,7 +112,7 @@ export default function AdminPage() {
       const configData = await configRes.json();
       const analyticsData = await analyticsRes.json();
       const guidesData = await guidesRes.json();
-      
+
       let missionsData = { missions: [] };
       try {
         const missionsRes = await fetch('/api/admin/pending-missions');
@@ -121,10 +120,10 @@ export default function AdminPage() {
       } catch (err) {
         console.error("Missions fetch error:", err);
       }
-      
+
       setStats(statsData);
       setReports(reportsData);
-      setUsers(Array.isArray(usersData) ? usersData : []);
+      setUsers(Array.isArray(usersData) ? usersData : (usersData.users || []));
       setTickets(ticketsData.tickets || []);
       setPendingMissions(missionsData.missions || []);
       setAuditLogs(auditData || []);
@@ -186,7 +185,7 @@ export default function AdminPage() {
   const handleTestEmail = async () => {
     const email = prompt("Enter email address to send test to:", session.user.email);
     if (!email) return;
-    
+
     setLoading(true);
     try {
       const res = await fetch('/api/admin/test-mail', {
@@ -273,48 +272,6 @@ export default function AdminPage() {
     }
   };
 
-  const handleExportUsers = () => {
-    if (!users || users.length === 0) {
-      alert('No user data available to export.');
-      return;
-    }
-
-    try {
-      // Prepare the data for Excel
-      const dataToExport = users.map(user => ({
-        'Full Name': user.name || 'N/A',
-        'Email Address': user.email || 'N/A',
-        'Username': user.username || 'N/A',
-        'Experience (XP)': user.xp || 0,
-        'Role': (user.role || 'user').toUpperCase(),
-        'Joined Date': user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'
-      }));
-
-      // Create a worksheet
-      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-      
-      // Create a workbook
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Citizens");
-
-      // Auto-size columns (optional but nice)
-      const maxWidths = {};
-      dataToExport.forEach(row => {
-        Object.keys(row).forEach(key => {
-          const val = String(row[key]);
-          maxWidths[key] = Math.max(maxWidths[key] || key.length, val.length);
-        });
-      });
-      worksheet['!cols'] = Object.keys(maxWidths).map(key => ({ wch: maxWidths[key] + 2 }));
-
-      // Trigger download
-      XLSX.writeFile(workbook, `Awareness_Citizens_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
-    } catch (error) {
-      console.error('Export failed:', error);
-      alert('Failed to generate Excel file.');
-    }
-  };
-
   const handleUpdateConfig = async (newConfig) => {
     try {
       const res = await fetch('/api/admin/config', {
@@ -347,18 +304,41 @@ export default function AdminPage() {
     }
   };
 
+  const handleExportUsers = () => {
+    try {
+      const exportData = users.map(user => ({
+        Name: user.name,
+        Email: user.email,
+        Username: user.username,
+        XP: user.xp || 0,
+        Role: user.role || 'user',
+        Joined: new Date(user.createdAt).toLocaleDateString()
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Citizens");
+
+      XLSX.writeFile(workbook, `Awareness_Citizens_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch (error) {
+      alert('Failed to generate Excel report');
+      console.error(error);
+    }
+  };
+
+
 
   const isDark = theme === 'dark';
 
   return (
-    <main style={{ 
-      minHeight: '100vh', 
-      background: isDark ? '#0a0a0b' : '#f8fafc', 
-      color: isDark ? 'white' : '#0f172a', 
+    <main style={{
+      minHeight: '100vh',
+      background: isDark ? '#0a0a0b' : '#f8fafc',
+      color: isDark ? 'white' : '#0f172a',
       padding: '2rem',
       transition: 'background 0.3s ease, color 0.3s ease'
     }}>
-      <AdminCommandBar 
+      <AdminCommandBar
         isOpen={isCommandBarOpen}
         onClose={() => setIsCommandBarOpen(false)}
         onNavigate={setActiveTab}
@@ -371,13 +351,13 @@ export default function AdminPage() {
 
       <div className="container">
         {/* Isolated Header */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          marginBottom: '4rem', 
-          borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)', 
-          paddingBottom: '2rem' 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '4rem',
+          borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)',
+          paddingBottom: '2rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ padding: '0.6rem', background: 'var(--accent-primary)', borderRadius: 'var(--radius-lg)', color: 'white' }}>
@@ -390,12 +370,12 @@ export default function AdminPage() {
               </p>
             </div>
           </div>
-          
+
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <button 
+            <button
               onClick={toggleTheme}
-              style={{ 
-                padding: '0.6rem', borderRadius: 'var(--radius-md)', 
+              style={{
+                padding: '0.6rem', borderRadius: 'var(--radius-md)',
                 background: isDark ? 'rgba(255,255,255,0.05)' : 'white',
                 border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
                 color: isDark ? 'white' : '#0f172a',
@@ -406,10 +386,10 @@ export default function AdminPage() {
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            <button 
+            <button
               onClick={() => signOut({ callbackUrl: '/admin/login' })}
-              style={{ 
-                display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', 
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)',
                 color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.2)',
                 padding: '0.6rem 1.2rem', borderRadius: 'var(--radius-md)', fontWeight: 700, fontSize: '0.9rem',
                 cursor: 'pointer'
@@ -428,14 +408,14 @@ export default function AdminPage() {
             { label: 'Pending Reports', value: stats.reports, icon: <AlertTriangle />, color: 'var(--accent-danger)' },
             { label: 'System Health', value: 'Optimal', icon: <CheckCircle />, color: 'var(--accent-success)' }
           ].map((stat, i) => (
-            <motion.div 
+            <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="glass-card" 
-              style={{ 
-                padding: '1.5rem', borderRadius: 'var(--radius-xl)', 
+              className="glass-card"
+              style={{
+                padding: '1.5rem', borderRadius: 'var(--radius-xl)',
                 borderLeft: `4px solid ${stat.color}`,
                 background: isDark ? 'var(--glass-bg)' : 'white',
                 boxShadow: isDark ? 'none' : '0 4px 6px -1px rgb(0 0 0 / 0.1)'
@@ -454,10 +434,10 @@ export default function AdminPage() {
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem', overflowX: 'auto' }}>
           {['overview', 'analytics', 'users', 'cms', 'missions', 'reports', 'audit', 'config', 'email', 'support', 'broadcast', 'sentinel'].map(tab => (
-            <button 
+            <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              style={{ 
+              style={{
                 background: 'none', border: 'none', color: activeTab === tab ? (isDark ? 'var(--text-primary)' : '#7c3aed') : 'var(--text-muted)',
                 fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', position: 'relative', padding: '0.5rem 1rem',
                 textTransform: 'uppercase', whiteSpace: 'nowrap'
@@ -492,19 +472,19 @@ export default function AdminPage() {
                           <p style={{ fontSize: '0.9rem', color: isDark ? 'var(--text-secondary)' : '#475569', marginTop: '0.4rem' }}>"{report.details}"</p>
                         </div>
                         <div style={{ display: 'flex', gap: '0.8rem' }}>
-                          <button 
+                          <button
                             onClick={() => window.open(`/wiki?id=${report.guideId}`, '_blank')}
                             className="btn-secondary" style={{ padding: '0.6rem', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}
                           >
                             <ExternalLink size={18} />
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDismissReport(report._id)}
                             className="btn-secondary" style={{ padding: '0.6rem', color: 'var(--accent-success)', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}
                           >
                             <CheckCircle size={18} />
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDeleteGuide(report.guideId, report._id)}
                             className="btn-secondary" style={{ padding: '0.6rem', color: 'var(--accent-danger)', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}
                           >
@@ -538,26 +518,26 @@ export default function AdminPage() {
                         <h4 style={{ margin: 0, fontWeight: 800, fontSize: '1.1rem' }}>{mission.title}</h4>
                         <p style={{ margin: '0.25rem 0', fontSize: '0.8rem', color: theme === 'dark' ? '#94a3b8' : '#64748b' }}>Creator: <span style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>{mission.creatorName}</span> • {mission.phases?.length} Phases • {mission.mode}</p>
                         <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', lineHeight: 1.5 }}>{mission.description}</p>
-                        
+
                         <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.1)' }}>
                           <p style={{ fontSize: '0.7rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Payload Overview</p>
                           {mission.phases?.slice(0, 2).map((p, i) => (
                             <div key={i} style={{ fontSize: '0.8rem', marginBottom: '0.25rem' }}>
-                              <span style={{ color: 'var(--accent-secondary)', fontWeight: 800 }}>P{i+1}:</span> {p.title} ({p.questions?.length} Questions)
+                              <span style={{ color: 'var(--accent-secondary)', fontWeight: 800 }}>P{i + 1}:</span> {p.title} ({p.questions?.length} Questions)
                             </div>
                           ))}
                           {mission.phases?.length > 2 && <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>...and {mission.phases.length - 2} more phases</p>}
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '0.75rem' }}>
-                        <button 
+                        <button
                           onClick={() => handleMissionAction(mission._id, 'approve')}
-                          className="btn-primary" 
+                          className="btn-primary"
                           style={{ padding: '0.5rem 1rem', background: 'var(--accent-success)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                         >
                           <CheckCircle size={14} /> APPROVE
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleMissionAction(mission._id, 'reject')}
                           style={{ padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)', border: '1px solid var(--accent-danger)', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                         >
@@ -577,18 +557,8 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'users' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button 
-                  onClick={handleExportUsers}
-                  className="btn-secondary"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-primary)', color: 'white', border: 'none' }}
-                >
-                  <Users size={16} /> Download Citizen Roster (Excel)
-                </button>
-              </div>
-              <div className="glass-card" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <div className="glass-card" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: isDark ? 'var(--bg-tertiary)' : '#f1f5f9', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.05)' }}>
                     <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>CITIZEN</th>
@@ -620,7 +590,7 @@ export default function AdminPage() {
                       </td>
                       <td style={{ padding: '1.2rem' }}>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <span style={{ 
+                          <span style={{
                             padding: '0.3rem 0.8rem', borderRadius: 'var(--radius-full)', fontSize: '0.7rem', fontWeight: 800,
                             background: user.role === 'admin' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(0, 0, 0, 0.05)',
                             color: user.role === 'admin' ? 'var(--accent-primary)' : 'var(--text-muted)'
@@ -629,14 +599,14 @@ export default function AdminPage() {
                           </span>
                           {user.role !== 'admin' && (
                             <div style={{ display: 'flex', gap: '0.4rem' }}>
-                              <button 
+                              <button
                                 onClick={() => handleRewardUser(user._id, 100, 'Manual Admin Reward')}
                                 title="Reward 100 XP"
                                 style={{ color: 'var(--accent-success)', opacity: 0.8 }}
                               >
                                 <Zap size={16} />
                               </button>
-                              <button 
+                              <button
                                 onClick={() => handleImpersonate(user._id, user.username)}
                                 title="Ghost Mode (Impersonate)"
                                 style={{ color: 'var(--accent-secondary)', opacity: 0.6 }}
@@ -652,7 +622,149 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+          )}
+
+          {activeTab === 'sandbox' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
+                    <Layout size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>The <span className="gradient-text">Sandbox</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Architect your own interactive simulations</p>
+                  </div>
+                  <button onClick={handleSaveScenario} className="btn-primary" style={{ marginLeft: 'auto', gap: '0.5rem', padding: '0.8rem 1.5rem' }}>
+                    <Save size={18} /> Deploy Scenario
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                  {/* Basic Info */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>SCENARIO TITLE</label>
+                      <input
+                        value={newScenario.title}
+                        onChange={(e) => setNewScenario({ ...newScenario, title: e.target.value })}
+                        placeholder="e.g. The Phishing Phone Call"
+                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>CATEGORY</label>
+                      <select
+                        value={newScenario.category}
+                        onChange={(e) => setNewScenario({ ...newScenario, category: e.target.value })}
+                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }}
+                      >
+                        <option value="Cybersecurity">Cybersecurity</option>
+                        <option value="Financial Literacy">Financial Literacy</option>
+                        <option value="Life Skills">Life Skills</option>
+                        <option value="Mental Health">Mental Health</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>SHORT DESCRIPTION</label>
+                      <textarea
+                        value={newScenario.description}
+                        onChange={(e) => setNewScenario({ ...newScenario, description: e.target.value })}
+                        placeholder="Describe the situation to the user..."
+                        style={{ width: '100%', height: '100px', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a', resize: 'none' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Steps Editor */}
+                  <div className="glass" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1rem' }}>Initial Step Configuration</h3>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>QUESTION / STORY TEXT</label>
+                      <textarea
+                        value={newScenario.steps.start.text}
+                        onChange={(e) => {
+                          const updated = { ...newScenario };
+                          updated.steps.start.text = e.target.value;
+                          setNewScenario(updated);
+                        }}
+                        placeholder="What happens first?"
+                        style={{ width: '100%', height: '80px', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a', resize: 'none' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block' }}>USER CHOICES</label>
+                      {newScenario.steps.start.options.map((opt, i) => (
+                        <div key={i} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid var(--glass-border)' }}>
+                          <input
+                            value={opt.text}
+                            onChange={(e) => {
+                              const updated = { ...newScenario };
+                              updated.steps.start.options[i].text = e.target.value;
+                              setNewScenario(updated);
+                            }}
+                            placeholder={`Choice #${i + 1} text`}
+                            style={{ width: '100%', marginBottom: '0.5rem', background: 'none', border: 'none', borderBottom: '1px solid var(--glass-border)', color: isDark ? 'white' : '#0f172a', padding: '0.5rem 0', outline: 'none' }}
+                          />
+                          <input
+                            value={opt.feedback}
+                            onChange={(e) => {
+                              const updated = { ...newScenario };
+                              updated.steps.start.options[i].feedback = e.target.value;
+                              setNewScenario(updated);
+                            }}
+                            placeholder="Feedback for this choice..."
+                            style={{ width: '100%', fontSize: '0.8rem', color: 'var(--text-muted)', background: 'none', border: 'none', outline: 'none' }}
+                          />
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => {
+                          const updated = { ...newScenario };
+                          updated.steps.start.options.push({ text: '', nextStep: 'success', feedback: '', points: 50 });
+                          setNewScenario(updated);
+                        }}
+                        style={{ padding: '0.75rem', border: '1px dashed var(--glass-border)', borderRadius: '8px', color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'none', cursor: 'pointer' }}
+                      >
+                        <Plus size={14} /> Add Choice
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'overview' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Active Notifications</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '1rem', padding: '1rem', background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderRadius: 'var(--radius-lg)' }}>
+                    <ShieldAlert color="var(--accent-primary)" />
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: isDark ? 'white' : '#0f172a' }}>Security Patch Deployed</p>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Threaded comments and guide deletion APIs secured.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Quick Actions</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  <button onClick={handleTestEmail} className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--accent-primary)' }}>
+                    <Mail size={18} /> Test Email System
+                  </button>
+                  <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
+                    <Shield size={18} /> Clear Audit Logs
+                  </button>
+                  <button onClick={handleExportUsers} className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
+                    <Users size={18} /> Export User Data (Excel)
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           {activeTab === 'analytics' && (
@@ -726,9 +838,9 @@ export default function AdminPage() {
                      <p style={{ margin: 0, fontWeight: 700 }}>Maintenance Mode</p>
                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Lock platform for all non-admin citizens</p>
                    </div>
-                   <input 
-                     type="checkbox" 
-                     checked={config?.maintenanceMode} 
+                   <input
+                     type="checkbox"
+                     checked={config?.maintenanceMode}
                      onChange={(e) => handleUpdateConfig({...config, maintenanceMode: e.target.checked})}
                      style={{ width: '40px', height: '20px', cursor: 'pointer' }}
                    />
@@ -738,9 +850,9 @@ export default function AdminPage() {
                      <p style={{ margin: 0, fontWeight: 700 }}>XP Multiplier</p>
                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Scale global XP rewards (e.g. 2 for Double XP)</p>
                    </div>
-                   <input 
-                     type="number" 
-                     value={config?.xpMultiplier} 
+                   <input
+                     type="number"
+                     value={config?.xpMultiplier}
                      onChange={(e) => handleUpdateConfig({...config, xpMultiplier: parseFloat(e.target.value)})}
                      style={{ width: '60px', padding: '0.4rem', background: 'rgba(0,0,0,0.1)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}
                    />
@@ -750,9 +862,9 @@ export default function AdminPage() {
                      <p style={{ margin: 0, fontWeight: 700 }}>Open Registration</p>
                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Allow new citizens to join the network</p>
                    </div>
-                   <input 
-                     type="checkbox" 
-                     checked={config?.registrationEnabled} 
+                   <input
+                     type="checkbox"
+                     checked={config?.registrationEnabled}
                      onChange={(e) => handleUpdateConfig({...config, registrationEnabled: e.target.checked})}
                      style={{ width: '40px', height: '20px', cursor: 'pointer' }}
                    />
@@ -824,154 +936,6 @@ export default function AdminPage() {
           )}
 
 
-          {activeTab === 'sandbox' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                  <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
-                    <Layout size={24} />
-                  </div>
-                  <div>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>The <span className="gradient-text">Sandbox</span></h2>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Architect your own interactive simulations</p>
-                  </div>
-                  <button onClick={handleSaveScenario} className="btn-primary" style={{ marginLeft: 'auto', gap: '0.5rem', padding: '0.8rem 1.5rem' }}>
-                    <Save size={18} /> Deploy Scenario
-                  </button>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-                  {/* Basic Info */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>SCENARIO TITLE</label>
-                      <input 
-                        value={newScenario.title}
-                        onChange={(e) => setNewScenario({...newScenario, title: e.target.value})}
-                        placeholder="e.g. The Phishing Phone Call"
-                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>CATEGORY</label>
-                      <select 
-                        value={newScenario.category}
-                        onChange={(e) => setNewScenario({...newScenario, category: e.target.value})}
-                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }}
-                      >
-                        <option value="Cybersecurity">Cybersecurity</option>
-                        <option value="Financial Literacy">Financial Literacy</option>
-                        <option value="Life Skills">Life Skills</option>
-                        <option value="Mental Health">Mental Health</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>SHORT DESCRIPTION</label>
-                      <textarea 
-                        value={newScenario.description}
-                        onChange={(e) => setNewScenario({...newScenario, description: e.target.value})}
-                        placeholder="Describe the situation to the user..."
-                        style={{ width: '100%', height: '100px', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a', resize: 'none' }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Steps Editor */}
-                  <div className="glass" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1rem' }}>Initial Step Configuration</h3>
-                    <div style={{ marginBottom: '1.5rem' }}>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>QUESTION / STORY TEXT</label>
-                      <textarea 
-                        value={newScenario.steps.start.text}
-                        onChange={(e) => {
-                          const updated = {...newScenario};
-                          updated.steps.start.text = e.target.value;
-                          setNewScenario(updated);
-                        }}
-                        placeholder="What happens first?"
-                        style={{ width: '100%', height: '80px', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a', resize: 'none' }}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block' }}>USER CHOICES</label>
-                      {newScenario.steps.start.options.map((opt, i) => (
-                        <div key={i} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid var(--glass-border)' }}>
-                          <input 
-                            value={opt.text}
-                            onChange={(e) => {
-                              const updated = {...newScenario};
-                              updated.steps.start.options[i].text = e.target.value;
-                              setNewScenario(updated);
-                            }}
-                            placeholder={`Choice #${i + 1} text`}
-                            style={{ width: '100%', marginBottom: '0.5rem', background: 'none', border: 'none', borderBottom: '1px solid var(--glass-border)', color: isDark ? 'white' : '#0f172a', padding: '0.5rem 0', outline: 'none' }}
-                          />
-                          <input 
-                            value={opt.feedback}
-                            onChange={(e) => {
-                              const updated = {...newScenario};
-                              updated.steps.start.options[i].feedback = e.target.value;
-                              setNewScenario(updated);
-                            }}
-                            placeholder="Feedback for this choice..."
-                            style={{ width: '100%', fontSize: '0.8rem', color: 'var(--text-muted)', background: 'none', border: 'none', outline: 'none' }}
-                          />
-                        </div>
-                      ))}
-                      <button 
-                        onClick={() => {
-                          const updated = {...newScenario};
-                          updated.steps.start.options.push({ text: '', nextStep: 'success', feedback: '', points: 50 });
-                          setNewScenario(updated);
-                        }}
-                        style={{ padding: '0.75rem', border: '1px dashed var(--glass-border)', borderRadius: '8px', color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'none', cursor: 'pointer' }}
-                      >
-                        <Plus size={14} /> Add Choice
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'overview' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Active Notifications</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', gap: '1rem', padding: '1rem', background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderRadius: 'var(--radius-lg)' }}>
-                     <ShieldAlert color="var(--accent-primary)" />
-                     <div>
-                       <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: isDark ? 'white' : '#0f172a' }}>Security Patch Deployed</p>
-                       <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Threaded comments and guide deletion APIs secured.</p>
-                     </div>
-                  </div>
-                </div>
-              </div>
-              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Quick Actions</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                  <button onClick={handleTestEmail} className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--accent-primary)' }}>
-                    <Mail size={18} /> Test Email System
-                  </button>
-                  <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
-                    <Shield size={18} /> Clear Audit Logs
-                  </button>
-                  <button 
-                    onClick={handleExportUsers}
-                    className="btn-secondary" 
-                    style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}
-                  >
-                    <Users size={18} /> Export User Data (Excel)
-                  </button>
-
-                </div>
-              </div>
-            </div>
-          )}
-
           {activeTab === 'sentinel' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', border: '1px solid rgba(245, 158, 11, 0.3)', background: isDark ? 'rgba(245, 158, 11, 0.05)' : '#fffbeb' }}>
@@ -987,31 +951,31 @@ export default function AdminPage() {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
-                {guides.filter(g => g.aiStatus && g.aiStatus !== 'safe').length === 0 ? (
+                {allGuides.filter(g => g.aiStatus && g.aiStatus !== 'safe').length === 0 ? (
                   <div className="glass-card" style={{ gridColumn: '1/-1', padding: '4rem', textAlign: 'center' }}>
                     <CheckCircle size={48} style={{ color: 'var(--accent-success)', margin: '0 auto 1.5rem' }} />
                     <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>All Clear, Commander!</h3>
                     <p style={{ color: 'var(--text-muted)', margin: 0 }}>The AI Sentinel hasn't flagged any new content.</p>
                   </div>
                 ) : (
-                  guides.filter(g => g.aiStatus && g.aiStatus !== 'safe').map(item => (
-                    <motion.div 
+                  allGuides.filter(g => g.aiStatus && g.aiStatus !== 'safe').map(item => (
+                    <motion.div
                       key={item._id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="glass-card"
-                      style={{ 
-                        padding: '1.5rem', 
-                        borderRadius: 'var(--radius-xl)', 
+                      style={{
+                        padding: '1.5rem',
+                        borderRadius: 'var(--radius-xl)',
                         borderLeft: `6px solid ${item.aiStatus === 'toxic' ? '#ef4444' : '#f59e0b'}`,
                         background: isDark ? 'var(--glass-bg)' : 'white'
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                        <span style={{ 
-                          fontSize: '0.65rem', 
-                          fontWeight: 900, 
-                          padding: '4px 8px', 
+                        <span style={{
+                          fontSize: '0.65rem',
+                          fontWeight: 900,
+                          padding: '4px 8px',
                           borderRadius: '6px',
                           background: item.aiStatus === 'toxic' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
                           color: item.aiStatus === 'toxic' ? '#ef4444' : '#f59e0b',
@@ -1021,7 +985,7 @@ export default function AdminPage() {
                         </span>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Wiki Guide</span>
                       </div>
-                      
+
                       <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '0.5rem' }}>{item.title}</h3>
                       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {item.content}
@@ -1037,16 +1001,16 @@ export default function AdminPage() {
                       </div>
 
                       <div style={{ display: 'flex', gap: '0.75rem' }}>
-                        <button 
+                        <button
                           onClick={() => handleMarkSafe(item._id, 'guide')}
-                          className="btn-secondary" 
+                          className="btn-secondary"
                           style={{ flex: 1, fontSize: '0.8rem', gap: '0.4rem', border: '1px solid var(--accent-success)', color: 'var(--accent-success)' }}
                         >
                           <CheckCircle size={16} /> Authorize
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteGuide(item._id)}
-                          className="btn-secondary" 
+                          className="btn-secondary"
                           style={{ flex: 1, fontSize: '0.8rem', gap: '0.4rem', border: '1px solid var(--accent-danger)', color: 'var(--accent-danger)' }}
                         >
                           <Trash2 size={16} /> Vanish
@@ -1080,20 +1044,20 @@ export default function AdminPage() {
                   </div>
                 ) : (
                   tickets.map(ticket => (
-                    <motion.div 
+                    <motion.div
                       key={ticket._id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       className="glass-card"
-                      style={{ 
-                        padding: '1.5rem', borderRadius: 'var(--radius-xl)', 
+                      style={{
+                        padding: '1.5rem', borderRadius: 'var(--radius-xl)',
                         borderLeft: `6px solid ${ticket.status === 'pending' ? '#ef4444' : '#10b981'}`,
                         background: isDark ? 'var(--glass-bg)' : 'white'
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                         <div>
-                          <span style={{ 
+                          <span style={{
                             fontSize: '0.65rem', fontWeight: 900, padding: '4px 8px', borderRadius: '6px',
                             background: ticket.status === 'pending' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
                             color: ticket.status === 'pending' ? '#ef4444' : '#10b981',
@@ -1105,7 +1069,7 @@ export default function AdminPage() {
                         </div>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(ticket.createdAt).toLocaleString()}</span>
                       </div>
-                      
+
                       <p style={{ fontSize: '1rem', fontWeight: 600, color: isDark ? 'white' : '#0f172a', marginBottom: '1rem' }}>
                         "{ticket.message}"
                       </p>
@@ -1120,9 +1084,9 @@ export default function AdminPage() {
                       )}
 
                       <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-                        <button 
+                        <button
                           onClick={() => handleReplyTicket(ticket._id)}
-                          className="btn-primary" 
+                          className="btn-primary"
                           style={{ flex: 1, fontSize: '0.8rem', gap: '0.4rem', padding: '0.6rem' }}
                         >
                           <Send size={16} /> {ticket.status === 'pending' ? 'Send Reply' : 'Send Another Reply'}
@@ -1152,7 +1116,7 @@ export default function AdminPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     <div>
                       <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>DISPATCH SUBJECT</label>
-                      <input 
+                      <input
                         value={broadcastSubject}
                         onChange={(e) => setBroadcastSubject(e.target.value)}
                         placeholder="e.g. Scheduled System Maintenance"
@@ -1163,7 +1127,7 @@ export default function AdminPage() {
                     <div>
                       <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>ANNOUNCEMENT TYPE</label>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button 
+                        <button
                           onClick={() => {
                             setBroadcastType('announcement');
                             setBroadcastSubject('📢 New Mission Briefing: Security Intel Update');
@@ -1173,7 +1137,7 @@ export default function AdminPage() {
                         >
                           📢 News
                         </button>
-                        <button 
+                        <button
                           onClick={() => {
                             setBroadcastType('maintenance');
                             setBroadcastSubject('⚠️ Scheduled System Maintenance & Security Upgrades');
@@ -1188,7 +1152,7 @@ export default function AdminPage() {
 
                     <div>
                       <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>DETAILED MESSAGE</label>
-                      <textarea 
+                      <textarea
                         value={broadcastMessage}
                         onChange={(e) => setBroadcastMessage(e.target.value)}
                         placeholder="Type your official announcement here..."
@@ -1196,13 +1160,13 @@ export default function AdminPage() {
                       />
                     </div>
 
-                    <button 
+                    <button
                       id="btn-send-broadcast"
                       onClick={async () => {
                         const btn = document.getElementById('btn-send-broadcast');
 
                         if (!broadcastSubject || !broadcastMessage) return alert('Please fill all fields');
-                        
+
                         if (!confirm(`Are you sure you want to send this broadcast to ALL users?`)) return;
 
                         btn.innerText = 'DEPLOYING...';
@@ -1229,7 +1193,7 @@ export default function AdminPage() {
                           btn.disabled = false;
                         }
                       }}
-                      className="btn-primary" 
+                      className="btn-primary"
                       style={{ width: '100%', padding: '1.2rem', gap: '0.75rem', fontSize: '1rem', boxShadow: '0 4px 20px rgba(124, 58, 237, 0.3)' }}
                     >
                       <Zap size={20} /> DEPLOY BROADCAST
@@ -1247,10 +1211,10 @@ export default function AdminPage() {
                       <li>Avoid sending more than one broadcast per 24 hours to prevent spam filters.</li>
                       <li>Subject lines should be clear and professional.</li>
                     </ul>
-                    
+
                     <div style={{ marginTop: '2rem', padding: '1.5rem', background: isDark ? 'rgba(255,255,255,0.02)' : 'white', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-                       <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>NETWORK REACH</p>
-                       <p style={{ margin: '0.25rem 0 0', fontSize: '1.5rem', fontWeight: 900 }}>{stats.users} <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-success)' }}>Active Citizens</span></p>
+                      <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>NETWORK REACH</p>
+                      <p style={{ margin: '0.25rem 0 0', fontSize: '1.5rem', fontWeight: 900 }}>{stats.users} <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-success)' }}>Active Citizens</span></p>
                     </div>
                   </div>
                 </div>
