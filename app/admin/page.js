@@ -1913,6 +1913,5 @@ export default function AdminPage() {
         </div>
       </div>
     </main>
-    </main>
   );
 }
