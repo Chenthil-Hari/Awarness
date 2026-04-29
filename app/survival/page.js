@@ -225,70 +225,78 @@ function SurvivalContent() {
   return (
     <main className="container" style={{ 
       minHeight: '100vh', 
-      paddingTop: '4rem',
       paddingBottom: '5rem', 
       position: 'relative', 
-      background: 'transparent', 
-      zIndex: 1
+      background: '#050101', 
+      zIndex: 1,
+      overflow: 'hidden'
     }}>
-      {/* <ThreeBackground theme="danger" {...bgProps} /> */}
       <Navbar />
-
-      {/* Header Info */}
+      
+      {/* Premium HUD (Heads-Up Display) */}
       <div style={{ 
+        position: 'sticky',
+        top: '1.5rem',
+        zIndex: 1000,
+        maxWidth: '1100px',
+        margin: '0 auto',
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center', 
-        marginTop: '5rem', // Huge margin to clear Navbar
-        marginBottom: '4rem', 
-        position: 'relative',
-        zIndex: 100, // Force it above everything
-        color: 'white' // Force white text
+        padding: '1rem 2rem',
+        background: 'rgba(5, 1, 1, 0.8)',
+        backdropFilter: 'blur(20px)',
+        borderRadius: '24px',
+        border: '1px solid rgba(239, 68, 68, 0.2)',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+        marginTop: '2rem'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
           <div style={{ 
-            padding: '1rem', 
+            width: '48px',
+            height: '48px',
             background: '#ef4444', 
-            borderRadius: '16px', 
+            borderRadius: '14px', 
             color: 'white',
-            boxShadow: '0 0 30px rgba(239, 68, 68, 0.6)'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 0 20px rgba(239, 68, 68, 0.4)'
           }}>
-            <Skull size={32} />
+            <Skull size={24} />
           </div>
           <div>
-            <h1 style={{ fontSize: '2rem', margin: 0, fontWeight: 900, color: 'white', letterSpacing: '-0.5px' }}>
-              Survival Mode: <span style={{ color: '#ef4444' }}>The Gauntlet</span>
+            <h1 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 900, color: 'white', letterSpacing: '1px', textTransform: 'uppercase' }}>
+              Gauntlet <span style={{ color: '#ef4444' }}>v2.4</span>
             </h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', color: 'rgba(255,255,255,0.8)', fontWeight: 600, marginTop: '0.25rem' }}>
-              <Users size={18} />
-              <span>{players} Players {isFriendMode ? `(${members.length} Friends)` : ''} Remaining</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', fontWeight: 700 }}>
+              <Users size={14} />
+              <span>{players} ACTIVE PLAYERS</span>
             </div>
           </div>
         </div>
 
         <motion.div 
-          animate={heartbeatActive ? { scale: [1, 1.1, 1] } : {}}
+          animate={heartbeatActive ? { scale: [1, 1.05, 1], borderColor: ['rgba(239, 68, 68, 0.2)', '#ef4444', 'rgba(239, 68, 68, 0.2)'] } : {}}
           transition={{ repeat: Infinity, duration: 0.5 }}
           style={{ 
             display: 'flex', 
             alignItems: 'center', 
-            gap: '1rem', 
-            background: timeLeft < 5 ? '#ef4444' : 'rgba(0,0,0,0.8)',
-            padding: '1rem 2rem',
-            borderRadius: 'var(--radius-full)',
-            fontWeight: 900,
-            fontSize: '1.75rem',
-            color: 'white',
-            border: `3px solid ${timeLeft < 5 ? '#ef4444' : '#ef4444'}`, // Always red border for timer
-            boxShadow: '0 0 20px rgba(239, 68, 68, 0.4)',
-            minWidth: '140px',
+            gap: '0.8rem', 
+            background: timeLeft < 5 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255,255,255,0.03)',
+            padding: '0.6rem 1.2rem',
+            borderRadius: '12px',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            minWidth: '100px',
             justifyContent: 'center'
           }}
         >
-          <Timer size={24} />
-          <span style={{ fontFamily: 'monospace' }}>{timeLeft}s</span>
+          <Timer size={18} color="#ef4444" />
+          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 900, fontSize: '1.4rem', color: 'white' }}>{timeLeft}s</span>
         </motion.div>
       </div>
+
+      <div style={{ marginTop: '5rem', paddingBottom: '5rem' }}>
 
       <AnimatePresence mode="wait">
         {gameState === 'lobby' && (
@@ -296,138 +304,147 @@ function SurvivalContent() {
             key="lobby"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto', paddingTop: '4rem' }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            style={{ 
+              textAlign: 'center', 
+              maxWidth: '900px', 
+              margin: '0 auto', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center' 
+            }}
           >
-            <div style={{ height: '100px', marginBottom: '2rem' }}>
-              <TextPressure text={isFriendMode ? "FRIEND LOBBY" : "SURVIVAL"} textColor="#ef4444" minFontSize={80} />
+            <div style={{ height: '120px', marginBottom: '1rem', width: '100%' }}>
+              <TextPressure text={isFriendMode ? "FRIEND LOBBY" : "THE GAUNTLET"} textColor="#ef4444" minFontSize={70} />
             </div>
             
-            <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', marginBottom: '3rem', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.5)', marginBottom: '3rem', maxWidth: '600px', fontWeight: 500 }}>
               {isFriendMode 
-                ? "Compete against your crew. Only one of you can be the ultimate survivor." 
-                : "100 enter. One mistake means instant elimination. Outlast the world."}
+                ? "Tactical crew deployment active. Only one operative remains." 
+                : "100 participants. Instant elimination. Outlast the digital void."}
             </p>
 
-            <BorderGlow
-              glowColor="0 80 50"
-              backgroundColor="rgba(0,0,0,0.8)"
-              borderRadius={32}
-              animated={true}
-            >
-              <div style={{ padding: '3rem' }}>
-                {isFriendMode && !isJoined ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    <div style={{ background: 'var(--bg-tertiary)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
-                      <h3 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', fontWeight: 800 }}>Create or Join Room</h3>
-                      <div style={{ display: 'flex', gap: '1rem' }}>
-                        <div style={{ flex: 1, position: 'relative' }}>
-                          <input 
-                            type="text" 
-                            placeholder="Enter Code" 
-                            value={inputCode}
-                            onChange={(e) => setInputCode(e.target.value)}
-                            style={{ width: '100%', padding: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
-                          />
+            <div style={{ width: '100%', maxWidth: '700px' }}>
+              <BorderGlow
+                glowColor="0 80 50"
+                backgroundColor="rgba(0,0,0,0.8)"
+                borderRadius={32}
+                animated={true}
+              >
+                <div style={{ padding: '3rem' }}>
+                  {isFriendMode && !isJoined ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                      <div style={{ background: 'var(--bg-tertiary)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                        <h3 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', fontWeight: 800 }}>Create or Join Room</h3>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                          <div style={{ flex: 1, position: 'relative' }}>
+                            <input 
+                              type="text" 
+                              placeholder="Enter Code" 
+                              value={inputCode}
+                              onChange={(e) => setInputCode(e.target.value)}
+                              style={{ width: '100%', padding: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
+                            />
+                          </div>
+                          <button onClick={handleJoin} className="btn-primary" style={{ padding: '1rem 2rem' }}>JOIN</button>
                         </div>
-                        <button onClick={handleJoin} className="btn-primary" style={{ padding: '1rem 2rem' }}>JOIN</button>
+                        <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>OR</span>
+                          <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
+                        </div>
+                        <button onClick={handleCreate} className="btn-secondary" style={{ width: '100%', padding: '1rem' }}>CREATE PRIVATE ROOM</button>
                       </div>
-                      <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>OR</span>
-                        <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
-                      </div>
-                      <button onClick={handleCreate} className="btn-secondary" style={{ width: '100%', padding: '1rem' }}>CREATE PRIVATE ROOM</button>
                     </div>
-                  </div>
-                ) : (
-                  <>
-                    <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{isFriendMode ? 'Room Ready' : 'Ready to risk it all?'}</h3>
-                    
-                    {isFriendMode && isHost && (
-                      <div style={{ background: 'rgba(220, 38, 38, 0.1)', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', border: '1px solid var(--accent-danger)', textAlign: 'left' }}>
-                        <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--accent-danger)' }}>HOST SETTINGS</h4>
-                        <div>
-                          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem', fontWeight: 800 }}>ROUND TIMER (SECONDS)</label>
-                          <input 
-                            type="number" 
-                            value={baseTime} 
-                            onChange={(e) => updateSettings(parseInt(e.target.value) || 15)}
-                            style={{ width: '100px', padding: '0.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'white' }}
-                          />
+                  ) : (
+                    <>
+                      <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{isFriendMode ? 'Room Ready' : 'Ready to risk it all?'}</h3>
+                      
+                      {isFriendMode && isHost && (
+                        <div style={{ background: 'rgba(220, 38, 38, 0.1)', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', border: '1px solid var(--accent-danger)', textAlign: 'left' }}>
+                          <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--accent-danger)' }}>HOST SETTINGS</h4>
+                          <div>
+                            <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem', fontWeight: 800 }}>ROUND TIMER (SECONDS)</label>
+                            <input 
+                              type="number" 
+                              value={baseTime} 
+                              onChange={(e) => updateSettings(parseInt(e.target.value) || 15)}
+                              style={{ width: '100px', padding: '0.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'white' }}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {isFriendMode ? (
-                      <div style={{ marginBottom: '2.5rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                          <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem 1.5rem', borderRadius: '8px', border: '1px dashed var(--accent-danger)', fontSize: '1.5rem', fontWeight: 900, letterSpacing: '4px' }}>
-                            {roomCode}
-                          </div>
-                          <button onClick={copyRoomCode} style={{ padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}>
-                            <LinkIcon size={20} />
-                          </button>
-                        </div>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--accent-primary)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, position: 'relative' }}>
-                              YOU
-                              <div style={{ position: 'absolute', top: -10, right: -10, background: 'var(--bg-tertiary)', border: '1px solid var(--accent-danger)', borderRadius: '50%', width: '24px', height: '24px', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-danger)', fontWeight: 900 }}>
-                                L{calculateLevel(session?.user?.xp || 0)}
-                              </div>
+                      {isFriendMode ? (
+                        <div style={{ marginBottom: '2.5rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                            <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem 1.5rem', borderRadius: '8px', border: '1px dashed var(--accent-danger)', fontSize: '1.5rem', fontWeight: 900, letterSpacing: '4px' }}>
+                              {roomCode}
                             </div>
-                            <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>HOST</span>
+                            <button onClick={copyRoomCode} style={{ padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}>
+                              <LinkIcon size={20} />
+                            </button>
                           </div>
-                          {members.filter(m => m.user_id !== (session?.user?.email || session?.user?.id)).map(f => (
-                            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={f.user_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                              <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', position: 'relative' }}>
-                                <Users size={20} />
-                                <div style={{ position: 'absolute', top: -10, right: -10, background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '50%', width: '24px', height: '24px', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontWeight: 900 }}>
-                                  L{calculateLevel(f.xp || 0)}
+                          
+                          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                              <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--accent-primary)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, position: 'relative' }}>
+                                YOU
+                                <div style={{ position: 'absolute', top: -10, right: -10, background: 'var(--bg-tertiary)', border: '1px solid var(--accent-danger)', borderRadius: '50%', width: '24px', height: '24px', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-danger)', fontWeight: 900 }}>
+                                  L{calculateLevel(session?.user?.xp || 0)}
                                 </div>
-                                {isHost && (
-                                  <button 
-                                    onClick={() => handleKick(f.user_id)}
-                                    style={{ position: 'absolute', bottom: -5, right: -5, background: 'var(--accent-danger)', borderRadius: '50%', width: '18px', height: '18px', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                                  >
-                                    <X size={10} />
-                                  </button>
-                                )}
                               </div>
-                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{f.name}</span>
-                            </motion.div>
-                          ))}
-                          {Array.from({ length: Math.max(0, 3 - (members.length - 1)) }).map((_, i) => (
-                            <div key={i} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px dashed var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                              <UserPlus size={20} />
+                              <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>HOST</span>
                             </div>
-                          ))}
+                            {members.filter(m => m.user_id !== (session?.user?.email || session?.user?.id)).map(f => (
+                              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} key={f.user_id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', position: 'relative' }}>
+                                  <Users size={20} />
+                                  <div style={{ position: 'absolute', top: -10, right: -10, background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '50%', width: '24px', height: '24px', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontWeight: 900 }}>
+                                    L{calculateLevel(f.xp || 0)}
+                                  </div>
+                                  {isHost && (
+                                    <button 
+                                      onClick={() => handleKick(f.user_id)}
+                                      style={{ position: 'absolute', bottom: -5, right: -5, background: 'var(--accent-danger)', borderRadius: '50%', width: '18px', height: '18px', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                    >
+                                      <X size={10} />
+                                    </button>
+                                  )}
+                                </div>
+                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{f.name}</span>
+                              </motion.div>
+                            ))}
+                            {Array.from({ length: Math.max(0, 3 - (members.length - 1)) }).map((_, i) => (
+                              <div key={i} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px dashed var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                                <UserPlus size={20} />
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Joining global lobby... (100/100 slots filled)</p>
-                    )}
-                    
-                    {(!isFriendMode || isHost) ? (
-                      <button 
-                        disabled={isFriendMode && members.length === 1}
-                        onClick={() => startGame()} 
-                        className="btn-primary" 
-                        style={{ background: 'var(--accent-danger)', padding: '1.5rem 3rem', fontSize: '1.2rem', opacity: (isFriendMode && members.length === 1) ? 0.5 : 1 }}
-                      >
-                        {isFriendMode && members.length === 1 ? 'WAITING FOR CREW...' : 'ENTER THE ARENA'}
-                      </button>
-                    ) : (
-                      <div style={{ color: 'var(--text-secondary)', fontStyle: 'italic', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '8px' }}>
-                        Waiting for Host to start the gauntlet...
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </BorderGlow>
+                      ) : (
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Joining global lobby... (100/100 slots filled)</p>
+                      )}
+                      
+                      {(!isFriendMode || isHost) ? (
+                        <button 
+                          disabled={isFriendMode && members.length === 1}
+                          onClick={() => startGame()} 
+                          className="btn-primary" 
+                          style={{ background: 'var(--accent-danger)', padding: '1.5rem 3rem', fontSize: '1.2rem', opacity: (isFriendMode && members.length === 1) ? 0.5 : 1 }}
+                        >
+                          {isFriendMode && members.length === 1 ? 'WAITING FOR CREW...' : 'ENTER THE ARENA'}
+                        </button>
+                      ) : (
+                        <div style={{ color: 'var(--text-secondary)', fontStyle: 'italic', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '8px' }}>
+                          Waiting for Host to start the gauntlet...
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </BorderGlow>
+            </div>
           </motion.div>
         )}
 
@@ -631,6 +648,7 @@ function SurvivalContent() {
           />
         )}
       </AnimatePresence>
+      </div>
     </main>
   );
 }
