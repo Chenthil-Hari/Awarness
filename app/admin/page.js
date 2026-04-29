@@ -161,7 +161,7 @@ export default function AdminPage() {
       setStats(statsData);
       setReports(reportsData);
       setUsers(Array.isArray(usersData) ? usersData : (usersData.users || []));
-      setTickets(ticketsData.tickets || []);
+      setTickets(Array.isArray(ticketsData) ? ticketsData : []);
       setPendingMissions(missionsData.missions || []);
       setAuditLogs(auditData || []);
       setConfig(configData);
