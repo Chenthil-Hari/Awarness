@@ -67,6 +67,16 @@ export default function Home() {
       checkGhost();
       fetchScenarios();
     }
+
+    const handleXpUpdate = (e) => {
+      const { xp } = e.detail;
+      setUserXp(xp);
+    };
+
+    window.addEventListener('xp-update', handleXpUpdate);
+    return () => {
+      window.removeEventListener('xp-update', handleXpUpdate);
+    };
   }, [session, status, router]);
 
   const handleScenarioComplete = () => {

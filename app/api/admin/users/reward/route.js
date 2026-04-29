@@ -16,15 +16,31 @@ export async function POST(req) {
     const client = await clientPromise;
     const db = client.db('awareness');
 
-    await db.collection('users').updateOne(
+    const result = await db.collection('users').findOneAndUpdate(
       { _id: new ObjectId(userId) },
-      { $inc: { xp: xpAmount } }
+      { $inc: { xp: parseInt(xpAmount) } },
+      { returnDocument: 'after' }
     );
 
-    await logAudit(session.user.name, 'USER_REWARD', `Rewarded 100 XP to user ${userId} for ${reason}`);
+    const updatedUser = result.value || result;
 
-    return NextResponse.json({ message: 'Reward issued' });
+    // Trigger real-time update via Pusher
+    try {
+      const { pusherServer } = await import('@/lib/pusher');
+      await pusherServer.trigger(`user-${userId}`, 'xp-update', {
+        xp: updatedUser.xp,
+        xpAmount: parseInt(xpAmount),
+        reason
+      });
+    } catch (pusherError) {
+      console.error("Pusher reward broadcast failed:", pusherError);
+    }
+
+    await logAudit(session.user.name, 'USER_REWARD', `Rewarded ${xpAmount} XP to user ${userId} for ${reason}`);
+
+    return NextResponse.json({ message: 'Reward issued', newXp: updatedUser.xp });
   } catch (error) {
+    console.error("Reward API error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

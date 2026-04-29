@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { Shield, LogOut, Home, BookOpen, Mail, Bell, Award, Hammer, Settings } from 'lucide-react';
@@ -12,11 +12,35 @@ import Lottie from 'lottie-react';
 import bellAnimation from '../../images/bell.json';
 import mobileWifiAnimation from '../../images/mobile-wifi.json';
 import GooeyNav from './GooeyNav/GooeyNav';
+import { calculateLevel } from '@/lib/game';
 
-export default function Navbar({ score = 0, level = 1 }) {
+export default function Navbar({ score = null, level = null }) {
   const { data: session } = useSession();
   const [showNotifications, setShowNotifications] = useState(false);
   const pathname = usePathname();
+  
+  // Real-time level tracking
+  const [currentLevel, setCurrentLevel] = useState(level || 1);
+
+  useEffect(() => {
+    // Sync with prop if provided
+    if (level !== null) {
+      setCurrentLevel(level);
+    } else if (session?.user?.xp !== undefined) {
+      setCurrentLevel(calculateLevel(session.user.xp));
+    }
+  }, [session, level]);
+
+  useEffect(() => {
+    const handleXpUpdate = (e) => {
+      const { xp } = e.detail;
+      const newLevel = calculateLevel(xp);
+      setCurrentLevel(newLevel);
+    };
+
+    window.addEventListener('xp-update', handleXpUpdate);
+    return () => window.removeEventListener('xp-update', handleXpUpdate);
+  }, []);
 
   const navItems = [
     { label: 'Home', href: '/' },
@@ -42,7 +66,7 @@ export default function Navbar({ score = 0, level = 1 }) {
         border: '1px solid var(--glass-border)'
       }}>
         <LevelIcon size={18} />
-        <span style={{ fontWeight: 700, fontSize: '0.75rem', color: 'white' }}>Lvl {level}</span>
+        <span style={{ fontWeight: 700, fontSize: '0.75rem', color: 'white' }}>Lvl {currentLevel}</span>
       </div>
 
       {session && (

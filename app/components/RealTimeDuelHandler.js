@@ -31,6 +31,15 @@ export default function RealTimeDuelHandler() {
       setInvitation(data);
     });
 
+    channel.bind('xp-update', (data) => {
+      console.log('Real-time XP update received:', data);
+      // Dispatch global event for other components to listen
+      window.dispatchEvent(new CustomEvent('xp-update', { detail: data }));
+      
+      // Also show a toast/notification if possible
+      // We can use a simple alert or just let the UI update reflect it
+    });
+
     return () => {
       pusher.unsubscribe(channelName);
     };

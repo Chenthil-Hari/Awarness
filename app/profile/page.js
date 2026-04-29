@@ -12,6 +12,7 @@ import {
   BarChart3, Calendar, ChevronRight, Edit2, Save, X, 
   Mail, LogOut, Settings, Award, Check, AlertCircle, Camera, User, MessageSquare, Send, Bell
 } from 'lucide-react';
+import { calculateLevel } from '@/lib/game';
 
 const timeAgo = (date) => {
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -50,14 +51,28 @@ export default function ProfilePage() {
   const [notifications, setNotifications] = useState([]);
   const [newTicket, setNewTicket] = useState({ subject: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userXp, setUserXp] = useState(0);
 
   useEffect(() => {
     if (session?.user?.username) {
       setUsername(session.user.username);
+      setUserXp(session.user.xp || 0);
       fetchTickets();
       fetchNotifications();
     }
+
+    const handleXpUpdate = (e) => {
+      const { xp } = e.detail;
+      setUserXp(xp);
+    };
+
+    window.addEventListener('xp-update', handleXpUpdate);
+    return () => {
+      window.removeEventListener('xp-update', handleXpUpdate);
+    };
   }, [session]);
+
+  const level = calculateLevel(userXp);
 
   const fetchTickets = async () => {
     try {
@@ -210,7 +225,7 @@ export default function ProfilePage() {
 
   return (
     <main className="container" style={{ position: 'relative', zIndex: 1, minHeight: '100vh', paddingBottom: '6rem' }}>
-      <Navbar />
+      <Navbar score={userXp} level={level} />
 
       <div style={{ marginTop: '3rem' }}>
         
