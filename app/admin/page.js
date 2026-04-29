@@ -112,7 +112,7 @@ export default function AdminPage() {
       
       setStats(statsData);
       setReports(reportsData);
-      setUsers(usersData || []);
+      setUsers(Array.isArray(usersData) ? usersData : []);
       setTickets(ticketsData.tickets || []);
       setPendingMissions(missionsData.missions || []);
       setLoading(false);
@@ -593,6 +593,7 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
+          </div>
           )}
 
           {activeTab === 'sandbox' && (
