@@ -1829,38 +1829,58 @@ export default function AdminPage() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem', borderRadius: '4px' }}>
-                <span style={{ color: 'var(--accent-primary)' }}>&gt;</span>
+                <span style={{ color: 'var(--accent-primary)', fontSize: '0.8rem', fontWeight: 900 }}>&gt;_</span>
                 <input 
                   value={terminalInput}
                   onChange={(e) => setTerminalInput(e.target.value)}
                   onKeyDown={handleTerminalCommand}
                   placeholder="Execute override..."
-                  style={{ background: 'none', border: 'none', outline: 'none', color: '#10b981', width: '100%', fontSize: '0.8rem' }}
+                  style={{ background: 'none', border: 'none', outline: 'none', color: '#10b981', width: '100%', fontSize: '0.8rem', fontFamily: 'monospace' }}
                 />
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <button
-          onClick={() => setIsTerminalOpen(!isTerminalOpen)}
-          style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '50%',
-            background: isTerminalOpen ? 'var(--accent-danger)' : 'var(--accent-primary)',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 10px 20px rgba(124, 58, 237, 0.4)',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          <Command size={24} />
-        </button>
+        <div style={{ position: 'relative' }}>
+          {/* Live Status Pulse */}
+          <div style={{ 
+            position: 'absolute', 
+            top: '-2px', 
+            right: '-2px', 
+            width: '12px', 
+            height: '12px', 
+            background: '#10b981', 
+            borderRadius: '50%', 
+            border: '2px solid var(--bg-main)',
+            zIndex: 10,
+            boxShadow: '0 0 10px #10b981'
+          }} />
+          
+          <button
+            onClick={() => setIsTerminalOpen(!isTerminalOpen)}
+            className="shell-trigger"
+            style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '16px',
+              background: isTerminalOpen ? 'var(--accent-danger)' : 'var(--accent-primary)',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: isTerminalOpen 
+                ? '0 0 30px rgba(239, 68, 68, 0.4)' 
+                : '0 0 30px rgba(124, 58, 237, 0.4)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: isTerminalOpen ? 'rotate(180deg)' : 'none'
+            }}
+          >
+            <Command size={24} />
+          </button>
+        </div>
       </div>
     </main>
   );
