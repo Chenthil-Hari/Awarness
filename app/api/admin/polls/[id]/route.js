@@ -16,7 +16,7 @@ async function checkAdmin() {
 export async function PATCH(req, { params }) {
   try {
     const session = await checkAdmin();
-    const { id } = params;
+    const { id } = await params;
     const { status, correctOptionIds, xpAmount } = await req.json();
     const client = await clientPromise;
     const db = client.db();
