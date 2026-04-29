@@ -54,17 +54,22 @@ export async function POST(req) {
       return NextResponse.json({ error: "Poll not found" }, { status: 404 });
     }
 
-    // Check if user has already voted
-    if (poll.votedBy.includes(session.user.id)) {
+    // Check if user has already voted (handling both old and new schema)
+    const hasVoted = poll.votedBy.some(v => 
+      (typeof v === 'string' && v === session.user.id) || 
+      (typeof v === 'object' && v.userId === session.user.id)
+    );
+
+    if (hasVoted) {
       return NextResponse.json({ error: "Already voted" }, { status: 400 });
     }
 
-    // Update the vote count for the specific option
+    // Update the vote count for the specific option and record the specific vote
     await pollsCollection.updateOne(
       { _id: new ObjectId(pollId), "options.id": optionId },
       { 
         $inc: { "options.$.votes": 1 },
-        $push: { votedBy: session.user.id }
+        $push: { votedBy: { userId: session.user.id, optionId, votedAt: new Date() } }
       }
     );
 

@@ -236,15 +236,29 @@ export default function AdminPage() {
   };
 
   const handlePublishPoll = async (pollId) => {
-    if (!confirm('Are you sure you want to publish these results and close the poll?')) return;
+    const poll = polls.find(p => p._id === pollId);
+    if (!poll) return;
+
+    const optionsList = poll.options.map((opt, i) => `${i + 1}. ${opt.text}`).join('\n');
+    const choice = prompt(`WHICH OPTION IS CORRECT? (Enter number 1-${poll.options.length})\n\n${optionsList}\n\nEnter 0 to close without correct answer:`);
+    
+    if (choice === null) return;
+    const choiceIdx = parseInt(choice) - 1;
+    const correctOptionId = choiceIdx >= 0 ? poll.options[choiceIdx].id : undefined;
+
+    if (!confirm(choiceIdx >= 0 
+      ? `Publish results and reward users who chose "${poll.options[choiceIdx].text}"?` 
+      : 'Publish results without rewards?')) return;
+
     try {
       const res = await fetch(`/api/admin/polls/${pollId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'published' })
+        body: JSON.stringify({ status: 'published', correctOptionId })
       });
+      const data = await res.json();
       if (res.ok) {
-        alert('Poll results published to the community!');
+        alert(`Success! Results published. ${data.rewardedCount || 0} users rewarded with +50 XP.`);
         fetchAdminData();
       }
     } catch (err) {
