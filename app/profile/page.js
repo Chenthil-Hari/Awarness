@@ -387,8 +387,6 @@ export default function ProfilePage() {
           </motion.div>
         </div>
 
-        </div>
-
         {/* NOTIFICATIONS SECTION */}
         <div style={{ marginTop: '4rem' }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card" style={{ padding: '2rem' }}>
