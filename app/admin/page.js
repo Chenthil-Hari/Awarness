@@ -220,20 +220,6 @@ export default function AdminPage() {
     }
   };
 
-  if (status === 'loading' || (session?.user?.role === 'admin' && loading)) {
-    return <LoadingSpinner message="Authenticating Admin Access..." />;
-  }
-
-  if (session?.user?.role !== 'admin') {
-    return (
-      <div className="flex-center" style={{ height: '100vh', flexDirection: 'column', gap: '1rem' }}>
-        <h1 style={{ fontSize: '8rem', fontWeight: 900, opacity: 0.1 }}>404</h1>
-        <p style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>The page you are looking for does not exist.</p>
-        <button onClick={() => window.location.href = '/'} className="btn-primary" style={{ marginTop: '1rem' }}>Return Home</button>
-      </div>
-    );
-  }
-
   const handleMarkSafe = async (id, type) => {
     try {
       const res = await fetch(`/api/admin/moderation/safe`, {
@@ -334,7 +320,6 @@ export default function AdminPage() {
     }
   };
 
-
   const handleExportUsers = () => {
     try {
       const exportData = users.map(user => ({
@@ -358,8 +343,21 @@ export default function AdminPage() {
   };
 
 
-
   const isDark = theme === 'dark';
+
+  if (status === 'loading' || (session?.user?.role === 'admin' && loading)) {
+    return <LoadingSpinner message="Authenticating Admin Access..." />;
+  }
+
+  if (session?.user?.role !== 'admin') {
+    return (
+      <div className="flex-center" style={{ height: '100vh', flexDirection: 'column', gap: '1rem' }}>
+        <h1 style={{ fontSize: '8rem', fontWeight: 900, opacity: 0.1 }}>404</h1>
+        <p style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>The page you are looking for does not exist.</p>
+        <button onClick={() => window.location.href = '/'} className="btn-primary" style={{ marginTop: '1rem' }}>Return Home</button>
+      </div>
+    );
+  }
 
   return (
     <main style={{
@@ -685,146 +683,38 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === 'sandbox' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                  <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
-                    <Layout size={24} />
-                  </div>
-                  <div>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>The <span className="gradient-text">Sandbox</span></h2>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Architect your own interactive simulations</p>
-                  </div>
-                  <button onClick={handleSaveScenario} className="btn-primary" style={{ marginLeft: 'auto', gap: '0.5rem', padding: '0.8rem 1.5rem' }}>
-                    <Save size={18} /> Deploy Scenario
-                  </button>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-                  {/* Basic Info */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>SCENARIO TITLE</label>
-                      <input
-                        value={newScenario.title}
-                        onChange={(e) => setNewScenario({ ...newScenario, title: e.target.value })}
-                        placeholder="e.g. The Phishing Phone Call"
-                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>CATEGORY</label>
-                      <select
-                        value={newScenario.category}
-                        onChange={(e) => setNewScenario({ ...newScenario, category: e.target.value })}
-                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a' }}
-                      >
-                        <option value="Cybersecurity">Cybersecurity</option>
-                        <option value="Financial Literacy">Financial Literacy</option>
-                        <option value="Life Skills">Life Skills</option>
-                        <option value="Mental Health">Mental Health</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>SHORT DESCRIPTION</label>
-                      <textarea
-                        value={newScenario.description}
-                        onChange={(e) => setNewScenario({ ...newScenario, description: e.target.value })}
-                        placeholder="Describe the situation to the user..."
-                        style={{ width: '100%', height: '100px', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a', resize: 'none' }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Steps Editor */}
-                  <div className="glass" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1rem' }}>Initial Step Configuration</h3>
-                    <div style={{ marginBottom: '1.5rem' }}>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>QUESTION / STORY TEXT</label>
-                      <textarea
-                        value={newScenario.steps.start.text}
-                        onChange={(e) => {
-                          const updated = { ...newScenario };
-                          updated.steps.start.text = e.target.value;
-                          setNewScenario(updated);
-                        }}
-                        placeholder="What happens first?"
-                        style={{ width: '100%', height: '80px', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: isDark ? 'white' : '#0f172a', resize: 'none' }}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block' }}>USER CHOICES</label>
-                      {newScenario.steps.start.options.map((opt, i) => (
-                        <div key={i} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid var(--glass-border)' }}>
-                          <input
-                            value={opt.text}
-                            onChange={(e) => {
-                              const updated = { ...newScenario };
-                              updated.steps.start.options[i].text = e.target.value;
-                              setNewScenario(updated);
-                            }}
-                            placeholder={`Choice #${i + 1} text`}
-                            style={{ width: '100%', marginBottom: '0.5rem', background: 'none', border: 'none', borderBottom: '1px solid var(--glass-border)', color: isDark ? 'white' : '#0f172a', padding: '0.5rem 0', outline: 'none' }}
-                          />
-                          <input
-                            value={opt.feedback}
-                            onChange={(e) => {
-                              const updated = { ...newScenario };
-                              updated.steps.start.options[i].feedback = e.target.value;
-                              setNewScenario(updated);
-                            }}
-                            placeholder="Feedback for this choice..."
-                            style={{ width: '100%', fontSize: '0.8rem', color: 'var(--text-muted)', background: 'none', border: 'none', outline: 'none' }}
-                          />
-                        </div>
-                      ))}
-                      <button
-                        onClick={() => {
-                          const updated = { ...newScenario };
-                          updated.steps.start.options.push({ text: '', nextStep: 'success', feedback: '', points: 50 });
-                          setNewScenario(updated);
-                        }}
-                        style={{ padding: '0.75rem', border: '1px dashed var(--glass-border)', borderRadius: '8px', color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'none', cursor: 'pointer' }}
-                      >
-                        <Plus size={14} /> Add Choice
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'overview' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Active Notifications</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', gap: '1rem', padding: '1rem', background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderRadius: 'var(--radius-lg)' }}>
-                    <ShieldAlert color="var(--accent-primary)" />
-                    <div>
-                      <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: isDark ? 'white' : '#0f172a' }}>Security Patch Deployed</p>
-                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Threaded comments and guide deletion APIs secured.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Quick Actions</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                  <button onClick={handleTestEmail} className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--accent-primary)' }}>
-                    <Mail size={18} /> Test Email System
-                  </button>
-                  <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
-                    <Shield size={18} /> Clear Audit Logs
-                  </button>
-                  <button onClick={handleExportUsers} className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
-                    <Users size={18} /> Export User Data (Excel)
-                  </button>
-                </div>
-              </div>
+          {activeTab === 'cms' && (
+            <div className="glass-card" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: isDark ? 'var(--bg-tertiary)' : '#f1f5f9', borderBottom: '1px solid var(--glass-border)' }}>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>STRATEGY TITLE</th>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>CATEGORY</th>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>AUTHOR</th>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>STATUS</th>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allGuides.map((guide, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid var(--glass-border)', fontSize: '0.85rem' }}>
+                      <td style={{ padding: '1rem', fontWeight: 700 }}>{guide.title}</td>
+                      <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{guide.category}</td>
+                      <td style={{ padding: '1rem' }}>{guide.authorName}</td>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '0.6rem', fontWeight: 900, background: guide.aiStatus === 'safe' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)', color: guide.aiStatus === 'safe' ? '#10b981' : '#f59e0b' }}>
+                          {guide.aiStatus?.toUpperCase() || 'PENDING'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <button onClick={() => handleDeleteGuide(guide._id)} style={{ color: 'var(--accent-danger)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 
@@ -891,205 +781,78 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'config' && (
-            <div className="glass-card" style={{ padding: '2rem', maxWidth: '600px' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem' }}>Global System Override</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                   <div>
-                     <p style={{ margin: 0, fontWeight: 700 }}>Maintenance Mode</p>
-                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Lock platform for all non-admin citizens</p>
-                   </div>
-                   <input
-                     type="checkbox"
-                     checked={config?.maintenanceMode}
-                     onChange={(e) => handleUpdateConfig({...config, maintenanceMode: e.target.checked})}
-                     style={{ width: '40px', height: '20px', cursor: 'pointer' }}
-                   />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                   <div>
-                     <p style={{ margin: 0, fontWeight: 700 }}>XP Multiplier</p>
-                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Scale global XP rewards (e.g. 2 for Double XP)</p>
-                   </div>
-                   <input
-                     type="number"
-                     value={config?.xpMultiplier}
-                     onChange={(e) => handleUpdateConfig({...config, xpMultiplier: parseFloat(e.target.value)})}
-                     style={{ width: '60px', padding: '0.4rem', background: 'rgba(0,0,0,0.1)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}
-                   />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                   <div>
-                     <p style={{ margin: 0, fontWeight: 700 }}>Open Registration</p>
-                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Allow new citizens to join the network</p>
-                   </div>
-                   <input
-                     type="checkbox"
-                     checked={config?.registrationEnabled}
-                     onChange={(e) => handleUpdateConfig({...config, registrationEnabled: e.target.checked})}
-                     style={{ width: '40px', height: '20px', cursor: 'pointer' }}
-                   />
+            <div className="grid-container" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))' }}>
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Shield size={20} color="var(--accent-primary)" /> System Overrides
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 700 }}>Maintenance Mode</p>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Lock down the platform for all non-admins</p>
+                    </div>
+                    <button
+                      onClick={() => handleUpdateConfig({ ...config, maintenanceMode: !config?.maintenanceMode })}
+                      style={{
+                        width: '50px', height: '24px', borderRadius: '12px', background: config?.maintenanceMode ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
+                        border: 'none', position: 'relative', cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ position: 'absolute', top: '2px', left: config?.maintenanceMode ? '28px' : '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'all 0.3s' }} />
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 700 }}>New Registrations</p>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Allow or block new citizen sign-ups</p>
+                    </div>
+                    <button
+                      onClick={() => handleUpdateConfig({ ...config, registrationEnabled: !config?.registrationEnabled })}
+                      style={{
+                        width: '50px', height: '24px', borderRadius: '12px', background: config?.registrationEnabled ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
+                        border: 'none', position: 'relative', cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ position: 'absolute', top: '2px', left: config?.registrationEnabled ? '28px' : '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'all 0.3s' }} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {activeTab === 'cms' && (
-            <div className="glass-card" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
-               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ background: isDark ? 'var(--bg-tertiary)' : '#f1f5f9', borderBottom: '1px solid var(--glass-border)' }}>
-                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>TITLE</th>
-                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>CATEGORY</th>
-                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>VOTES</th>
-                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allGuides.map((guide) => (
-                    <tr key={guide._id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                      <td style={{ padding: '1rem', fontWeight: 700, fontSize: '0.9rem' }}>{guide.title}</td>
-                      <td style={{ padding: '1rem' }}>
-                        <span style={{ fontSize: '0.7rem', fontWeight: 800, opacity: 0.6 }}>{guide.category?.toUpperCase()}</span>
-                      </td>
-                      <td style={{ padding: '1rem', fontWeight: 800 }}>{guide.upvotes || 0}</td>
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                           <button onClick={() => window.open(`/wiki?id=${guide._id}`, '_blank')} className="btn-secondary" style={{ padding: '0.4rem' }}><ExternalLink size={14} /></button>
-                           <button onClick={() => handleDeleteGuide(guide._id)} className="btn-secondary" style={{ padding: '0.4rem', color: 'var(--accent-danger)' }}><Trash2 size={14} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           )}
 
           {activeTab === 'email' && (
-            <div className="glass-card" style={{ padding: '2rem' }}>
-               <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem' }}>Email Template Architect</h3>
-               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                     <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>TEMPLATE SELECTOR</label>
-                     <select style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }}>
-                        <option>Welcome Citizen</option>
-                        <option>Password Reset Intel</option>
-                        <option>Mission Dispatch</option>
-                        <option>Account Breach Alert</option>
-                     </select>
-                     <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>SUBJECT LINE</label>
-                     <input placeholder="Enter email subject..." style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} />
-                     <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>HTML BODY</label>
-                     <textarea style={{ height: '300px', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'white', fontFamily: 'monospace' }} defaultValue="<h1>Welcome, {{name}}!</h1><p>Your journey into the void begins now.</p>" />
-                     <button className="btn-primary" style={{ padding: '1rem' }}>Save Template</button>
-                  </div>
-                  <div style={{ background: 'white', borderRadius: '12px', padding: '2rem', color: '#0f172a' }}>
-                     <p style={{ fontSize: '0.6rem', fontWeight: 900, color: '#94a3b8', marginBottom: '1rem', textAlign: 'center' }}>LIVE PREVIEW</p>
-                     <div style={{ border: '1px solid #e2e8f0', padding: '1rem' }}>
-                        <h1 style={{ margin: 0 }}>Welcome, Commander!</h1>
-                        <p style={{ marginTop: '1rem' }}>Your journey into the void begins now.</p>
-                        <div style={{ marginTop: '2rem', padding: '1rem', background: '#7c3aed', color: 'white', textAlign: 'center', borderRadius: '4px' }}>Access Dashboard</div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-          )}
-
-
-          {activeTab === 'sentinel' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', border: '1px solid rgba(245, 158, 11, 0.3)', background: isDark ? 'rgba(245, 158, 11, 0.05)' : '#fffbeb' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ padding: '0.8rem', background: '#f59e0b', borderRadius: '12px', color: 'white' }}>
-                    <Bot size={24} />
-                  </div>
-                  <div>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>AI Sentinel <span style={{ color: '#f59e0b' }}>Review Queue</span></h2>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Content flagged for potential toxicity or misinformation</p>
-                  </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Template Vault</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {['Welcome Email', 'Password Reset', 'Security Alert', 'Reward Earned', 'Support Response'].map(t => (
+                    <button key={t} style={{ textAlign: 'left', padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{t}</button>
+                  ))}
                 </div>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
-                {allGuides.filter(g => g.aiStatus && g.aiStatus !== 'safe').length === 0 ? (
-                  <div className="glass-card" style={{ gridColumn: '1/-1', padding: '4rem', textAlign: 'center' }}>
-                    <CheckCircle size={48} style={{ color: 'var(--accent-success)', margin: '0 auto 1.5rem' }} />
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>All Clear, Commander!</h3>
-                    <p style={{ color: 'var(--text-muted)', margin: 0 }}>The AI Sentinel hasn't flagged any new content.</p>
-                  </div>
-                ) : (
-                  allGuides.filter(g => g.aiStatus && g.aiStatus !== 'safe').map(item => (
-                    <motion.div
-                      key={item._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="glass-card"
-                      style={{
-                        padding: '1.5rem',
-                        borderRadius: 'var(--radius-xl)',
-                        borderLeft: `6px solid ${item.aiStatus === 'toxic' ? '#ef4444' : '#f59e0b'}`,
-                        background: isDark ? 'var(--glass-bg)' : 'white'
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                        <span style={{
-                          fontSize: '0.65rem',
-                          fontWeight: 900,
-                          padding: '4px 8px',
-                          borderRadius: '6px',
-                          background: item.aiStatus === 'toxic' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                          color: item.aiStatus === 'toxic' ? '#ef4444' : '#f59e0b',
-                          textTransform: 'uppercase'
-                        }}>
-                          {item.aiStatus} detected
-                        </span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Wiki Guide</span>
-                      </div>
-
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '0.5rem' }}>{item.title}</h3>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {item.content}
-                      </p>
-
-                      <div style={{ padding: '0.75rem', background: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', border: '1px dashed var(--glass-border)' }}>
-                        <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-                          SENTINEL REASON:
-                        </p>
-                        <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', fontStyle: 'italic', color: item.aiStatus === 'toxic' ? '#ef4444' : '#f59e0b' }}>
-                          "{item.aiReason || 'Suspicious patterns in language or metadata.'}"
-                        </p>
-                      </div>
-
-                      <div style={{ display: 'flex', gap: '0.75rem' }}>
-                        <button
-                          onClick={() => handleMarkSafe(item._id, 'guide')}
-                          className="btn-secondary"
-                          style={{ flex: 1, fontSize: '0.8rem', gap: '0.4rem', border: '1px solid var(--accent-success)', color: 'var(--accent-success)' }}
-                        >
-                          <CheckCircle size={16} /> Authorize
-                        </button>
-                        <button
-                          onClick={() => handleDeleteGuide(item._id)}
-                          className="btn-secondary"
-                          style={{ flex: 1, fontSize: '0.8rem', gap: '0.4rem', border: '1px solid var(--accent-danger)', color: 'var(--accent-danger)' }}
-                        >
-                          <Trash2 size={16} /> Vanish
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))
-                )}
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Template Architect</h3>
+                  <button className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}><Save size={16} /> Save Changes</button>
+                </div>
+                <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '1.5rem', minHeight: '400px', border: '1px solid var(--glass-border)', fontFamily: 'monospace', fontSize: '0.9rem', color: '#10b981' }}>
+                  &lt;!DOCTYPE html&gt;<br/>
+                  &lt;html&gt;<br/>
+                  &nbsp;&nbsp;&lt;body style="background: #0f172a; color: white;"&gt;<br/>
+                  &nbsp;&nbsp;&nbsp;&nbsp;&lt;h1&gt;Welcome to Awareness Pro, &#123;&#123;name&#125;&#125;!&lt;/h1&gt;<br/>
+                  &nbsp;&nbsp;&lt;/body&gt;<br/>
+                  &lt;/html&gt;
+                </div>
               </div>
             </div>
           )}
+
           {activeTab === 'support' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
-                    <Mail size={24} />
-                  </div>
+            <div className="grid-container" style={{ gridTemplateColumns: '1fr' }}>
+              <div className="admin-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                   <div>
                     <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>Guardian <span className="gradient-text">Inbox</span></h2>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Communicate directly with your community citizens</p>
@@ -1144,11 +907,11 @@ export default function AdminPage() {
                         </div>
                       )}
 
-                      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+                      <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
                         <button
                           onClick={() => handleReplyTicket(ticket._id)}
-                          className="btn-primary"
-                          style={{ flex: 1, fontSize: '0.8rem', gap: '0.4rem', padding: '0.6rem' }}
+                          className="btn-secondary"
+                          style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem', gap: '0.5rem' }}
                         >
                           <Send size={16} /> {ticket.status === 'pending' ? 'Send Reply' : 'Send Another Reply'}
                         </button>
@@ -1189,50 +952,35 @@ export default function AdminPage() {
                       <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>ANNOUNCEMENT TYPE</label>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
-                          onClick={() => {
-                            setBroadcastType('announcement');
-                            setBroadcastSubject('📢 New Mission Briefing: Security Intel Update');
-                            setBroadcastMessage('A new simulation has just been deployed to your dashboard. Stay ahead of the latest threats by completing your daily drill and claiming your XP bonus!\n\nSee you in the Command Center.');
-                          }}
-                          style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: broadcastType === 'announcement' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)', color: broadcastType === 'announcement' ? 'white' : (isDark ? 'white' : '#0f172a'), fontWeight: 700, cursor: 'pointer' }}
+                          onClick={() => setBroadcastType('announcement')}
+                          style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: broadcastType === 'announcement' ? 'var(--accent-primary)' : 'none', color: broadcastType === 'announcement' ? 'white' : 'var(--text-muted)', fontWeight: 700, cursor: 'pointer' }}
                         >
-                          📢 News
+                          Announcement
                         </button>
                         <button
-                          onClick={() => {
-                            setBroadcastType('maintenance');
-                            setBroadcastSubject('⚠️ Scheduled System Maintenance & Security Upgrades');
-                            setBroadcastMessage('Our engineers are performing a scheduled security upgrade to keep your awareness journey bulletproof. The platform will be temporarily offline for approximately 30 minutes.\n\nWe appreciate your patience as we harden our defenses.');
-                          }}
-                          style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: broadcastType === 'maintenance' ? '#f59e0b' : 'rgba(255,255,255,0.05)', color: broadcastType === 'maintenance' ? 'white' : (isDark ? 'white' : '#0f172a'), fontWeight: 700, cursor: 'pointer' }}
+                          onClick={() => setBroadcastType('maintenance')}
+                          style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: broadcastType === 'maintenance' ? 'var(--accent-primary)' : 'none', color: broadcastType === 'maintenance' ? 'white' : 'var(--text-muted)', fontWeight: 700, cursor: 'pointer' }}
                         >
-                          ⚙️ Maintenance
+                          Maintenance
                         </button>
                       </div>
                     </div>
 
                     <div>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>DETAILED MESSAGE</label>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>MESSAGE PAYLOAD</label>
                       <textarea
                         value={broadcastMessage}
                         onChange={(e) => setBroadcastMessage(e.target.value)}
-                        placeholder="Type your official announcement here..."
+                        placeholder="Citizens of Awareness Pro, please be advised..."
                         style={{ width: '100%', height: '200px', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'var(--text-primary)', resize: 'none', lineHeight: 1.6 }}
                       />
                     </div>
 
                     <button
-                      id="btn-send-broadcast"
-                      onClick={async () => {
-                        const btn = document.getElementById('btn-send-broadcast');
-
-                        if (!broadcastSubject || !broadcastMessage) return alert('Please fill all fields');
-
-                        if (!confirm(`Are you sure you want to send this broadcast to ALL users?`)) return;
-
-                        btn.innerText = 'DEPLOYING...';
+                      onClick={async (e) => {
+                        const btn = e.currentTarget;
+                        btn.innerText = 'SENDING...';
                         btn.disabled = true;
-
                         try {
                           const res = await fetch('/api/admin/broadcast', {
                             method: 'POST',
@@ -1282,6 +1030,76 @@ export default function AdminPage() {
               </div>
             </div>
           )}
+
+          {activeTab === 'overview' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Active Notifications</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '1rem', padding: '1rem', background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderRadius: 'var(--radius-lg)' }}>
+                    <ShieldAlert color="var(--accent-primary)" />
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: isDark ? 'white' : '#0f172a' }}>Security Patch Deployed</p>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Threaded comments and guide deletion APIs secured.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Quick Actions</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  <button onClick={handleTestEmail} className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--accent-primary)' }}>
+                    <Mail size={18} /> Test Email System
+                  </button>
+                  <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
+                    <Shield size={18} /> Clear Audit Logs
+                  </button>
+                  <button onClick={handleExportUsers} className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
+                    <Users size={18} /> Export User Data (Excel)
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'sentinel' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
+                    <Bot size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>Sentinel <span className="gradient-text">Moderation</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>AI-Powered content monitoring and authorization</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                  {allGuides.filter(g => g.aiStatus !== 'safe').map(guide => (
+                    <div key={guide._id} className="glass-card" style={{ padding: '1.5rem', background: isDark ? 'rgba(255,255,255,0.02)' : 'white' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                        <span style={{ padding: '4px 8px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderRadius: '4px', fontSize: '0.6rem', fontWeight: 900 }}>AI_FLAGGED</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{guide.category}</span>
+                      </div>
+                      <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: 800 }}>{guide.title}</h4>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Reason: {guide.aiReason || 'Potential violation of community standards'}</p>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button onClick={() => handleMarkSafe(guide._id, 'guide')} className="btn-primary" style={{ flex: 1, padding: '0.6rem', background: 'var(--accent-success)', fontSize: '0.75rem' }}>AUTHORIZE</button>
+                        <button onClick={() => handleDeleteGuide(guide._id)} className="btn-secondary" style={{ flex: 1, padding: '0.6rem', color: 'var(--accent-danger)', fontSize: '0.75rem' }}>PURGE</button>
+                      </div>
+                    </div>
+                  ))}
+                  {allGuides.filter(g => g.aiStatus !== 'safe').length === 0 && (
+                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
+                      <CheckCircle size={48} style={{ opacity: 0.1, marginBottom: '1rem' }} />
+                      <p>All content has been cleared by the Sentinel.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1289,7 +1107,7 @@ export default function AdminPage() {
       <div style={{
         position: 'fixed',
         bottom: '2rem',
-        right: '2rem',
+        right: '7rem',
         zIndex: 9999,
         display: 'flex',
         flexDirection: 'column',
