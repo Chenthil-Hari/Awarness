@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { BarChart3, Users, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { getPusherClient } from '../lib/pusher';
+import { getPusherClient } from '@/lib/pusher';
 
 export default function CommunityPoll() {
   const { data: session } = useSession();
