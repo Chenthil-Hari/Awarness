@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save, Globe, Send, Sparkles, ShieldCheck, Vote, Map as MapIcon, ThumbsUp, ThumbsDown, Trophy, Calendar, Image as ImageIcon, Folder, FileText, Upload, Key, Lock, Workflow, Activity, Settings } from 'lucide-react';
 import AdminCommandBar from '../components/AdminCommandBar';
 import * as XLSX from 'xlsx';
+import { getPusherClient } from '@/lib/pusher';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -107,6 +108,21 @@ export default function AdminPage() {
 
     if (session?.user?.role === 'admin') {
       fetchAdminData();
+      
+      // Real-time listener for Admin
+      const pusher = getPusherClient();
+      if (pusher) {
+        const channel = pusher.subscribe('polls');
+        channel.bind('poll-updated', (data) => {
+          console.log('Admin: Real-time update received:', data);
+          fetchAdminData();
+        });
+
+        return () => {
+          channel.unbind_all();
+          channel.unsubscribe();
+        };
+      }
     } else if (status !== 'loading') {
       setLoading(false);
     }

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route.js";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { pusherServer } from "@/lib/pusher";
 
 export async function GET(req) {
   try {
@@ -78,6 +79,9 @@ export async function POST(req) {
     }
 
     const updatedPoll = await pollsCollection.findOne({ _id: new ObjectId(pollId) });
+    
+    await pusherServer.trigger('polls', 'poll-updated', { type: 'voted', pollId });
+
     return NextResponse.json(updatedPoll);
   } catch (error) {
     console.error("Poll vote error:", error);
