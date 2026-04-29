@@ -1781,9 +1781,7 @@ export default function AdminPage() {
           </div>
           </motion.div>
         </AnimatePresence>
-      </div>
-
-      {/* System Shell Terminal */}
+        {/* System Shell Terminal */}
       <div style={{
         position: 'fixed',
         bottom: '2rem',
@@ -1804,38 +1802,44 @@ export default function AdminPage() {
                 width: '400px',
                 height: '300px',
                 marginBottom: '1rem',
-                background: 'rgba(0,0,0,0.9)',
+                background: 'rgba(0,0,0,0.95)',
                 border: '1px solid var(--accent-primary)',
-                borderRadius: '12px',
-                padding: '1rem',
+                borderRadius: '16px',
+                padding: '1.2rem',
                 fontFamily: 'monospace',
                 display: 'flex',
                 flexDirection: 'column',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+                boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+                backdropFilter: 'blur(10px)'
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-                <span style={{ color: 'var(--accent-primary)', fontSize: '0.7rem', fontWeight: 800 }}>SYSTEM_SHELL v2.4</span>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem' }}>CONNECTED</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 8px #10b981' }} />
+                  <span style={{ color: 'var(--accent-primary)', fontSize: '0.7rem', fontWeight: 900, letterSpacing: '1px' }}>SYSTEM_SHELL v2.4</span>
+                </div>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem' }}>CONNECTED // SECURE</span>
               </div>
               
-              <div style={{ flex: 1, overflowY: 'auto', fontSize: '0.8rem', color: '#10b981', marginBottom: '1rem' }}>
-                <p style={{ margin: '0 0 0.5rem 0', opacity: 0.6 }}>// Type /help for commands</p>
-                {activityLog.slice(0, 5).reverse().map(log => (
-                  <p key={log.id} style={{ margin: '0 0 0.2rem 0' }}>
-                    <span style={{ opacity: 0.4 }}>[{new Date(log.id).toLocaleTimeString()}]</span> {log.msg}
+              <div style={{ flex: 1, overflowY: 'auto', fontSize: '0.85rem', color: '#10b981', marginBottom: '1rem' }} className="no-scrollbar">
+                <p style={{ margin: '0 0 0.8rem 0', opacity: 0.5, fontSize: '0.7rem' }}># GDI_OS KERNEL LOADED...</p>
+                {activityLog.slice(0, 8).reverse().map(log => (
+                  <p key={log.id} style={{ margin: '0 0 0.4rem 0', display: 'flex', gap: '0.8rem' }}>
+                    <span style={{ opacity: 0.3, minWidth: '70px' }}>[{new Date(log.id).toLocaleTimeString()}]</span> 
+                    <span>{log.msg}</span>
                   </p>
                 ))}
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem', borderRadius: '4px' }}>
-                <span style={{ color: 'var(--accent-primary)', fontSize: '0.8rem', fontWeight: 900 }}>&gt;_</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(0,0,0,0.3)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <span style={{ color: 'var(--accent-primary)', fontWeight: 900 }}>$</span>
                 <input 
                   value={terminalInput}
                   onChange={(e) => setTerminalInput(e.target.value)}
                   onKeyDown={handleTerminalCommand}
-                  placeholder="Execute override..."
-                  style={{ background: 'none', border: 'none', outline: 'none', color: '#10b981', width: '100%', fontSize: '0.8rem', fontFamily: 'monospace' }}
+                  placeholder="Enter system command..."
+                  style={{ background: 'none', border: 'none', outline: 'none', color: '#10b981', width: '100%', fontSize: '0.85rem', fontFamily: 'inherit' }}
+                  autoFocus
                 />
               </div>
             </motion.div>
@@ -1843,28 +1847,13 @@ export default function AdminPage() {
         </AnimatePresence>
 
         <div style={{ position: 'relative' }}>
-          {/* Live Status Pulse */}
-          <div style={{ 
-            position: 'absolute', 
-            top: '-2px', 
-            right: '-2px', 
-            width: '12px', 
-            height: '12px', 
-            background: '#10b981', 
-            borderRadius: '50%', 
-            border: '2px solid var(--bg-main)',
-            zIndex: 10,
-            boxShadow: '0 0 10px #10b981'
-          }} />
-          
           <button
             onClick={() => setIsTerminalOpen(!isTerminalOpen)}
-            className="shell-trigger"
             style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '16px',
-              background: isTerminalOpen ? 'var(--accent-danger)' : 'var(--accent-primary)',
+              width: '60px',
+              height: '60px',
+              borderRadius: '18px',
+              background: isTerminalOpen ? '#ef4444' : '#7c3aed',
               color: 'white',
               border: 'none',
               cursor: 'pointer',
@@ -1872,16 +1861,31 @@ export default function AdminPage() {
               alignItems: 'center',
               justifyContent: 'center',
               boxShadow: isTerminalOpen 
-                ? '0 0 30px rgba(239, 68, 68, 0.4)' 
-                : '0 0 30px rgba(124, 58, 237, 0.4)',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: isTerminalOpen ? 'rotate(180deg)' : 'none'
+                ? '0 0 40px rgba(239, 68, 68, 0.4)' 
+                : '0 0 40px rgba(124, 58, 237, 0.4)',
+              transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              transform: isTerminalOpen ? 'rotate(135deg) scale(0.9)' : 'scale(1)',
+              position: 'relative',
+              overflow: 'hidden'
             }}
           >
-            <Command size={24} />
+            <Command size={28} />
+            {!isTerminalOpen && (
+              <div style={{ 
+                position: 'absolute', 
+                top: '12px', 
+                right: '12px', 
+                width: '8px', 
+                height: '8px', 
+                background: '#10b981', 
+                borderRadius: '50%', 
+                boxShadow: '0 0 10px #10b981' 
+              }} />
+            )}
           </button>
         </div>
       </div>
+    </main>
     </main>
   );
 }
