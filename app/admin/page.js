@@ -577,12 +577,11 @@ export default function AdminPage() {
   }
 
   return (
-    <main style={{
-      minHeight: '100vh',
-      background: isDark ? '#0a0a0b' : '#f8fafc',
-      color: isDark ? 'white' : '#0f172a',
-      padding: '2rem',
-      transition: 'background 0.3s ease, color 0.3s ease'
+    <main style={{ 
+      minHeight: '100vh', 
+      background: isDark ? 'var(--bg-main)' : '#f8fafc', 
+      color: isDark ? 'var(--text-primary)' : '#0f172a',
+      display: 'flex'
     }}>
       <AdminCommandBar
         isOpen={isCommandBarOpen}
@@ -595,152 +594,51 @@ export default function AdminPage() {
         currentTheme={theme}
       />
 
-      <div className="container">
-        {/* Isolated Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '4rem',
-          borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)',
-          paddingBottom: '2rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ padding: '0.6rem', background: 'var(--accent-primary)', borderRadius: 'var(--radius-lg)', color: 'white' }}>
-              <Shield size={24} />
+      {/* Fixed Vertical Sidebar */}
+      <aside style={{
+        width: '280px',
+        height: '100vh',
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        background: isDark ? 'rgba(0,0,0,0.3)' : 'white',
+        borderRight: '1px solid var(--glass-border)',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '2rem 1rem',
+        zIndex: 100,
+        overflowY: 'auto'
+      }} className="no-scrollbar">
+        <div style={{ marginBottom: '2.5rem', padding: '0 1rem' }}>
+          <h1 style={{ fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <div style={{ width: '32px', height: '32px', background: 'var(--accent-primary)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Shield size={18} color="white" />
             </div>
-            <div>
-              <h1 style={{ fontSize: '1.8rem', fontWeight: 900, letterSpacing: '-1px', margin: 0 }}>Admin <span className="gradient-text">Command</span></h1>
-              <p style={{ color: isDark ? 'var(--text-muted)' : 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                SECURE SYSTEM OVERRIDE <span style={{ padding: '2px 6px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', fontSize: '0.6rem' }}><Command size={8} /> K</span>
-              </p>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <button
-              onClick={toggleTheme}
-              style={{
-                padding: '0.6rem', borderRadius: 'var(--radius-md)',
-                background: isDark ? 'rgba(255,255,255,0.05)' : 'white',
-                border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
-                color: isDark ? 'white' : '#0f172a',
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}
-            >
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-
-            <button
-              onClick={() => signOut({ callbackUrl: '/admin/login' })}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)',
-                color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.2)',
-                padding: '0.6rem 1.2rem', borderRadius: 'var(--radius-md)', fontWeight: 700, fontSize: '0.9rem',
-                cursor: 'pointer'
-              }}
-            >
-              <LogOut size={18} /> System Exit
-            </button>
-          </div>
+            COMMAND <span className="gradient-text">CENTER</span>
+          </h1>
         </div>
 
-        {/* Main Workspace Layout */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem', alignItems: 'start' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* Stats Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-              {[
-                { label: 'Total Citizens', value: stats.users, icon: <Users />, color: 'var(--accent-primary)' },
-                { label: 'Strategies Shared', value: stats.guides, icon: <BookOpen />, color: 'var(--accent-secondary)' },
-                { label: 'Pending Reports', value: stats.reports, icon: <AlertTriangle />, color: 'var(--accent-danger)' },
-                { label: 'System Health', value: 'Optimal', icon: <CheckCircle />, color: 'var(--accent-success)' }
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="glass-card"
-                  style={{
-                    padding: '1.5rem', borderRadius: 'var(--radius-xl)',
-                    borderLeft: `4px solid ${stat.color}`,
-                    background: isDark ? 'var(--glass-bg)' : 'white',
-                    boxShadow: isDark ? 'none' : '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                    <div style={{ color: stat.color }}>{stat.icon}</div>
-                    <BarChart3 size={16} style={{ opacity: 0.3 }} />
-                  </div>
-                  <h3 style={{ fontSize: '1.8rem', fontWeight: 900, margin: 0, color: isDark ? 'white' : '#0f172a' }}>{stat.value}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', marginTop: '0.4rem' }}>{stat.label}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Guardian Pulse Sidebar */}
-          <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 'var(--radius-xl)', height: '100%', minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.5rem' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-success)', boxShadow: '0 0 10px var(--accent-success)' }} />
-              <h3 style={{ fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>Guardian Pulse</h3>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto', maxHeight: '400px', paddingRight: '0.5rem' }}>
-              {activityLog.map(log => (
-                <motion.div 
-                  initial={{ opacity: 0, x: 20 }} 
-                  animate={{ opacity: 1, x: 0 }} 
-                  key={log.id} 
-                  style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', marginBottom: '0.3rem' }}>
-                    <span style={{ color: log.type === 'error' ? 'var(--accent-danger)' : 'var(--accent-primary)', fontWeight: 800 }}>{log.type.toUpperCase()}</span>
-                    <span style={{ color: 'var(--text-muted)' }}>{log.time}</span>
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 500, lineHeight: 1.4 }}>{log.msg}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '0.8rem', 
-          marginBottom: '2.5rem', 
-          padding: '0.5rem',
-          background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
-          borderRadius: '16px',
-          overflowX: 'auto',
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'none',
-          border: '1px solid var(--glass-border)',
-          whiteSpace: 'nowrap'
-        }} className="no-scrollbar">
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           {[
-            { id: 'overview', icon: <Globe size={16} />, label: 'Overview' },
-            { id: 'analytics', icon: <BarChart3 size={16} />, label: 'Analytics' },
-            { id: 'users', icon: <Users size={16} />, label: 'Citizens' },
-            { id: 'cms', icon: <BookOpen size={16} />, label: 'Wiki CMS' },
-            { id: 'missions', icon: <Zap size={16} />, label: 'Missions' },
-            { id: 'reports', icon: <ShieldAlert size={16} />, label: 'Reports' },
-            { id: 'democracy', icon: <Vote size={16} />, label: 'Democracy' },
-            { id: 'designer', icon: <Workflow size={16} />, label: 'Designer' },
-            { id: 'tournaments', icon: <Trophy size={16} />, label: 'Sprints' },
-            { id: 'assets', icon: <Folder size={16} />, label: 'Cloud Vault' },
-            { id: 'permissions', icon: <Key size={16} />, label: 'Permissions' },
-            { id: 'security', icon: <Shield size={16} />, label: 'Security' },
-            { id: 'achievements', icon: <Sparkles size={16} />, label: 'Badges' },
-            { id: 'audit', icon: <Activity size={16} />, label: 'Audit' },
-            { id: 'config', icon: <Settings size={16} />, label: 'Config' },
-            { id: 'email', icon: <Mail size={16} />, label: 'Email' },
-            { id: 'support', icon: <Bot size={16} />, label: 'Support' },
-            { id: 'broadcast', icon: <Send size={16} />, label: 'Broadcast' },
-            { id: 'sentinel', icon: <Eye size={16} />, label: 'Sentinel' }
+            { id: 'overview', icon: <Globe size={18} />, label: 'Overview' },
+            { id: 'analytics', icon: <BarChart3 size={18} />, label: 'Analytics' },
+            { id: 'users', icon: <Users size={18} />, label: 'Citizens' },
+            { id: 'cms', icon: <BookOpen size={18} />, label: 'Wiki CMS' },
+            { id: 'missions', icon: <Zap size={18} />, label: 'Missions' },
+            { id: 'reports', icon: <ShieldAlert size={18} />, label: 'Reports' },
+            { id: 'democracy', icon: <Vote size={18} />, label: 'Democracy' },
+            { id: 'designer', icon: <Workflow size={18} />, label: 'Designer' },
+            { id: 'tournaments', icon: <Trophy size={18} />, label: 'Sprints' },
+            { id: 'assets', icon: <Folder size={18} />, label: 'Cloud Vault' },
+            { id: 'permissions', icon: <Key size={18} />, label: 'Permissions' },
+            { id: 'security', icon: <Shield size={18} />, label: 'Security' },
+            { id: 'achievements', icon: <Sparkles size={18} />, label: 'Badges' },
+            { id: 'audit', icon: <Activity size={18} />, label: 'Audit' },
+            { id: 'config', icon: <Settings size={18} />, label: 'Config' },
+            { id: 'email', icon: <Mail size={18} />, label: 'Email' },
+            { id: 'support', icon: <Bot size={18} />, label: 'Support' },
+            { id: 'broadcast', icon: <Send size={18} />, label: 'Broadcast' },
+            { id: 'sentinel', icon: <Eye size={18} />, label: 'Sentinel' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -748,31 +646,61 @@ export default function AdminPage() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.6rem',
-                padding: '0.75rem 1.25rem',
+                gap: '1rem',
+                padding: '0.8rem 1.2rem',
                 borderRadius: '12px',
-                border: '1px solid transparent',
+                border: 'none',
                 background: activeTab === tab.id 
                   ? 'var(--accent-primary)' 
                   : 'transparent',
-                color: activeTab === tab.id ? 'white' : 'var(--text-muted)',
-                fontSize: '0.75rem',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
+                color: activeTab === tab.id ? 'white' : (isDark ? 'rgba(255,255,255,0.5)' : '#64748b'),
+                fontSize: '0.85rem',
+                fontWeight: activeTab === tab.id ? 700 : 500,
+                textAlign: 'left',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: activeTab === tab.id ? '0 10px 20px rgba(124, 58, 237, 0.3)' : 'none'
+                transition: 'all 0.2s ease',
+                boxShadow: activeTab === tab.id ? '0 10px 20px rgba(124, 58, 237, 0.2)' : 'none'
               }}
-              className={activeTab === tab.id ? '' : 'nav-hover'}
             >
-              {tab.icon}
+              <div style={{ opacity: activeTab === tab.id ? 1 : 0.6 }}>{tab.icon}</div>
               {tab.label}
             </button>
           ))}
+        </nav>
+
+        <div style={{ marginTop: 'auto', paddingTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <button onClick={toggleTheme} className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', padding: '0.8rem' }}>
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />} {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          </button>
+          <button onClick={() => signOut()} className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', padding: '0.8rem', color: 'var(--accent-danger)' }}>
+            <LogOut size={18} /> Sign Out
+          </button>
         </div>
+      </aside>
 
+      {/* Main Content Area */}
+      <div style={{ flex: 1, marginLeft: '280px', padding: '2rem 3rem' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+          <div>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, margin: 0, textTransform: 'capitalize' }}>{activeTab.replace('-', ' ')}</h2>
+            <p style={{ color: 'var(--text-muted)', margin: '0.2rem 0 0', fontSize: '0.9rem' }}>Welcome back, <span style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>{session?.user?.name}</span></p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button onClick={() => setIsCommandBarOpen(true)} className="btn-secondary" style={{ gap: '0.5rem' }}>
+              <Command size={18} /> <span style={{ fontSize: '0.8rem' }}>CTRL+K</span>
+            </button>
+          </div>
+        </header>
 
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+          
         <div style={{ marginTop: '2rem' }}>
           {activeTab === 'reports' && (
             <AnimatePresence mode="wait">
@@ -1851,13 +1779,14 @@ export default function AdminPage() {
             </div>
           )}
         </div>
+        </div>
       </div>
 
       {/* System Shell Terminal */}
       <div style={{
         position: 'fixed',
         bottom: '2rem',
-        right: '7rem',
+        right: '2rem',
         zIndex: 9999,
         display: 'flex',
         flexDirection: 'column',
