@@ -18,6 +18,10 @@ export default function AdminPage() {
   const [tickets, setTickets] = useState([]);
   const [pendingMissions, setPendingMissions] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [config, setConfig] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [allGuides, setAllGuides] = useState([]);
   const [broadcastSubject, setBroadcastSubject] = useState('');
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [broadcastType, setBroadcastType] = useState('announcement');
@@ -94,13 +98,21 @@ export default function AdminPage() {
         fetch('/api/admin/reports'),
         fetch('/api/admin/users'),
         fetch('/api/admin/support'),
-        fetch('/api/admin/pending-missions')
+        fetch('/api/admin/pending-missions'),
+        fetch('/api/admin/audit'),
+        fetch('/api/admin/config'),
+        fetch('/api/admin/analytics'),
+        fetch('/api/guides')
       ]);
       
       const statsData = await statsRes.json();
       const reportsData = await reportsRes.json();
       const usersData = await usersRes.json();
       const ticketsData = await ticketsRes.json();
+      const auditData = await auditRes.json();
+      const configData = await configRes.json();
+      const analyticsData = await analyticsRes.json();
+      const guidesData = await guidesRes.json();
       
       let missionsData = { missions: [] };
       try {
@@ -115,6 +127,10 @@ export default function AdminPage() {
       setUsers(Array.isArray(usersData) ? usersData : []);
       setTickets(ticketsData.tickets || []);
       setPendingMissions(missionsData.missions || []);
+      setAuditLogs(auditData || []);
+      setConfig(configData);
+      setAnalytics(analyticsData);
+      setAllGuides(guidesData || []);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch admin data');
@@ -299,6 +315,39 @@ export default function AdminPage() {
     }
   };
 
+  const handleUpdateConfig = async (newConfig) => {
+    try {
+      const res = await fetch('/api/admin/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newConfig)
+      });
+      if (res.ok) {
+        setConfig(newConfig);
+        alert('Configuration updated successfully');
+      }
+    } catch (error) {
+      alert('Failed to update configuration');
+    }
+  };
+
+  const handleRewardUser = async (userId, xpAmount, reason) => {
+    try {
+      const res = await fetch('/api/admin/users/reward', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, xpAmount, reason })
+      });
+      if (res.ok) {
+        alert('Reward issued successfully!');
+        fetchAdminData();
+      }
+    } catch (error) {
+      alert('Failed to issue reward');
+    }
+  };
+
+
   const isDark = theme === 'dark';
 
   return (
@@ -404,21 +453,22 @@ export default function AdminPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem', overflowX: 'auto' }}>
-          {['overview', 'reports', 'missions', 'users', 'sandbox', 'support', 'broadcast'].map(tab => (
+          {['overview', 'analytics', 'users', 'cms', 'missions', 'reports', 'audit', 'config', 'email', 'support', 'broadcast', 'sentinel'].map(tab => (
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
               style={{ 
                 background: 'none', border: 'none', color: activeTab === tab ? (isDark ? 'var(--text-primary)' : '#7c3aed') : 'var(--text-muted)',
-                fontWeight: 700, fontSize: '1rem', cursor: 'pointer', position: 'relative', padding: '0.5rem 1rem',
-                textTransform: 'capitalize', whiteSpace: 'nowrap'
+                fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', position: 'relative', padding: '0.5rem 1rem',
+                textTransform: 'uppercase', whiteSpace: 'nowrap'
               }}
             >
-              {tab === 'sandbox' ? 'Sandbox 🏗️' : (tab === 'support' ? 'Support 💬' : tab)}
+              {tab === 'cms' ? 'Wiki CMS' : tab}
               {activeTab === tab && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1rem', left: 0, right: 0, height: '3px', background: 'var(--accent-primary)' }} />}
             </button>
           ))}
         </div>
+
 
         <div style={{ marginTop: '2rem' }}>
           {activeTab === 'reports' && (
@@ -578,13 +628,22 @@ export default function AdminPage() {
                             {user.role?.toUpperCase() || 'USER'}
                           </span>
                           {user.role !== 'admin' && (
-                            <button 
-                              onClick={() => handleImpersonate(user._id, user.username)}
-                              title="Ghost Mode (Impersonate)"
-                              style={{ color: 'var(--accent-secondary)', opacity: 0.6 }}
-                            >
-                              <Ghost size={16} />
-                            </button>
+                            <div style={{ display: 'flex', gap: '0.4rem' }}>
+                              <button 
+                                onClick={() => handleRewardUser(user._id, 100, 'Manual Admin Reward')}
+                                title="Reward 100 XP"
+                                style={{ color: 'var(--accent-success)', opacity: 0.8 }}
+                              >
+                                <Zap size={16} />
+                              </button>
+                              <button 
+                                onClick={() => handleImpersonate(user._id, user.username)}
+                                title="Ghost Mode (Impersonate)"
+                                style={{ color: 'var(--accent-secondary)', opacity: 0.6 }}
+                              >
+                                <Ghost size={16} />
+                              </button>
+                            </div>
                           )}
                         </div>
                       </td>
@@ -595,6 +654,175 @@ export default function AdminPage() {
             </div>
           </div>
           )}
+
+          {activeTab === 'analytics' && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+               <div className="glass-card" style={{ padding: '2rem' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1rem' }}>User Growth (Last 30 Days)</h3>
+                  <div style={{ height: '200px', display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
+                    {analytics?.userGrowth?.map((d, i) => (
+                      <div key={i} title={`${d._id}: ${d.count}`} style={{ flex: 1, background: 'var(--accent-primary)', height: `${(d.count / Math.max(...(analytics.userGrowth.length > 0 ? analytics.userGrowth.map(x => x.count) : [1]))) * 100}%`, borderRadius: '4px 4px 0 0', opacity: 0.8 }} />
+                    ))}
+                  </div>
+               </div>
+               <div className="glass-card" style={{ padding: '2rem' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1rem' }}>Wiki Categories</h3>
+                  {analytics?.guideStats?.map((c, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.8rem', fontSize: '0.9rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>{c._id || 'Uncategorized'}</span>
+                      <span style={{ fontWeight: 800 }}>{c.count}</span>
+                    </div>
+                  ))}
+               </div>
+               <div className="glass-card" style={{ padding: '2rem' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1rem' }}>Top Citizens</h3>
+                  {analytics?.topEarners?.map((u, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1rem' }}>
+                      <span style={{ width: '20px', fontSize: '0.8rem', fontWeight: 900, color: 'var(--accent-primary)' }}>#{i+1}</span>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem' }}>{u.name}</p>
+                        <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>@{u.username}</p>
+                      </div>
+                      <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>{u.xp} XP</span>
+                    </div>
+                  ))}
+               </div>
+            </div>
+          )}
+
+          {activeTab === 'audit' && (
+            <div className="glass-card" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: isDark ? 'var(--bg-tertiary)' : '#f1f5f9', borderBottom: '1px solid var(--glass-border)' }}>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>OPERATOR</th>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>ACTION</th>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>DETAILS</th>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>TIMESTAMP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditLogs.map((log, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid var(--glass-border)', fontSize: '0.85rem' }}>
+                      <td style={{ padding: '1rem', fontWeight: 700 }}>{log.userName}</td>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{ padding: '2px 6px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 900 }}>{log.action}</span>
+                      </td>
+                      <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{log.details}</td>
+                      <td style={{ padding: '1rem', fontSize: '0.75rem' }}>{new Date(log.timestamp).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === 'config' && (
+            <div className="glass-card" style={{ padding: '2rem', maxWidth: '600px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem' }}>Global System Override</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <div>
+                     <p style={{ margin: 0, fontWeight: 700 }}>Maintenance Mode</p>
+                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Lock platform for all non-admin citizens</p>
+                   </div>
+                   <input 
+                     type="checkbox" 
+                     checked={config?.maintenanceMode} 
+                     onChange={(e) => handleUpdateConfig({...config, maintenanceMode: e.target.checked})}
+                     style={{ width: '40px', height: '20px', cursor: 'pointer' }}
+                   />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <div>
+                     <p style={{ margin: 0, fontWeight: 700 }}>XP Multiplier</p>
+                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Scale global XP rewards (e.g. 2 for Double XP)</p>
+                   </div>
+                   <input 
+                     type="number" 
+                     value={config?.xpMultiplier} 
+                     onChange={(e) => handleUpdateConfig({...config, xpMultiplier: parseFloat(e.target.value)})}
+                     style={{ width: '60px', padding: '0.4rem', background: 'rgba(0,0,0,0.1)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}
+                   />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <div>
+                     <p style={{ margin: 0, fontWeight: 700 }}>Open Registration</p>
+                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Allow new citizens to join the network</p>
+                   </div>
+                   <input 
+                     type="checkbox" 
+                     checked={config?.registrationEnabled} 
+                     onChange={(e) => handleUpdateConfig({...config, registrationEnabled: e.target.checked})}
+                     style={{ width: '40px', height: '20px', cursor: 'pointer' }}
+                   />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'cms' && (
+            <div className="glass-card" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
+               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: isDark ? 'var(--bg-tertiary)' : '#f1f5f9', borderBottom: '1px solid var(--glass-border)' }}>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>TITLE</th>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>CATEGORY</th>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>VOTES</th>
+                    <th style={{ padding: '1rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allGuides.map((guide) => (
+                    <tr key={guide._id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                      <td style={{ padding: '1rem', fontWeight: 700, fontSize: '0.9rem' }}>{guide.title}</td>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 800, opacity: 0.6 }}>{guide.category?.toUpperCase()}</span>
+                      </td>
+                      <td style={{ padding: '1rem', fontWeight: 800 }}>{guide.upvotes || 0}</td>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                           <button onClick={() => window.open(`/wiki?id=${guide._id}`, '_blank')} className="btn-secondary" style={{ padding: '0.4rem' }}><ExternalLink size={14} /></button>
+                           <button onClick={() => handleDeleteGuide(guide._id)} className="btn-secondary" style={{ padding: '0.4rem', color: 'var(--accent-danger)' }}><Trash2 size={14} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === 'email' && (
+            <div className="glass-card" style={{ padding: '2rem' }}>
+               <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem' }}>Email Template Architect</h3>
+               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                     <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>TEMPLATE SELECTOR</label>
+                     <select style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }}>
+                        <option>Welcome Citizen</option>
+                        <option>Password Reset Intel</option>
+                        <option>Mission Dispatch</option>
+                        <option>Account Breach Alert</option>
+                     </select>
+                     <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>SUBJECT LINE</label>
+                     <input placeholder="Enter email subject..." style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} />
+                     <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>HTML BODY</label>
+                     <textarea style={{ height: '300px', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'white', fontFamily: 'monospace' }} defaultValue="<h1>Welcome, {{name}}!</h1><p>Your journey into the void begins now.</p>" />
+                     <button className="btn-primary" style={{ padding: '1rem' }}>Save Template</button>
+                  </div>
+                  <div style={{ background: 'white', borderRadius: '12px', padding: '2rem', color: '#0f172a' }}>
+                     <p style={{ fontSize: '0.6rem', fontWeight: 900, color: '#94a3b8', marginBottom: '1rem', textAlign: 'center' }}>LIVE PREVIEW</p>
+                     <div style={{ border: '1px solid #e2e8f0', padding: '1rem' }}>
+                        <h1 style={{ margin: 0 }}>Welcome, Commander!</h1>
+                        <p style={{ marginTop: '1rem' }}>Your journey into the void begins now.</p>
+                        <div style={{ marginTop: '2rem', padding: '1rem', background: '#7c3aed', color: 'white', textAlign: 'center', borderRadius: '4px' }}>Access Dashboard</div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+          )}
+
 
           {activeTab === 'sandbox' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
