@@ -235,6 +235,23 @@ export default function AdminPage() {
     setNodes(prev => prev.map((n, i) => ({ ...n, x: 50 + (i * 150), y: 150 + (i % 2 === 0 ? -50 : 50) })));
   };
 
+  const handlePublishPoll = async (pollId) => {
+    if (!confirm('Are you sure you want to publish these results and close the poll?')) return;
+    try {
+      const res = await fetch(`/api/admin/polls/${pollId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'published' })
+      });
+      if (res.ok) {
+        alert('Poll results published to the community!');
+        fetchAdminData();
+      }
+    } catch (err) {
+      alert('Failed to publish results');
+    }
+  };
+
   const handleUploadAsset = async () => {
     const name = prompt("Enter asset name:");
     if (!name) return;
@@ -1425,12 +1442,22 @@ export default function AdminPage() {
                                   <span style={{ fontWeight: 800 }}>{percent}%</span>
                                 </div>
                                 <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                                  <motion.div initial={{ width: 0 }} animate={{ width: `${percent}%` }} style={{ height: '100%', background: 'var(--accent-primary)' }} />
+                                  <motion.div initial={{ width: 0 }} animate={{ width: `${percent}%` }} style={{ height: '100%', background: poll.status === 'published' ? 'var(--accent-success)' : 'var(--accent-primary)' }} />
                                 </div>
                               </div>
                             );
                           })}
                         </div>
+                        
+                        {poll.status !== 'published' && (
+                          <button 
+                            onClick={() => handlePublishPoll(poll._id)}
+                            className="btn-secondary" 
+                            style={{ width: '100%', marginTop: '1.5rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}
+                          >
+                            <CheckCircle size={16} /> PUBLISH RESULTS
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
