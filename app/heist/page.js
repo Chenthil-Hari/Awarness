@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Shield, Cpu, Binary, Radio, AlertCircle, CheckCircle2, XCircle, ArrowRight, Timer, Terminal, Users, Play, Lock, Link as LinkIcon, UserPlus, X } from 'lucide-react';
+import { Shield, Cpu, Binary, Radio, AlertCircle, CheckCircle2, XCircle, ArrowRight, Timer, Terminal, Users, Play, Lock, Link as LinkIcon, UserPlus, X, Zap } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
@@ -76,11 +76,9 @@ function HeistContent() {
 
   const chatRef = useRef(null);
 
-  // 1. Stable Listeners (Reconstructed)
+  // 1. Stable Listeners
   useEffect(() => {
     if (!isConnected || !isFriendMode || !isJoined) return;
-
-    console.log("Heist: Crew comms active.");
 
     const offStart = on('game-start', (data) => {
       setGameState('playing');
@@ -103,11 +101,14 @@ function HeistContent() {
       }
     });
 
-    const offSettings = on('settings-updated', (data) => {
-      if (data.senderId !== myId) {
-        setBaseTime(data.timer);
-        setMissionDifficulty(data.difficulty);
-        setSelectedMissionId(data.missionId || 'default');
+    const offShuffled = on('roles-shuffled', (data) => {
+      const hostIndex = members.findIndex(m => m.user_id === data.hostId);
+      const myIndex = members.findIndex(m => m.user_id === myId);
+      if (myIndex !== -1 && hostIndex !== -1) {
+        const roleIndex = (myIndex - hostIndex + 3) % 3;
+        const assignedRole = data.assignments[roleIndex];
+        setSelectedRole(assignedRole);
+        addMessage('System', `Host has assigned you the role of ${assignedRole}.`);
       }
     });
 
@@ -127,11 +128,11 @@ function HeistContent() {
       offStart();
       offProgress();
       offRole();
-      offSettings();
+      offShuffled();
       offNext();
       offMessage();
     };
-  }, [isConnected, isFriendMode, isJoined, myId]);
+  }, [isConnected, isFriendMode, isJoined, myId, members.length]);
 
   // 2. Room Initialization
   useEffect(() => {
@@ -163,17 +164,26 @@ function HeistContent() {
     setIsHost(true);
   };
 
-  const updateSettings = (timer, difficulty, missionId) => {
-    const sId = missionId || selectedMissionId;
-    setBaseTime(timer);
-    setMissionDifficulty(difficulty);
-    setSelectedMissionId(sId);
-    broadcast('settings-updated', { timer, difficulty, missionId: sId });
+  const handleKick = (userId) => {
+    if (confirm("Are you sure you want to remove this operative?")) {
+      broadcast('kicked', { userId });
+    }
+  };
+
+  const randomizeRoles = () => {
+    const roles = ['Hacker', 'Analyst', 'Decoy'];
+    const shuffled = [...roles].sort(() => Math.random() - 0.5);
+    setSelectedRole(shuffled[0]);
+    broadcast('role-selected', { role: shuffled[0], senderName: session?.user?.name });
+    broadcast('roles-shuffled', { assignments: shuffled, hostId: myId });
   };
 
   const startHeist = () => {
     if (isFriendMode) {
-      broadcast('game-start', { chapter: 0, timer: baseTime, missionId: selectedMissionId });
+      const signal = { chapter: 0, timer: baseTime, missionId: selectedMissionId, timestamp: Date.now() };
+      broadcast('game-start', signal);
+      setTimeout(() => broadcast('game-start', signal), 500);
+      setTimeout(() => broadcast('game-start', signal), 1000);
     }
     setGameState('playing');
     setTimeLeft(baseTime);
@@ -188,7 +198,7 @@ function HeistContent() {
   };
 
   const scenario = getScenario();
-  const otherRoles = selectedRole ? Object.keys(scenario.roles).filter(r => r !== selectedRole) : [];
+  const otherRoles = selectedRole ? Object.keys(scenario.roles).filter(r => r !== selectedRole) : ['Hacker', 'Analyst', 'Decoy'].filter(r => r !== selectedRole);
 
   // 4. Combat Logic
   useEffect(() => {
@@ -196,12 +206,10 @@ function HeistContent() {
     if (gameState === 'playing' && timeLeft > 0) {
       timer = setInterval(() => {
         setTimeLeft(prev => prev - 1);
-        
-        // Multiplayer progress sync
         if (!isFriendMode) {
           setTeamProgress(prev => {
             const newState = { ...prev };
-            otherRoles.forEach((role, i) => {
+            otherRoles.forEach(role => {
               newState[role] = Math.min(100, (prev[role] || 0) + Math.random() * 8);
             });
             return newState;
@@ -314,20 +322,30 @@ function HeistContent() {
                   </div>
                 ) : (
                   <>
-                    <div style={{ background: 'var(--bg-tertiary)', padding: '1.5rem', borderRadius: '12px', border: '1px dashed var(--accent-secondary)', fontSize: '2rem', fontWeight: 900, letterSpacing: '8px', color: 'var(--accent-secondary)', marginBottom: '2rem' }}>
-                      {roomCode}
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                      <div style={{ background: 'var(--bg-tertiary)', padding: '1.5rem', borderRadius: '12px', border: '1px dashed var(--accent-secondary)', fontSize: '2rem', fontWeight: 900, letterSpacing: '8px', color: 'var(--accent-secondary)', flex: 1 }}>
+                        {roomCode}
+                      </div>
+                      <button onClick={() => { navigator.clipboard.writeText(roomCode); alert("Code Copied!"); }} style={{ padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}>
+                        <LinkIcon size={24} />
+                      </button>
                     </div>
                     
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '3rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '3rem', flexWrap: 'wrap' }}>
                       {members.map(m => (
-                        <div key={m.user_id} style={{ textAlign: 'center' }}>
+                        <div key={m.user_id} style={{ textAlign: 'center', position: 'relative' }}>
                           <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'var(--bg-tertiary)', border: `2px solid ${m.user_id === myId ? 'var(--accent-secondary)' : 'var(--glass-border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Users size={32} color={m.user_id === myId ? 'var(--accent-secondary)' : 'white'} />
                           </div>
                           <p style={{ fontSize: '0.7rem', marginTop: '0.5rem', fontWeight: 800 }}>{m.name.split(' ')[0].toUpperCase()}</p>
+                          {isHost && m.user_id !== myId && (
+                            <button onClick={() => handleKick(m.user_id)} style={{ position: 'absolute', top: -5, right: -5, background: 'var(--accent-danger)', borderRadius: '50%', width: '20px', height: '20px', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10 }}>
+                              <X size={12} />
+                            </button>
+                          )}
                         </div>
                       ))}
-                      {Array.from({ length: 3 - members.length }).map((_, i) => (
+                      {Array.from({ length: Math.max(0, 3 - members.length) }).map((_, i) => (
                         <div key={i} style={{ width: '64px', height: '64px', borderRadius: '16px', border: '2px dashed var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.3 }}>
                           <UserPlus size={32} />
                         </div>
@@ -335,9 +353,16 @@ function HeistContent() {
                     </div>
 
                     {isHost ? (
-                      <button onClick={() => setGameState('role-select')} className="btn-primary" style={{ width: '100%', background: 'var(--accent-secondary)' }}>ASSIGN ROLES</button>
+                      <div style={{ display: 'flex', gap: '1rem' }}>
+                        <button onClick={randomizeRoles} className="btn-secondary" style={{ flex: 1, padding: '1rem', borderColor: 'var(--accent-secondary)', color: 'var(--accent-secondary)' }}>RANDOMIZE ROLES</button>
+                        <button disabled={members.length < 2} onClick={() => setGameState('role-select')} className="btn-primary" style={{ flex: 2, background: 'var(--accent-secondary)', padding: '1rem', fontSize: '1.1rem', opacity: (members.length < 2) ? 0.5 : 1 }}>
+                          {members.length < 2 ? 'WAITING FOR CREW...' : 'ASSIGN ROLES'}
+                        </button>
+                      </div>
                     ) : (
-                      <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Waiting for host to assign roles...</p>
+                      <div style={{ color: 'var(--text-secondary)', fontStyle: 'italic', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '8px' }}>
+                        Waiting for host to begin mission...
+                      </div>
                     )}
                   </>
                 )}
@@ -413,6 +438,29 @@ function HeistContent() {
               </div>
               <input type="text" placeholder="SEND MESSAGE..." onKeyDown={(e) => { if (e.key === 'Enter') { sendChatMessage(e.target.value); e.target.value = ''; } }} style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '0.8rem' }} />
             </div>
+          </motion.div>
+        )}
+
+        {gameState === 'phase-complete' && (
+          <motion.div key="complete" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: 'center', paddingTop: '6rem' }}>
+            <div style={{ width: '80px', height: '80px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--accent-success)', margin: '0 auto 2rem' }}>
+              <CheckCircle2 size={40} color="var(--accent-success)" />
+            </div>
+            <h2 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>PHASE {currentChapter + 1} CLEAR</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginBottom: '3rem' }}>The team has successfully synchronized. Moving to next objective...</p>
+            <button onClick={() => { setCurrentChapter(prev => prev + 1); setGameState('playing'); setTimeLeft(baseTime); setTeamProgress({}); setAnswerState(null); }} className="btn-primary" style={{ padding: '1.2rem 3.5rem', fontSize: '1.1rem' }}>
+              PROCEED TO PHASE {currentChapter + 2} <ArrowRight size={20} />
+            </button>
+          </motion.div>
+        )}
+
+        {gameState === 'failed' && (
+          <motion.div key="failed" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: 'center', paddingTop: '6rem', maxWidth: '600px', margin: '0 auto' }}>
+            <div style={{ width: '80px', height: '80px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--accent-danger)', margin: '0 auto 2rem' }}>
+              <XCircle size={40} color="var(--accent-danger)" />
+            </div>
+            <h2 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>HEIST FAILED</h2>
+            <button onClick={() => window.location.reload()} className="btn-secondary" style={{ width: '100%', padding: '1.2rem' }}>RETRY MISSION</button>
           </motion.div>
         )}
 

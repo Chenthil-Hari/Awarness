@@ -42,6 +42,13 @@ export function useMultiplayer(roomCode, isEnabled) {
       setMembers(prev => prev.filter(item => item.user_id !== m.id));
     });
 
+    channel.bind('kicked', (data) => {
+      if (data.userId === (session?.user?.id)) {
+        alert("You have been removed from the lobby by the host.");
+        window.location.href = '/';
+      }
+    });
+
     // Cleanup
     return () => {
       channel.unbind_all();
