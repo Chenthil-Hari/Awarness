@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save, Globe, Send, Sparkles, ShieldCheck } from 'lucide-react';
+import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save, Globe, Send, Sparkles, ShieldCheck, Vote, Map as MapIcon, ThumbsUp, ThumbsDown, Trophy, Calendar, Image as ImageIcon, Folder, FileText, Upload, Key, Lock, Workflow, Activity } from 'lucide-react';
 import AdminCommandBar from '../components/AdminCommandBar';
 import * as XLSX from 'xlsx';
 
@@ -26,10 +26,17 @@ export default function AdminPage() {
     { id: 2, type: 'security', user: 'Sentinel', time: '1m ago', msg: 'Neural firewall active' }
   ]);
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [heatmapDots, setHeatmapDots] = useState([]);
   const [terminalInput, setTerminalInput] = useState('');
-  const [broadcastSubject, setBroadcastSubject] = useState('');
-  const [broadcastMessage, setBroadcastMessage] = useState('');
   const [broadcastType, setBroadcastType] = useState('announcement');
+  const [polls, setPolls] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [tournaments, setTournaments] = useState([]);
+  const [assets, setAssets] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [forecast, setForecast] = useState(null);
+  const [newPoll, setNewPoll] = useState({ question: '', options: ['', ''] });
+  const [newTournament, setNewTournament] = useState({ title: '', prizePool: 1000, duration: 24 });
   const [theme, setTheme] = useState('dark');
   const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
   const [blockedIPs, setBlockedIPs] = useState(['192.168.1.1', '45.76.12.33']);
@@ -51,6 +58,13 @@ export default function AdminPage() {
       fail: { text: 'Unfortunate. Try again!', isFinal: true, failed: true }
     }
   });
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [nodes, setNodes] = useState([
+    { id: 'start', title: 'Phishing Hook', x: 50, y: 150, type: 'trigger' },
+    { id: 'q1', title: 'Check Link?', x: 250, y: 100, type: 'question' },
+    { id: 'q2', title: 'Input Pass?', x: 250, y: 200, type: 'question' },
+    { id: 'end', title: 'Success', x: 450, y: 150, type: 'outcome' }
+  ]);
 
   const handleSaveScenario = async () => {
     try {
@@ -132,13 +146,33 @@ export default function AdminPage() {
       setAnalytics(analyticsData);
       setAllGuides(guidesData || []);
       
-      // Fetch new modules data
+      setAnalytics(analyticsData);
+      setAllGuides(guidesData || []);
+      
+      // Fetch Democracy data
       try {
-        const [ipRes, badgeRes] = await Promise.all([
+        const [ipRes, badgeRes, pollsRes, suggRes, tourRes, assetRes, rolesRes] = await Promise.all([
           fetch('/api/admin/security/blocklist'),
-          fetch('/api/admin/badges')
+          fetch('/api/admin/badges'),
+          fetch('/api/admin/polls'),
+          fetch('/api/admin/suggestions'),
+          fetch('/api/admin/tournaments'),
+          fetch('/api/admin/assets'),
+          fetch('/api/admin/roles')
         ]);
         if (ipRes.ok) setBlockedIPs(await ipRes.json());
+        if (pollsRes.ok) setPolls(await pollsRes.json());
+        if (suggRes.ok) setSuggestions(await suggRes.json());
+        if (tourRes.ok) setTournaments(await tourRes.json());
+        if (assetRes.ok) setAssets(await assetRes.json());
+        if (rolesRes.ok) setRoles(await rolesRes.json());
+        
+        const [heatmapRes, forecastRes] = await Promise.all([
+          fetch('/api/admin/heatmap'),
+          fetch('/api/admin/analytics/forecast')
+        ]);
+        if (heatmapRes.ok) setHeatmapDots(await heatmapRes.json());
+        if (forecastRes.ok) setForecast(await forecastRes.json());
       } catch (err) {
         console.error("New modules fetch error:", err);
       }
@@ -283,6 +317,73 @@ export default function AdminPage() {
       }
     } catch (err) {
       alert('Failed to publish badge');
+    }
+  };
+
+  const handleCreatePoll = async () => {
+    if (!newPoll.question || newPoll.options.some(o => !o)) return alert('Question and all options are required');
+    try {
+      const res = await fetch('/api/admin/polls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPoll)
+      });
+      if (res.ok) {
+        alert('Poll deployed to community!');
+        setNewPoll({ question: '', options: ['', ''] });
+        fetchAdminData();
+      }
+    } catch (err) {
+      alert('Failed to deploy poll');
+    }
+  };
+
+  const handleReviewSuggestion = async (id, status) => {
+    try {
+      const res = await fetch('/api/admin/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status })
+      });
+      if (res.ok) {
+        setSuggestions(prev => prev.map(s => s._id === id ? { ...s, status } : s));
+      }
+    } catch (err) {
+      alert('Failed to update suggestion');
+    }
+  };
+
+  const handleCreateTournament = async () => {
+    if (!newTournament.title) return alert('Tournament title is required');
+    try {
+      const res = await fetch('/api/admin/tournaments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTournament)
+      });
+      if (res.ok) {
+        alert('Tournament scheduled successfully!');
+        setNewTournament({ title: '', prizePool: 1000, duration: 24 });
+        fetchAdminData();
+      }
+    } catch (err) {
+      alert('Failed to schedule tournament');
+    }
+  };
+
+  const handleUpdateUserRole = async (userId, role) => {
+    try {
+      const res = await fetch('/api/admin/roles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, role })
+      });
+      if (res.ok) {
+        setUsers(prev => prev.map(u => u._id === userId ? { ...u, role } : u));
+        alert('Citizen role updated');
+      }
+    } catch (err) {
+      alert('Failed to update role');
     }
   };
 
@@ -540,7 +641,7 @@ export default function AdminPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.1)', paddingBottom: '1rem', overflowX: 'auto' }}>
-          {['overview', 'analytics', 'users', 'cms', 'missions', 'reports', 'security', 'achievements', 'audit', 'config', 'email', 'support', 'broadcast', 'sentinel'].map(tab => (
+          {['overview', 'analytics', 'users', 'cms', 'missions', 'reports', 'democracy', 'designer', 'tournaments', 'assets', 'permissions', 'security', 'achievements', 'audit', 'config', 'email', 'support', 'broadcast', 'sentinel'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -797,7 +898,42 @@ export default function AdminPage() {
                       <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>{u.xp} XP</span>
                     </div>
                   ))}
-               </div>
+                </div>
+
+              {/* Phase 7: Predictive AI Section */}
+              <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem', marginTop: '1.5rem' }}>
+                <div className="glass-card" style={{ padding: '2rem', border: '1px solid rgba(124, 58, 237, 0.2)', background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.05), transparent)' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <Bot size={20} color="var(--accent-primary)" /> AI Risk Shield
+                  </h3>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--accent-primary)' }}>{forecast?.riskScore}%</div>
+                    <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>NETWORK RISK SCORE</p>
+                    <div style={{ marginTop: '1rem', padding: '0.5rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 900 }}>TRENDING DOWN (SAFE)</div>
+                  </div>
+                  <div style={{ marginTop: '2rem' }}>
+                    <p style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.8rem' }}>CONTENT GAPS IDENTIFIED</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {forecast?.contentGaps?.map(gap => (
+                        <div key={gap} style={{ padding: '0.6rem', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700 }}>{gap}</div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="glass-card" style={{ padding: '2rem' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Predicted Activity (7D Forecast)</h3>
+                  <div style={{ height: '250px', display: 'flex', alignItems: 'flex-end', gap: '1.5rem', paddingBottom: '2rem' }}>
+                    {forecast?.predictedActiveUsers?.map((d, i) => (
+                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ width: '100%', background: 'rgba(124, 58, 237, 0.2)', height: `${(d.count / 250) * 100}%`, borderRadius: '8px 8px 0 0', position: 'relative' }}>
+                          <motion.div initial={{ height: 0 }} animate={{ height: '100%' }} style={{ width: '100%', background: 'var(--accent-primary)', borderRadius: '8px 8px 0 0' }} />
+                        </div>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>{d.day}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -967,6 +1103,317 @@ export default function AdminPage() {
                     </motion.div>
                   ))
                 )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'designer' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', height: '600px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', position: 'relative', zIndex: 10 }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <Workflow size={20} color="var(--accent-primary)" /> Simulation Flow Designer
+                  </h3>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn-secondary" style={{ padding: '0.6rem 1.2rem' }}>AUTO-LAYOUT</button>
+                    <button className="btn-primary" style={{ padding: '0.6rem 1.2rem' }}><Save size={16} /> DEPLOY FLOW</button>
+                  </div>
+                </div>
+
+                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+                
+                <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+                  {nodes.map((node, i) => i < nodes.length - 1 && (
+                    <line 
+                      key={i} 
+                      x1={node.x + 100} y1={node.y + 30} 
+                      x2={nodes[i+1].x} y2={nodes[i+1].y + 30} 
+                      stroke="var(--accent-primary)" strokeWidth="2" strokeDasharray="5,5" opacity="0.3" 
+                    />
+                  ))}
+                </svg>
+
+                {nodes.map(node => (
+                  <motion.div
+                    key={node.id}
+                    drag
+                    dragMomentum={false}
+                    onDrag={(e, info) => {
+                      setNodes(prev => prev.map(n => n.id === node.id ? { ...n, x: n.x + info.delta.x, y: n.y + info.delta.y } : n));
+                    }}
+                    style={{
+                      position: 'absolute',
+                      left: node.x,
+                      top: node.y,
+                      width: '180px',
+                      padding: '1rem',
+                      background: isDark ? 'rgba(10, 10, 11, 0.95)' : 'white',
+                      border: `1px solid ${selectedNode === node.id ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
+                      borderRadius: '12px',
+                      cursor: 'grab',
+                      boxShadow: selectedNode === node.id ? '0 0 20px rgba(124, 58, 237, 0.3)' : '0 10px 25px rgba(0,0,0,0.2)',
+                      zIndex: selectedNode === node.id ? 100 : 1
+                    }}
+                    onClick={() => setSelectedNode(node.id)}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: node.type === 'trigger' ? '#f59e0b' : node.type === 'outcome' ? '#10b981' : 'var(--accent-primary)' }} />
+                      <span style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.5 }}>{node.type}</span>
+                    </div>
+                    <p style={{ margin: 0, fontWeight: 800, fontSize: '0.85rem' }}>{node.title}</p>
+                  </motion.div>
+                ))}
+
+                <div style={{ position: 'absolute', bottom: '2rem', left: '2rem', background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)', zIndex: 10 }}>
+                  <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>Node Controls</p>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    <button className="btn-secondary" style={{ padding: '0.4rem' }}><Plus size={14} /></button>
+                    <button className="btn-secondary" style={{ padding: '0.4rem' }}><Trash2 size={14} /></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'permissions' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <Key size={20} color="var(--accent-primary)" /> Defined Roles
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {roles.map(role => (
+                    <div key={role.id} style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <span style={{ fontWeight: 800 }}>{role.name}</span>
+                        <Lock size={14} style={{ opacity: 0.3 }} />
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                        {role.permissions.map(p => (
+                          <span key={p} style={{ fontSize: '0.6rem', background: 'rgba(124, 58, 237, 0.1)', color: 'var(--accent-primary)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>{p}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Team Management</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  {users.filter(u => u.role !== 'user').map(u => (
+                    <div key={u._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><User size={16} /></div>
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 700 }}>{u.name}</p>
+                          <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>@{u.username}</p>
+                        </div>
+                      </div>
+                      <select 
+                        value={u.role} 
+                        onChange={(e) => handleUpdateUserRole(u._id, e.target.value)}
+                        style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid var(--glass-border)', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem' }}
+                      >
+                        <option value="admin">Super Admin</option>
+                        <option value="moderator">Junior Moderator</option>
+                        <option value="creator">Content Creator</option>
+                        <option value="user">Revoke Access</option>
+                      </select>
+                    </div>
+                  ))}
+                  {users.filter(u => u.role !== 'user').length === 0 && <p style={{ opacity: 0.5, textAlign: 'center', padding: '2rem' }}>No administrators currently assigned.</p>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'assets' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <Folder size={20} color="var(--accent-primary)" /> Asset Library
+                  </h3>
+                  <button className="btn-primary" style={{ padding: '0.6rem 1.2rem', gap: '0.5rem' }}><Upload size={16} /> UPLOAD ASSET</button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                  {assets.map(asset => (
+                    <div key={asset.id} className="glass-card" style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                      <div style={{ width: '100%', height: '120px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                        {asset.type.includes('image') ? <ImageIcon size={32} opacity={0.3} /> : <FileText size={32} opacity={0.3} />}
+                      </div>
+                      <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{asset.name}</p>
+                      <p style={{ margin: '0.2rem 0 0.8rem 0', fontSize: '0.7rem', color: 'var(--text-muted)' }}>{asset.size} • {asset.category}</p>
+                      <div style={{ display: 'flex', gap: '0.4rem' }}>
+                        <button className="btn-secondary" style={{ flex: 1, padding: '0.4rem', fontSize: '0.65rem' }}>PREVIEW</button>
+                        <button className="btn-secondary" style={{ flex: 1, padding: '0.4rem', fontSize: '0.65rem', color: 'var(--accent-danger)' }}>PURGE</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'tournaments' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <Trophy size={20} color="#f59e0b" /> Tournament Manager
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>TOURNAMENT TITLE</label>
+                      <input 
+                        value={newTournament.title} 
+                        onChange={e => setNewTournament({...newTournament, title: e.target.value})} 
+                        placeholder="e.g. Summer Awareness Sprint" 
+                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>PRIZE POOL (XP)</label>
+                      <input 
+                        type="number" 
+                        value={newTournament.prizePool} 
+                        onChange={e => setNewTournament({...newTournament, prizePool: parseInt(e.target.value) || 0})} 
+                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
+                      />
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(245, 158, 11, 0.03)', borderRadius: '16px', padding: '1.5rem', border: '1px solid rgba(245, 158, 11, 0.1)' }}>
+                    <p style={{ fontSize: '0.65rem', fontWeight: 900, color: '#f59e0b', marginBottom: '1rem' }}>EVENT PREVIEW</p>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      <Trophy size={32} color="#f59e0b" />
+                      <div>
+                        <h4 style={{ margin: 0 }}>{newTournament.title || 'Upcoming Event'}</h4>
+                        <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.6 }}>Duration: {newTournament.duration} Hours</p>
+                      </div>
+                    </div>
+                    <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                      <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 800 }}>Total Reward: <span style={{ color: '#f59e0b' }}>{newTournament.prizePool} XP</span></p>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={handleCreateTournament} className="btn-primary" style={{ width: '100%', marginTop: '2rem', padding: '1rem', background: '#f59e0b', color: 'black' }}>DEPLOY TOURNAMENT</button>
+              </div>
+
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Active Sprints</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {tournaments.map(t => (
+                    <div key={t._id} style={{ padding: '1.2rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span style={{ fontWeight: 800 }}>{t.title}</span>
+                        <span style={{ fontSize: '0.6rem', background: '#10b981', color: 'white', padding: '2px 6px', borderRadius: '4px' }}>LIVE</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        <Calendar size={12} /> Ends in 14h 22m
+                      </div>
+                    </div>
+                  ))}
+                  {tournaments.length === 0 && <p style={{ opacity: 0.5, textAlign: 'center', padding: '2rem' }}>No active tournaments</p>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'democracy' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <Vote size={20} color="var(--accent-primary)" /> Poll Architect
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>POLL QUESTION</label>
+                    <input 
+                      value={newPoll.question} 
+                      onChange={e => setNewPoll({...newPoll, question: e.target.value})} 
+                      placeholder="e.g. Which awareness topic should we focus on next?" 
+                      style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'white' }} 
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>OPTIONS</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                      {newPoll.options.map((opt, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input 
+                            value={opt} 
+                            onChange={e => {
+                              const newOpts = [...newPoll.options];
+                              newOpts[i] = e.target.value;
+                              setNewPoll({...newPoll, options: newOpts});
+                            }}
+                            placeholder={`Option ${i+1}`} 
+                            style={{ flex: 1, padding: '0.8rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }} 
+                          />
+                          {newPoll.options.length > 2 && (
+                            <button onClick={() => setNewPoll({...newPoll, options: newPoll.options.filter((_, idx) => idx !== i)})} style={{ color: 'var(--accent-danger)', background: 'none', border: 'none', cursor: 'pointer' }}><Minus size={16} /></button>
+                          )}
+                        </div>
+                      ))}
+                      <button onClick={() => setNewPoll({...newPoll, options: [...newPoll.options, '']})} className="btn-secondary" style={{ width: 'fit-content', padding: '0.5rem 1rem', fontSize: '0.75rem' }}><Plus size={14} /> Add Option</button>
+                    </div>
+                  </div>
+                  <button onClick={handleCreatePoll} className="btn-primary" style={{ marginTop: '1rem', padding: '1rem' }}>DEPLOY GLOBAL POLL</button>
+                </div>
+
+                <div style={{ marginTop: '3rem' }}>
+                  <h4 style={{ fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Active Polls & Sentiment</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    {polls.map(poll => (
+                      <div key={poll._id} className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                          <p style={{ margin: 0, fontWeight: 700 }}>{poll.question}</p>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{poll.options.reduce((a, b) => a + (b.votes || 0), 0)} Votes</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                          {poll.options.map((opt, i) => {
+                            const total = poll.options.reduce((a, b) => a + (b.votes || 0), 0);
+                            const percent = total > 0 ? Math.round(((opt.votes || 0) / total) * 100) : 0;
+                            return (
+                              <div key={i}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.3rem' }}>
+                                  <span>{opt.text}</span>
+                                  <span style={{ fontWeight: 800 }}>{percent}%</span>
+                                </div>
+                                <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                                  <motion.div initial={{ width: 0 }} animate={{ width: `${percent}%` }} style={{ height: '100%', background: 'var(--accent-primary)' }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="glass-card" style={{ padding: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '2rem' }}>Suggestion Box</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {suggestions.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2rem', opacity: 0.5 }}>No suggestions yet</div>
+                  ) : (
+                    suggestions.map(s => (
+                      <div key={s._id} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600 }}>"{s.text}"</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>by @{s.userName}</span>
+                          <div style={{ display: 'flex', gap: '0.4rem' }}>
+                            <button onClick={() => handleReviewSuggestion(s._id, 'approved')} className="btn-secondary" style={{ padding: '0.4rem', color: 'var(--accent-success)' }}><ThumbsUp size={14} /></button>
+                            <button onClick={() => handleReviewSuggestion(s._id, 'rejected')} className="btn-secondary" style={{ padding: '0.4rem', color: 'var(--accent-danger)' }}><ThumbsDown size={14} /></button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1170,14 +1617,65 @@ export default function AdminPage() {
 
           {activeTab === 'overview' && (
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-              <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Active Notifications</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', gap: '1rem', padding: '1rem', background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderRadius: 'var(--radius-lg)' }}>
-                    <ShieldAlert color="var(--accent-primary)" />
-                    <div>
-                      <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: isDark ? 'white' : '#0f172a' }}>Security Patch Deployed</p>
-                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Threaded comments and guide deletion APIs secured.</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <Globe size={20} color="var(--accent-primary)" /> Global Threat Map
+                  </h3>
+                  <div style={{ 
+                    height: '400px', 
+                    background: 'rgba(0,0,0,0.4)', 
+                    borderRadius: '16px', 
+                    position: 'relative', 
+                    overflow: 'hidden',
+                    border: '1px solid rgba(255,255,255,0.05)'
+                  }}>
+                    {/* Simulated World Map SVG */}
+                    <svg viewBox="0 0 1000 500" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.1, fill: 'var(--accent-primary)' }}>
+                      <path d="M150,100 Q400,50 850,100 T150,400 T150,100" opacity="0.3" fill="none" stroke="currentColor" strokeWidth="1" />
+                      <circle cx="200" cy="150" r="2" /> <circle cx="400" cy="250" r="2" /> <circle cx="700" cy="180" r="2" />
+                    </svg>
+                    
+                    {heatmapDots.map(dot => (
+                      <motion.div
+                        key={dot.id}
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: [1, 2, 1.5], opacity: [0, 1, 0.4] }}
+                        transition={{ duration: 2, repeat: Infinity, delay: Math.random() * 2 }}
+                        style={{
+                          position: 'absolute',
+                          left: `${dot.x}%`,
+                          top: `${dot.y}%`,
+                          width: '12px',
+                          height: '12px',
+                          borderRadius: '50%',
+                          background: 'var(--accent-primary)',
+                          boxShadow: '0 0 15px var(--accent-primary)',
+                          zIndex: 2
+                        }}
+                      />
+                    ))}
+
+                    <div style={{ position: 'absolute', bottom: '1.5rem', right: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)' }} /> LIVE SIMULATIONS
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-danger)' }} /> SECURITY BREACHES
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: isDark ? 'white' : '#0f172a' }}>Active Notifications</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '1rem', padding: '1rem', background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderRadius: 'var(--radius-lg)' }}>
+                      <ShieldAlert color="var(--accent-primary)" />
+                      <div>
+                        <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: isDark ? 'white' : '#0f172a' }}>Global Network Analysis</p>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Simulation traffic is currently up 14% in the last hour.</p>
+                      </div>
                     </div>
                   </div>
                 </div>
