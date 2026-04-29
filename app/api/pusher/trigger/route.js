@@ -14,7 +14,7 @@ export async function POST(req) {
   await pusherServer.trigger(channel, event, {
     ...data,
     sender: session.user.name,
-    senderId: session.user.email || session.user.id
+    senderId: session.user.id
   });
 
   return new Response(JSON.stringify({ success: true }));

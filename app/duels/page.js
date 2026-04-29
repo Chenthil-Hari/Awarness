@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Swords, Timer, Zap, Trophy, XCircle, CheckCircle2, Shield, AlertTriangle } from 'lucide-react';
+import { Swords, Timer, Zap, Trophy, XCircle, Shield } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import { useMultiplayer } from '@/hooks/useMultiplayer';
@@ -19,11 +19,10 @@ function DuelContent() {
   const opponentName = searchParams.get('opponentName') || 'Opponent';
   const urlRoom = searchParams.get('room');
   
-  // Room code is derived from both IDs to ensure they land in the same room
-  // Stable Room Code
   const myId = session?.user?.id;
+  
+  // 1. Stable Room Derivation
   const [roomCode, setRoomCode] = useState(urlRoom || '');
-
   useEffect(() => {
     if (!urlRoom && myId && opponentId) {
       const code = [myId, opponentId].sort().join('-').substring(0, 10).toUpperCase();
@@ -31,50 +30,46 @@ function DuelContent() {
     }
   }, [myId, opponentId, urlRoom]);
 
+  // 2. Multiplayer Connection
+  const { members, broadcast, on, isConnected } = useMultiplayer(roomCode, !!myId);
+
+  // 3. Game State
   const [gameState, setGameState] = useState('waiting'); // waiting, countdown, playing, result
+  const [isReady, setIsReady] = useState(false);
+  const [opponentReady, setOpponentReady] = useState(false);
+  
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [myProgress, setMyProgress] = useState(0);
   const [opponentProgress, setOpponentProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(45);
-  const [result, setResult] = useState(null); // 'win', 'loss', 'draw'
-  const [isReady, setIsReady] = useState(false);
-  const [opponentReady, setOpponentReady] = useState(false);
+  const [result, setResult] = useState(null);
 
-  const { members, broadcast, on, isConnected } = useMultiplayer(roomCode, !!myId);
-
-  // Send invitation if we are the challenger (not joining an existing room)
-  useEffect(() => {
-    // Only send invite if we are the one WHO INITIATED (no room param)
-    if (opponentId && roomCode && session?.user?.id && !urlRoom) {
-      const sendInvite = async () => {
-        try {
-          await fetch('/api/duels/invite', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ opponentId, roomCode })
-          });
-        } catch (e) {
-          console.error("Failed to send duel invite", e);
-        }
-      };
-      sendInvite();
-    }
-  }, [opponentId, roomCode, session, urlRoom]);
-
-  // Use a subset of scenarios for the duel
   const duelQuestions = survivalScenarios.slice(0, 3);
 
+  // 4. Invitation (Challenger only)
   useEffect(() => {
-    if (!isConnected || !opponentId || !roomCode) return;
+    if (opponentId && roomCode && myId && !urlRoom) {
+      console.log("Duel: Sending invite to", opponentId);
+      fetch('/api/duels/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opponentId, roomCode })
+      }).catch(e => console.error("Invite fail:", e));
+    }
+  }, [opponentId, roomCode, myId, urlRoom]);
 
-    console.log(`Duel: Listening for events in room ${roomCode}`);
+  // 5. Handshake & Events
+  useEffect(() => {
+    if (!isConnected || !opponentId) return;
+
+    console.log("Duel: Arena Active. Waiting for signals...");
 
     const offReady = on('player-ready', (data) => {
-      console.log('Duel: Received player-ready from:', data.senderId);
+      console.log("Duel: Opponent Ready Signal Received", data.senderId);
       if (data.senderId === opponentId) {
         setOpponentReady(true);
-        // If we are also ready, acknowledge back to ensure they know
-        if (isReady) broadcast('player-ready', { senderId: myId });
+        // Response handshake: If I'm already ready, tell them again to be sure
+        if (isReady) broadcast('player-ready', { status: 'ready' });
       }
     });
 
@@ -83,18 +78,16 @@ function DuelContent() {
     });
 
     const offFinished = on('duel-finished', (data) => {
-      if (data.senderId === opponentId && gameState === 'playing') {
-        finishDuel('loss');
-      }
+      if (data.senderId === opponentId && gameState === 'playing') finishDuel('loss');
     });
 
-    const offSync = on('request-sync', (data) => {
-      console.log('Duel: Received sync request from:', data.senderId);
-      if (isReady) {
-        console.log('Duel: Responding to sync with ready status');
-        broadcast('player-ready', { senderId: myId });
-      }
+    const offSync = on('request-sync', () => {
+      console.log("Duel: Sync Requested");
+      if (isReady) broadcast('player-ready', { status: 'ready' });
     });
+
+    // Auto-ping on connect
+    broadcast('request-sync', {});
 
     return () => {
       offReady();
@@ -102,55 +95,39 @@ function DuelContent() {
       offFinished();
       offSync();
     };
-  }, [isConnected, opponentId, roomCode, isReady, gameState, myId]);
+  }, [isConnected, opponentId, isReady, gameState, myId]);
 
-  // Initial Sync Request
-  useEffect(() => {
-    if (isConnected && roomCode) {
-      console.log('Duel: Connected. Broadcasting sync request...');
-      broadcast('request-sync', { senderId: myId });
-    }
-  }, [isConnected, roomCode]);
-
+  // 6. Game Start Logic
   useEffect(() => {
     if (isReady && opponentReady && gameState === 'waiting') {
+      console.log("Duel: Both players locked. Starting...");
       setGameState('countdown');
+      setTimeout(() => setGameState('playing'), 3000);
     }
-  }, [isReady, opponentReady]);
+  }, [isReady, opponentReady, gameState]);
 
-  // REMOVED: Simulation fallback for demo
-  // We want real 1v1 only now as requested
-
-  // Timer
+  // 7. Combat Mechanics
   useEffect(() => {
     let timer;
     if (gameState === 'playing' && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
+      timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (timeLeft === 0 && gameState === 'playing') {
       finishDuel('loss');
     }
     return () => clearInterval(timer);
   }, [gameState, timeLeft]);
 
-  // Check if opponent finished
-  useEffect(() => {
-    if (opponentProgress >= 100 && gameState === 'playing') {
-      finishDuel('loss');
-    }
-  }, [opponentProgress, gameState]);
-
   const handleReady = () => {
+    console.log("Duel: User clicked READY");
     setIsReady(true);
-    broadcast('player-ready', { senderId: myId });
+    broadcast('player-ready', { status: 'ready' });
   };
 
   const handleAnswer = (option) => {
     if (option.correct) {
       const newProgress = ((currentQuestion + 1) / duelQuestions.length) * 100;
       setMyProgress(newProgress);
-      broadcast('duel-progress', { progress: newProgress, senderId: myId });
+      broadcast('duel-progress', { progress: newProgress });
 
       if (currentQuestion < duelQuestions.length - 1) {
         setCurrentQuestion(prev => prev + 1);
@@ -158,17 +135,15 @@ function DuelContent() {
         finishDuel('win');
       }
     } else {
-      // Penalty: lose 5 seconds
       setTimeLeft(prev => Math.max(0, prev - 5));
     }
   };
 
   const finishDuel = async (finalResult) => {
     if (gameState !== 'playing') return;
-    
     setGameState('result');
     setResult(finalResult);
-    broadcast('duel-finished', { senderId: myId });
+    broadcast('duel-finished', {});
 
     if (finalResult === 'win') {
       try {
@@ -185,7 +160,7 @@ function DuelContent() {
         });
         update();
       } catch (e) {
-        console.error("Failed to save duel win");
+        console.error("Victory save fail:", e);
       }
     }
   };
@@ -225,7 +200,12 @@ function DuelContent() {
                 {!isReady ? (
                   <button onClick={handleReady} className="btn-primary" style={{ width: '100%', background: 'var(--accent-danger)' }}>READY TO BREACH</button>
                 ) : (
-                  <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Waiting for opponent...</p>
+                  <div style={{ color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <p style={{ fontStyle: 'italic' }}>Waiting for opponent...</p>
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }} style={{ width: '20px', height: '20px', border: '2px solid var(--accent-danger)', borderTopColor: 'transparent', borderRadius: '50%' }} />
+                    </div>
+                  </div>
                 )}
               </div>
             </BorderGlow>
@@ -233,7 +213,7 @@ function DuelContent() {
         )}
 
         {gameState === 'countdown' && (
-          <motion.div key="countdown" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} onAnimationComplete={() => setTimeout(() => setGameState('playing'), 3000)} style={{ textAlign: 'center', paddingTop: '10rem' }}>
+          <motion.div key="countdown" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} style={{ textAlign: 'center', paddingTop: '10rem' }}>
             <motion.h2 
               animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
               transition={{ repeat: 3, duration: 1 }}
@@ -246,14 +226,7 @@ function DuelContent() {
 
         {gameState === 'playing' && (
           <motion.div key="playing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ maxWidth: '1000px', margin: '2rem auto' }}>
-            {/* Progress Bars */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', 
-              gap: '2rem', 
-              alignItems: 'center', 
-              marginBottom: '3rem' 
-            }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '2rem', alignItems: 'center', marginBottom: '3rem' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: 800 }}>
                   <span>YOU</span>
@@ -264,7 +237,7 @@ function DuelContent() {
                 </div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '2rem', fontWeight: 900, color: timeLeft < 10 ? 'var(--accent-danger)' : 'var(--text-primary)' }}>{timeLeft}s</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 900, color: timeLeft < 10 ? 'var(--accent-danger)' : 'var(--text-primary)' }}>{timeLeft}s</div>
               </div>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: 800 }}>
@@ -277,19 +250,13 @@ function DuelContent() {
               </div>
             </div>
 
-            {/* Question Card */}
-            <div className="glass-card" style={{ padding: '2rem', borderRadius: '24px', border: '1px solid var(--glass-border)' }}>
+            <div className="glass-card" style={{ padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--glass-border)' }}>
               <h3 style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>{duelQuestions[currentQuestion].title}</h3>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '3rem', fontSize: '1.1rem' }}>{duelQuestions[currentQuestion].description}</p>
               
-              <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                 {duelQuestions[currentQuestion].options.map((opt, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleAnswer(opt)}
-                    className="btn-secondary"
-                    style={{ padding: '1.5rem', textAlign: 'left', background: 'var(--bg-tertiary)' }}
-                  >
+                  <button key={i} onClick={() => handleAnswer(opt)} className="btn-secondary" style={{ padding: '1.5rem', textAlign: 'left', background: 'var(--bg-tertiary)' }}>
                     {opt.text}
                   </button>
                 ))}
