@@ -111,7 +111,7 @@ export default function AdminPage() {
   const [forecast, setForecast] = useState(null);
   const [newPoll, setNewPoll] = useState({ question: '', options: ['', ''] });
   const [newTournament, setNewTournament] = useState({ title: '', prizePool: 1000, duration: 24 });
-  const [theme, setTheme] = useState('dark');
+
   const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
   const [configPoll, setConfigPoll] = useState(null);
   const [selectedCorrectOptions, setSelectedCorrectOptions] = useState([]);
@@ -173,10 +173,6 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    // Load theme from localStorage
-    const savedTheme = localStorage.getItem('admin-theme') || 'dark';
-    setTheme(savedTheme);
-
     if (session?.user?.role === 'admin') {
       fetchAdminData();
       
@@ -198,12 +194,6 @@ export default function AdminPage() {
       setLoading(false);
     }
   }, [session, status]);
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem('admin-theme', newTheme);
-  };
 
   const fetchAdminData = async () => {
     try {
@@ -759,7 +749,7 @@ export default function AdminPage() {
   };
 
 
-  const isDark = theme === 'dark';
+
 
   if (status === 'loading' || (session?.user?.role === 'admin' && loading)) {
     return <LoadingSpinner message="Authenticating Admin Access..." />;
@@ -779,19 +769,17 @@ export default function AdminPage() {
     <>
     <main style={{ 
       minHeight: '100vh', 
-      background: isDark ? 'var(--bg-main)' : '#f8fafc', 
-      color: isDark ? 'var(--text-primary)' : '#0f172a',
+      background: 'var(--bg-primary)', 
+      color: 'var(--text-primary)',
       display: 'flex'
     }}>
       <AdminCommandBar
         isOpen={isCommandBarOpen}
         onClose={() => setIsCommandBarOpen(false)}
         onNavigate={setActiveTab}
-        onToggleTheme={toggleTheme}
         onTestEmail={handleTestEmail}
         users={users}
         reports={reports}
-        currentTheme={theme}
       />
 
       {/* Fixed Vertical Sidebar */}
@@ -801,7 +789,7 @@ export default function AdminPage() {
         position: 'fixed',
         left: 0,
         top: 0,
-        background: isDark ? 'rgba(0,0,0,0.3)' : 'white',
+        background: 'rgba(255, 255, 255, 0.02)',
         borderRight: '1px solid var(--glass-border)',
         display: 'flex',
         flexDirection: 'column',

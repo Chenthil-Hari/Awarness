@@ -94,6 +94,41 @@ button {
   font-family: inherit;
 }
 
+input, textarea, select {
+  font-family: inherit;
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  transition: var(--transition-base);
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+
+[data-theme='dark'] input, 
+[data-theme='dark'] textarea, 
+[data-theme='dark'] select {
+  background-color: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] input:focus, 
+[data-theme='dark'] textarea:focus, 
+[data-theme='dark'] select:focus {
+  border-color: var(--accent-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

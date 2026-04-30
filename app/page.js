@@ -83,27 +83,6 @@ export default function Home() {
     setSelectedScenario(null);
   };
 
-  // Force Dark Mode theme for the Dashboard
-  useEffect(() => {
-    if (status === 'authenticated') {
-      const html = document.querySelector('html');
-      const originalTheme = html.getAttribute('data-theme');
-      html.setAttribute('data-theme', 'dark');
-      
-      const originalBg = document.body.style.backgroundColor;
-      document.body.style.backgroundColor = '#050101';
-      
-      return () => {
-        if (originalTheme) {
-          html.setAttribute('data-theme', originalTheme);
-        } else {
-          html.removeAttribute('data-theme');
-        }
-        document.body.style.backgroundColor = originalBg;
-      };
-    }
-  }, [status]);
-
   const level = calculateLevel(userXp);
 
   // Show landing page if not authenticated

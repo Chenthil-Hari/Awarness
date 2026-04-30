@@ -27,7 +27,7 @@ import RealTimeDuelHandler from "./components/RealTimeDuelHandler";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${outfit.variable} ${plusJakarta.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${outfit.variable} ${plusJakarta.variable}`} data-theme="dark" suppressHydrationWarning>
       <body>
         <Providers>
           <ClickSpark
