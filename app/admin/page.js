@@ -8,9 +8,12 @@ import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3,
 import AdminCommandBar from '../components/AdminCommandBar';
 import * as XLSX from 'xlsx';
 import { getPusherClient } from '@/lib/pusher';
+import { useTheme } from '../context/ThemeContext';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ users: 0, guides: 0, reports: 0 });
   const [reports, setReports] = useState([]);
