@@ -35,7 +35,7 @@ export default function ArchitectPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
 
-  const isHackerTier = (session?.user?.xp || 0) >= 3000;
+  const isHackerTier = (session?.user?.xp || 0) >= 500;
 
   if (status === 'loading') return null;
 
@@ -58,31 +58,31 @@ export default function ArchitectPage() {
             <motion.div 
               animate={{ rotate: 360 }} 
               transition={{ repeat: Infinity, duration: 10, ease: 'linear' }}
-              style={{ position: 'absolute', inset: -20, border: '2px dashed var(--accent-danger)', borderRadius: '50%', opacity: 0.3 }}
+              style={{ position: 'absolute', inset: -20, border: '2px dashed var(--accent-warning)', borderRadius: '50%', opacity: 0.3 }}
             />
-            <div style={{ width: '100px', height: '100px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--accent-danger)' }}>
-              <Lock size={48} color="var(--accent-danger)" />
+            <div style={{ width: '100px', height: '100px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--accent-warning)' }}>
+              <Lock size={48} color="var(--accent-warning)" />
             </div>
           </div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>MISSION ARCHITECT: <span style={{ color: 'var(--accent-danger)' }}>LOCKED</span></h1>
+          <h1 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>COMMUNITY CREATOR: <span style={{ color: 'var(--accent-warning)' }}>LOCKED</span></h1>
           <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', maxWidth: '600px', marginBottom: '3rem', lineHeight: 1.6 }}>
-            The Mission Architect is reserved for elite <span style={{ color: 'var(--accent-warning)', fontWeight: 800 }}>Hacker-Tier</span> operatives. 
-            Continue neutralizing threats to reach <span style={{ fontWeight: 900 }}>3,000 XP</span> and unlock the power to design the network.
+            The Architect Studio is reserved for <span style={{ color: 'var(--accent-warning)', fontWeight: 800 }}>Certified</span> operatives. 
+            Reach <span style={{ fontWeight: 900 }}>500 XP</span> to unlock the power to design and submit your own missions for the community.
           </p>
           <div style={{ background: 'var(--bg-tertiary)', padding: '1.5rem 3rem', borderRadius: 'var(--radius-xl)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: '2rem' }}>
             <div style={{ textAlign: 'left' }}>
               <p style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', margin: 0, textTransform: 'uppercase' }}>Current Progress</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0 }}>{session.user.xp} / 3000 XP</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0 }}>{session.user.xp} / 500 XP</p>
             </div>
             <div style={{ width: '150px', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
               <motion.div 
                 initial={{ width: 0 }}
-                animate={{ width: `${(session.user.xp / 3000) * 100}%` }}
-                style={{ height: '100%', background: 'var(--accent-danger)' }}
+                animate={{ width: `${(session.user.xp / 500) * 100}%` }}
+                style={{ height: '100%', background: 'var(--accent-warning)' }}
               />
             </div>
           </div>
-          <button onClick={() => window.location.href='/heist'} className="btn-primary" style={{ marginTop: '3rem', padding: '1rem 3rem' }}>Neutralize Threats</button>
+          <button onClick={() => window.location.href='/scenarios'} className="btn-primary" style={{ marginTop: '3rem', padding: '1rem 3rem' }}>Earn More XP</button>
         </div>
       </main>
     );

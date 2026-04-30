@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, RotateCcw, X, CheckCircle2, AlertTriangle, ArrowLeft, ShieldCheck, Heart, Waves, Disc, Usb, Zap, BookOpen } from 'lucide-react';
+import { ChevronRight, RotateCcw, X, CheckCircle2, AlertTriangle, ArrowLeft, ShieldCheck, Heart, Waves, Disc, Usb, Zap, BookOpen, Volume2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useSimulation } from '../hooks/useSimulation';
 import Link from 'next/link';
@@ -110,9 +110,25 @@ export default function SimulationViewer({ scenario, onExit }) {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <p style={{ fontSize: '1.1rem', lineHeight: 1.5, marginBottom: '2rem', color: 'var(--text-primary)' }}>
-                {currentStep.text}
-              </p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem' }}>
+                <p style={{ fontSize: '1.1rem', lineHeight: 1.5, margin: 0, color: 'var(--text-primary)', flex: 1 }}>
+                  {currentStep.text}
+                </p>
+                <button 
+                  onClick={() => {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(currentStep.text);
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1;
+                    window.speechSynthesis.speak(utterance);
+                  }}
+                  className="btn-secondary"
+                  style={{ padding: '0.5rem', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)', background: 'rgba(255, 255, 255, 0.05)' }}
+                  title="Read Aloud"
+                >
+                  <Volume2 size={18} />
+                </button>
+              </div>
 
               {!isComplete ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

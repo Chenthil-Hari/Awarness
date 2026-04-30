@@ -10,7 +10,7 @@ import StreakIcon from '../components/StreakIcon';
 import { 
   Trophy, Target, Zap, Clock, TrendingUp, Shield, 
   BarChart3, Calendar, ChevronRight, Edit2, Save, X, 
-  Mail, LogOut, Settings, Award, Check, AlertCircle, Camera, User, MessageSquare, Send, Bell
+  Mail, LogOut, Settings, Award, Check, AlertCircle, Camera, User, MessageSquare, Send, Bell, Users
 } from 'lucide-react';
 import { calculateLevel } from '@/lib/game';
 
@@ -399,6 +399,43 @@ export default function ProfilePage() {
               </div>
             </div>
             <p style={{ marginTop: '2rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, maxWidth: '200px' }}>Based on {totalAttempts} total decisions.</p>
+          </motion.div>
+        </div>
+
+        {/* NETWORK & SOCIAL SECTION */}
+        <div style={{ marginTop: '4rem' }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card" style={{ padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Users size={22} color="var(--accent-secondary)" /> Operative Network
+              </h3>
+              <Link href="/leaderboard" className="btn-secondary" style={{ fontSize: '0.75rem', fontWeight: 800, padding: '0.5rem 1rem' }}>FIND OPERATIVES</Link>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+              {/* Mock Friends for now, could be fetched from DB in future */}
+              {[
+                { name: 'Sentinel_01', username: 'sentinel', xp: 4500, league: 'Hacker-Tier', status: 'online' },
+                { name: 'Data_Ghost', username: 'ghost_x', xp: 2800, league: 'Gold', status: 'offline' }
+              ].map((friend, idx) => (
+                <div key={idx} style={{ padding: '1.25rem', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: `2px solid ${friend.status === 'online' ? 'var(--accent-success)' : 'var(--glass-border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 900 }}>
+                    {friend.name.charAt(0)}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800 }}>{friend.name}</h4>
+                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>@{friend.username}</p>
+                  </div>
+                  <Link 
+                    href={`/duels?opponentId=${friend.username}&opponentName=${friend.name}`} 
+                    className="btn-primary" 
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.65rem', background: 'var(--accent-danger)' }}
+                  >
+                    CHALLENGE
+                  </Link>
+                </div>
+              ))}
+            </div>
           </motion.div>
         </div>
 

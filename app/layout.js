@@ -14,6 +14,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 export const metadata = {
   title: "Awareness Pro | Simulation-Based Learning",
   description: "Master real-world challenges through interactive, scenario-driven simulations in cybersecurity, finance, and life skills.",
+  manifest: "/manifest.json",
 };
 
 import { Providers } from "./providers";
