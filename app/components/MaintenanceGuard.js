@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 export default function MaintenanceGuard({ children }) {
   const { data: session, status } = useSession();
   const [isMaintenance, setIsMaintenance] = useState(false);
+  const [maintenanceUntil, setMaintenanceUntil] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,6 +18,7 @@ export default function MaintenanceGuard({ children }) {
         if (res.ok) {
           const config = await res.json();
           setIsMaintenance(config.maintenanceMode);
+          setMaintenanceUntil(config.maintenanceUntil);
         }
       } catch (err) {
         console.error("Maintenance check failed");
@@ -26,7 +28,6 @@ export default function MaintenanceGuard({ children }) {
     };
 
     checkMaintenance();
-    // Poll every 30 seconds for state changes
     const interval = setInterval(checkMaintenance, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -35,6 +36,15 @@ export default function MaintenanceGuard({ children }) {
   const isExcluded = session?.user?.role === 'admin';
 
   if (!loading && isMaintenance && !isExcluded) {
+    const formattedDate = maintenanceUntil ? new Date(maintenanceUntil).toLocaleString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }) : 'TBD';
+
     return (
       <div style={{ 
         height: '100vh', 
@@ -48,45 +58,47 @@ export default function MaintenanceGuard({ children }) {
         textAlign: 'center',
         position: 'fixed',
         inset: 0,
-        zIndex: 99999
+        zIndex: 99999,
+        overflowY: 'auto'
       }}>
-        <div style={{ maxWidth: '600px' }}>
+        <div style={{ maxWidth: '800px', width: '100%' }}>
           <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
             style={{ marginBottom: '2rem' }}
           >
             <div style={{ 
-              width: '80px', 
-              height: '80px', 
-              background: 'rgba(124, 58, 237, 0.1)', 
-              borderRadius: '24px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              margin: '0 auto 2rem',
-              border: '1px solid var(--accent-primary)',
-              boxShadow: '0 0 30px rgba(124, 58, 237, 0.2)'
+              width: '100%',
+              maxWidth: '500px',
+              margin: '0 auto 3rem',
+              borderRadius: '24px',
+              overflow: 'hidden',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+              border: '1px solid rgba(255,255,255,0.05)'
             }}>
-              <ShieldAlert size={40} color="var(--accent-primary)" />
+              <img 
+                src="/images/freepik__talk__75941.png" 
+                alt="System Maintenance"
+                style={{ width: '100%', height: 'auto', display: 'block' }}
+              />
             </div>
             
-            <h1 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.05em' }}>
-              SYSTEM <span className="gradient-text">OFFLINE</span>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.05em' }}>
+              SYSTEM <span className="gradient-text">RECALIBRATION</span>
             </h1>
             <p style={{ color: '#94a3b8', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '2.5rem' }}>
-              The Neural Network is currently undergoing scheduled recalibration. We are optimizing security protocols to better serve the community.
+              We are currently enhancing the Neural Network to provide a more secure and immersive training experience.
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '3rem' }}>
-              <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: 900, color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Current Phase</p>
-                <p style={{ margin: '0.5rem 0 0', fontWeight: 800 }}>Core Hardening</p>
-              </div>
-              <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: 900, color: 'var(--accent-secondary)', textTransform: 'uppercase' }}>ETA</p>
-                <p style={{ margin: '0.5rem 0 0', fontWeight: 800 }}>60-90 Minutes</p>
-              </div>
+            <div style={{ 
+              padding: '2rem', 
+              background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(6, 182, 212, 0.1))', 
+              borderRadius: '24px', 
+              border: '1px solid rgba(124, 58, 237, 0.2)',
+              marginBottom: '3rem'
+            }}>
+              <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 900, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '0.75rem' }}>Estimated Return</p>
+              <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: 'white' }}>{formattedDate}</p>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', opacity: 0.5 }}>

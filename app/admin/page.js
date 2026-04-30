@@ -2099,7 +2099,14 @@ export default function AdminPage() {
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>Restrict platform access to Super Admins only.</p>
                       </div>
                       <button 
-                        onClick={() => handleUpdateConfig({ ...config, maintenanceMode: !config?.maintenanceMode })}
+                        onClick={() => {
+                          if (!config?.maintenanceMode) {
+                            const until = prompt("SYSTEM LOCKDOWN: Enter estimated end time (e.g. 2026-05-01T12:00:00):", new Date(Date.now() + 3600000).toISOString());
+                            if (until) handleUpdateConfig({ ...config, maintenanceMode: true, maintenanceUntil: until });
+                          } else {
+                            handleUpdateConfig({ ...config, maintenanceMode: false, maintenanceUntil: null });
+                          }
+                        }}
                         style={{ 
                           padding: '0.6rem 1.5rem', 
                           borderRadius: 'var(--radius-full)', 

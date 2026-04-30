@@ -8,6 +8,7 @@ export async function GET() {
     
     return Response.json({
       maintenanceMode: config?.maintenanceMode || false,
+      maintenanceUntil: config?.maintenanceUntil || null,
       registrationEnabled: config?.registrationEnabled !== false
     });
   } catch (error) {
