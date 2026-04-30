@@ -36,6 +36,7 @@ export async function POST(req) {
       { type: 'global' },
       { $set: { 
           maintenanceMode: body.maintenanceMode,
+          maintenanceUntil: body.maintenanceUntil,
           xpMultiplier: body.xpMultiplier,
           registrationEnabled: body.registrationEnabled
         } 

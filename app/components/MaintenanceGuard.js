@@ -14,7 +14,7 @@ export default function MaintenanceGuard({ children }) {
   useEffect(() => {
     const checkMaintenance = async () => {
       try {
-        const res = await fetch('/api/config/public');
+        const res = await fetch(`/api/config/public?t=${Date.now()}`);
         if (res.ok) {
           const config = await res.json();
           setIsMaintenance(config.maintenanceMode);

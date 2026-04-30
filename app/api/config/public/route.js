@@ -1,10 +1,12 @@
 import clientPromise from "@/lib/mongodb";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const client = await clientPromise;
-    const db = client.db();
-    const config = await db.collection("config").findOne({ id: "main" });
+    const db = client.db('awareness');
+    const config = await db.collection("system_config").findOne({ type: "global" });
     
     return Response.json({
       maintenanceMode: config?.maintenanceMode || false,
