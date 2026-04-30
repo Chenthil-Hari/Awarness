@@ -7,7 +7,7 @@ import Navbar from './components/Navbar';
 import ScenarioCard from './components/ScenarioCard';
 import SimulationViewer from './components/SimulationViewer';
 import { motion } from 'framer-motion';
-import { Shield, Lightbulb, TrendingUp, Users, Skull } from 'lucide-react';
+import { Shield, Lightbulb, TrendingUp, Users, Skull, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import BorderGlow from './components/BorderGlow/BorderGlow';
 import { calculateLevel } from '../lib/game';
@@ -264,6 +264,44 @@ export default function Home() {
               </div>
             </div>
           </BorderGlow>
+        </div>
+        
+        {/* Roadmap & Shop Row */}
+        <div className="grid-responsive" style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))',
+          gap: '2rem',
+          marginTop: '2rem'
+        }}>
+          {/* Roadmap Card */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', borderLeft: '4px solid var(--accent-primary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ padding: '0.75rem', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '12px' }}>
+                <TrendingUp size={24} color="var(--accent-primary)" />
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Skill Tree</p>
+                <p style={{ fontWeight: 900, fontSize: '1rem' }}>Operational Roadmap</p>
+              </div>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, margin: '1rem 0' }}>Visualize your mastery over diverse domains and unlock advanced mission specializations.</p>
+            <Link href="/roadmap" className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>VIEW PROGRESS</Link>
+          </motion.div>
+
+          {/* Shop Card */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', borderLeft: '4px solid var(--accent-warning)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ padding: '0.75rem', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '12px' }}>
+                <ShoppingBag size={24} color="var(--accent-warning)" />
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Vault</p>
+                <p style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--accent-warning)' }}>Neural Market</p>
+              </div>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, margin: '1rem 0' }}>Exchange your neutralized threat data (XP) for high-tier cosmetic enhancements and gear.</p>
+            <Link href="/shop" className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>ACCESS SHOP</Link>
+          </motion.div>
         </div>
 
         <motion.div 

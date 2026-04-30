@@ -45,6 +45,8 @@ export default function Navbar({ score = null, level = null }) {
   const navItems = [
     { label: 'Home', href: '/' },
     { label: 'Wiki', href: '/wiki' },
+    { label: 'Roadmap', href: '/roadmap' },
+    { label: 'Shop', href: '/shop' },
     { label: 'Duels', href: '/duels' },
     { label: 'Inbox', href: '/inbox' },
     { label: 'Heist', href: '/heist' },
