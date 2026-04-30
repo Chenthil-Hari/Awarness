@@ -14,21 +14,21 @@ export default function MaintenanceGuard({ children }) {
   useEffect(() => {
     const checkMaintenance = async () => {
       try {
-        const res = await fetch(`/api/config/public?t=${Date.now()}`);
+        const res = await fetch(`/api/config/public?t=${Date.now()}`, { cache: 'no-store' });
         if (res.ok) {
           const config = await res.json();
           setIsMaintenance(config.maintenanceMode);
           setMaintenanceUntil(config.maintenanceUntil);
         }
       } catch (err) {
-        console.error("Maintenance check failed");
+        console.error("Maintenance Sync Failed:", err);
       } finally {
         setLoading(false);
       }
     };
 
     checkMaintenance();
-    const interval = setInterval(checkMaintenance, 30000);
+    const interval = setInterval(checkMaintenance, 5000); // 5 second pulse
     return () => clearInterval(interval);
   }, []);
 
