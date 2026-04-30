@@ -7,7 +7,7 @@ import Navbar from './components/Navbar';
 import ScenarioCard from './components/ScenarioCard';
 import SimulationViewer from './components/SimulationViewer';
 import { motion } from 'framer-motion';
-import { Shield, Lightbulb, TrendingUp, Users, Skull, ShoppingBag } from 'lucide-react';
+import { Shield, Lightbulb, TrendingUp, Users, Skull, ShoppingBag, Eye } from 'lucide-react';
 import Link from 'next/link';
 import BorderGlow from './components/BorderGlow/BorderGlow';
 import { calculateLevel } from '../lib/game';
@@ -301,6 +301,21 @@ export default function Home() {
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, margin: '1rem 0' }}>Exchange your neutralized threat data (XP) for high-tier cosmetic enhancements and gear.</p>
             <Link href="/shop" className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>ACCESS SHOP</Link>
+          </motion.div>
+
+          {/* NEW: Deepfake Detective Card */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', borderLeft: '4px solid #f43f5e' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ padding: '0.75rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px' }}>
+                <Eye size={24} color="#f43f5e" />
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>AI Literacy</p>
+                <p style={{ fontWeight: 900, fontSize: '1rem', color: '#f43f5e' }}>Deepfake Lab</p>
+              </div>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, margin: '1rem 0' }}>Train your optical sensors to identify synthetic media and deepfake deceptions.</p>
+            <Link href="/deepfake-detective" className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>START ANALYSIS</Link>
           </motion.div>
         </div>
 

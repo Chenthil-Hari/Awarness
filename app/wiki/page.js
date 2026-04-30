@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ThumbsUp, Plus, Search, Send, X, MessageSquare, Trash2, Flag, AlertCircle, Award, Video, PlayCircle, CornerDownRight, User, Loader2 } from 'lucide-react';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
+import IntelFragment from '../components/IntelFragment';
 
 function CommentItem({ comment, onReply, isReply = false }) {
   return (
@@ -453,6 +454,14 @@ function WikiContent() {
                   <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '2rem', flex: 1 }}>
                     {guide.content}
                   </p>
+
+                  {idx === 1 && (
+                    <IntelFragment 
+                      id="intel_wiki_01" 
+                      title="Symmetry Paradox Data" 
+                      xp={150} 
+                    />
+                  )}
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
