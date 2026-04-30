@@ -2386,6 +2386,8 @@ export default function AdminPage() {
             </div>
           </motion.div>
         </div>
+      )}
+
       {/* Custom Maintenance Modal */}
       {showMaintenanceModal && (
         <div style={{
