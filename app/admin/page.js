@@ -147,6 +147,8 @@ export default function AdminPage() {
     { id: 'q2', title: 'Input Pass?', x: 250, y: 200, type: 'question' },
     { id: 'end', title: 'Success', x: 450, y: 150, type: 'outcome' }
   ]);
+  const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [tempMaintenanceUntil, setTempMaintenanceUntil] = useState('');
 
   const handleSaveScenario = async () => {
     try {
@@ -2101,8 +2103,8 @@ export default function AdminPage() {
                       <button 
                         onClick={() => {
                           if (!config?.maintenanceMode) {
-                            const until = prompt("SYSTEM LOCKDOWN: Enter estimated end time (e.g. 2026-05-01T12:00:00):", new Date(Date.now() + 3600000).toISOString());
-                            if (until) handleUpdateConfig({ ...config, maintenanceMode: true, maintenanceUntil: until });
+                            setTempMaintenanceUntil(new Date(Date.now() + 3600000).toISOString().slice(0, 16));
+                            setShowMaintenanceModal(true);
                           } else {
                             handleUpdateConfig({ ...config, maintenanceMode: false, maintenanceUntil: null });
                           }
@@ -2380,6 +2382,79 @@ export default function AdminPage() {
                 disabled={isPublishing}
               >
                 {isPublishing ? 'PROCESSING...' : 'FINALIZE & REWARD'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      {/* Custom Maintenance Modal */}
+      {showMaintenanceModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '2rem'
+        }}>
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="glass-card"
+            style={{ maxWidth: '450px', width: '100%', padding: '2.5rem', border: '1px solid var(--accent-primary)' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ padding: '0.8rem', background: 'rgba(124, 58, 237, 0.1)', borderRadius: '12px' }}>
+                <ShieldAlert size={24} color="var(--accent-primary)" />
+              </div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0 }}>LOCKDOWN SCHEDULER</h3>
+            </div>
+
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '2rem', lineHeight: 1.5 }}>
+              Enter the estimated return to operations. This timestamp will be broadcasted to all citizens.
+            </p>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <label style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', marginBottom: '0.5rem' }}>
+                Return Timestamp (ETA)
+              </label>
+              <input 
+                type="datetime-local" 
+                value={tempMaintenanceUntil}
+                onChange={(e) => setTempMaintenanceUntil(e.target.value)}
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid var(--glass-border)',
+                  padding: '1rem',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  colorScheme: 'dark'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button 
+                onClick={() => setShowMaintenanceModal(false)}
+                className="btn-secondary" 
+                style={{ flex: 1, padding: '1rem' }}
+              >
+                CANCEL
+              </button>
+              <button 
+                onClick={() => {
+                  handleUpdateConfig({ ...config, maintenanceMode: true, maintenanceUntil: new Date(tempMaintenanceUntil).toISOString() });
+                  setShowMaintenanceModal(false);
+                }}
+                className="btn-primary" 
+                style={{ flex: 2, padding: '1rem' }}
+              >
+                INITIATE LOCKDOWN
               </button>
             </div>
           </motion.div>
