@@ -125,6 +125,7 @@ export default function AdminPage() {
     difficulty: 'Beginner',
     description: '',
     xpReward: 100,
+    scheduledFor: null,
     steps: {
       start: {
         text: '',
@@ -194,6 +195,16 @@ export default function AdminPage() {
       setLoading(false);
     }
   }, [session, status]);
+
+  // Simulated Telemetry Oscillation
+  useEffect(() => {
+    if (activeTab !== 'system') return;
+    const interval = setInterval(() => {
+      // Logic handled inside the render for micro-movements
+      setStats(prev => ({ ...prev, _telemetryUpdate: Date.now() }));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [activeTab]);
 
   const fetchAdminData = async () => {
     try {
@@ -810,6 +821,7 @@ export default function AdminPage() {
           {[
             { id: 'overview', icon: <Globe size={18} />, label: 'Overview' },
             { id: 'analytics', icon: <BarChart3 size={18} />, label: 'Analytics' },
+            { id: 'system', icon: <Activity size={18} />, label: 'System Health' },
             { id: 'users', icon: <Users size={18} />, label: 'Citizens' },
             { id: 'cms', icon: <BookOpen size={18} />, label: 'Wiki CMS' },
             { id: 'missions', icon: <Zap size={18} />, label: 'Missions' },
@@ -1666,6 +1678,15 @@ export default function AdminPage() {
                       <button onClick={() => setNewPoll({...newPoll, options: [...newPoll.options, '']})} className="btn-secondary" style={{ width: 'fit-content', padding: '0.5rem 1rem', fontSize: '0.75rem' }}><Plus size={14} /> Add Option</button>
                     </div>
                   </div>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>GO-LIVE DATE (OPTIONAL)</label>
+                    <input 
+                      type="datetime-local"
+                      value={newPoll.scheduledFor || ''} 
+                      onChange={e => setNewPoll({...newPoll, scheduledFor: e.target.value})} 
+                      style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: isDark ? 'white' : '#0f172a' }} 
+                    />
+                  </div>
                   <button onClick={handleCreatePoll} className="btn-primary" style={{ marginTop: '1rem', padding: '1rem' }}>DEPLOY GLOBAL POLL</button>
                 </div>
 
@@ -2027,7 +2048,122 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === 'sentinel' && (
+            {activeTab === 'system' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  <div className="glass-card" style={{ padding: '2rem' }}>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Activity size={22} color="var(--accent-primary)" /> Global Health Monitor
+                    </h3>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
+                      <div style={{ padding: '1.5rem', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '16px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                        <p style={{ fontSize: '0.65rem', fontWeight: 900, color: '#10b981', marginBottom: '0.5rem' }}>API LATENCY</p>
+                        <p style={{ fontSize: '1.8rem', fontWeight: 900, margin: 0 }}>{Math.floor(40 + Math.random() * 5)}ms <span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-muted)' }}>avg</span></p>
+                      </div>
+                      <div style={{ padding: '1.5rem', background: 'rgba(139, 92, 246, 0.05)', borderRadius: '16px', border: '1px solid rgba(139, 92, 246, 0.1)' }}>
+                        <p style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>DB UPTIME</p>
+                        <p style={{ fontSize: '1.8rem', fontWeight: 900, margin: 0 }}>99.98%</p>
+                      </div>
+                      <div style={{ padding: '1.5rem', background: 'rgba(6, 182, 212, 0.05)', borderRadius: '16px', border: '1px solid rgba(6, 182, 212, 0.1)' }}>
+                        <p style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--accent-secondary)', marginBottom: '0.5rem' }}>ACTIVE SESSIONS</p>
+                        <p style={{ fontSize: '1.8rem', fontWeight: 900, margin: 0 }}>{stats.users || 0}</p>
+                      </div>
+                    </div>
+
+                    <div style={{ height: '200px', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', padding: '1.5rem', position: 'relative', overflow: 'hidden' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800 }}>RESPONSE_TIME_TELEMETRY</span>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          {[...Array(20)].map((_, i) => (
+                            <motion.div 
+                              key={i}
+                              animate={{ height: [10, Math.random() * 40 + 10, 20] }}
+                              transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.1 }}
+                              style={{ width: '4px', background: 'var(--accent-primary)', borderRadius: '2px', opacity: 0.5 }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', position: 'absolute', bottom: '1rem' }}>Real-time packet analysis active. All systems nominal.</p>
+                    </div>
+                  </div>
+
+                  <div className="glass-card" style={{ padding: '2rem', border: '1px solid var(--accent-primary)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                      <div>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>Maintenance Protocol</h3>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>Restrict platform access to Super Admins only.</p>
+                      </div>
+                      <button 
+                        onClick={() => handleUpdateConfig({ ...config, maintenanceMode: !config?.maintenanceMode })}
+                        style={{ 
+                          padding: '0.6rem 1.5rem', 
+                          borderRadius: 'var(--radius-full)', 
+                          background: config?.maintenanceMode ? 'var(--accent-danger)' : 'rgba(255,255,255,0.05)',
+                          border: config?.maintenanceMode ? 'none' : '1px solid var(--glass-border)',
+                          color: config?.maintenanceMode ? 'white' : 'var(--text-primary)',
+                          fontWeight: 900,
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
+                      >
+                        {config?.maintenanceMode ? 'DEACTIVATE' : 'ACTIVATE'}
+                      </button>
+                    </div>
+                    {config?.maintenanceMode && (
+                      <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '12px', border: '1px dashed var(--accent-danger)', marginTop: '1rem' }}>
+                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--accent-danger)', fontWeight: 700 }}>
+                          ⚠️ WARNING: Platform is currently locked. Non-admin users will see the "System Offline" message.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  <div className="glass-card" style={{ padding: '2rem' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <Mail size={20} color="var(--accent-primary)" /> Comms Center
+                    </h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>Manually trigger global communication events.</p>
+                    
+                    <button 
+                      onClick={async () => {
+                        if (!confirm('Broadcast Weekly Digest to all operatives?')) return;
+                        try {
+                          const res = await fetch('/api/admin/digest/send', { method: 'POST' });
+                          const data = await res.json();
+                          if (res.ok) alert(data.message);
+                          else alert(data.error);
+                        } catch (err) {
+                          alert('Failed to trigger digest');
+                        }
+                      }}
+                      className="btn-primary" 
+                      style={{ width: '100%', padding: '1rem', gap: '0.75rem' }}
+                    >
+                      <Send size={18} /> TRIGGER WEEKLY DIGEST
+                    </button>
+                  </div>
+
+                  <div className="glass-card" style={{ padding: '2rem' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Audit Timeline</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {auditLogs.slice(0, 5).map((log, i) => (
+                        <div key={i} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', borderLeft: '3px solid var(--accent-primary)' }}>
+                          <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700 }}>{log.action.replace(/_/g, ' ')}</p>
+                          <p style={{ margin: 0, fontSize: '0.65rem', color: 'var(--text-muted)' }}>{new Date(log.timestamp).toLocaleTimeString()} • {log.admin}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'sentinel' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>

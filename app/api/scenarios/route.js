@@ -8,8 +8,15 @@ export async function GET() {
     const db = client.db();
     
     // Fetch custom scenarios from database
+    const now = new Date();
     const customScenarios = await db.collection('scenarios')
-      .find({})
+      .find({
+        $or: [
+          { scheduledFor: { $exists: false } },
+          { scheduledFor: { $lte: now.toISOString() } },
+          { scheduledFor: null }
+        ]
+      })
       .sort({ createdAt: -1 })
       .toArray();
 

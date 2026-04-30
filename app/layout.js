@@ -24,25 +24,28 @@ import SupportWidget from "./components/SupportWidget";
 import ClickSpark from "./components/ClickSpark/ClickSpark";
 import MobileBottomNav from "./components/MobileBottomNav";
 import RealTimeDuelHandler from "./components/RealTimeDuelHandler";
+import MaintenanceGuard from "./components/MaintenanceGuard";
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${outfit.variable} ${plusJakarta.variable}`} data-theme="dark" suppressHydrationWarning>
       <body>
         <Providers>
-          <ClickSpark
-            sparkColor='var(--accent-primary)'
-            sparkSize={10}
-            sparkRadius={15}
-            sparkCount={8}
-            duration={400}
-          >
-            <GhostBanner />
-            {children}
-            <ChatBot />
-            <MobileBottomNav />
-            <RealTimeDuelHandler />
-          </ClickSpark>
+          <MaintenanceGuard>
+            <ClickSpark
+              sparkColor='var(--accent-primary)'
+              sparkSize={10}
+              sparkRadius={15}
+              sparkCount={8}
+              duration={400}
+            >
+              <GhostBanner />
+              {children}
+              <ChatBot />
+              <MobileBottomNav />
+              <RealTimeDuelHandler />
+            </ClickSpark>
+          </MaintenanceGuard>
         </Providers>
       </body>
     </html>

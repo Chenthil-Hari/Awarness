@@ -11,8 +11,15 @@ export async function GET(req) {
     const db = client.db();
     const pollsCollection = db.collection("polls");
 
-    // Fetch the most recent poll
-    let activePoll = await pollsCollection.findOne({}, { sort: { createdAt: -1 } });
+    // Fetch the most recent poll that is either not scheduled or has reached its scheduled time
+    const now = new Date();
+    let activePoll = await pollsCollection.findOne({
+      $or: [
+        { scheduledFor: { $exists: false } },
+        { scheduledFor: { $lte: now.toISOString() } },
+        { scheduledFor: null }
+      ]
+    }, { sort: { createdAt: -1 } });
 
     // Seed a default poll if none exist
     if (!activePoll) {
