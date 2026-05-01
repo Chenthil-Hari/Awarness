@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx';
 import { getPusherClient } from '@/lib/pusher';
 import { useTheme } from '../context/ThemeContext';
 
-export default function AdminPage() {
+function AdminPage() {
   const { data: session, status } = useSession();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
