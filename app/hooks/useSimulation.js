@@ -2,9 +2,10 @@
 
 import { useState, useCallback } from 'react';
 
-export function useSimulation(scenario) {
+export function useSimulation(scenario, initialInventory = []) {
   const [currentStepId, setCurrentStepId] = useState('start');
-  const [inventory, setInventory] = useState([]);
+  // Initialize with session inventory + any items gained during simulation
+  const [inventory, setInventory] = useState(initialInventory);
   const [history, setHistory] = useState([]);
   const [score, setScore] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
@@ -44,10 +45,10 @@ export function useSimulation(scenario) {
     setCurrentStepId('start');
     setHistory([]);
     setScore(0);
-    setInventory([]);
+    setInventory(initialInventory);
     setIsComplete(false);
     setLastFeedback(null);
-  }, []);
+  }, [initialInventory]);
 
   return {
     currentStep,

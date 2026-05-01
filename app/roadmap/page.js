@@ -9,6 +9,7 @@ import { Shield, Lock, CheckCircle2, ChevronRight, Zap, Target, BookOpen, Star, 
 import Link from 'next/link';
 
 const SKILL_NODES = [
+  // --- CYBERSECURITY PATH (CYAN) ---
   {
     id: 'sec_1',
     title: 'Phishing Awareness',
@@ -17,17 +18,8 @@ const SKILL_NODES = [
     scenarios: ['cybersecurity-phishing', 'phishing-advanced'],
     icon: <Shield size={24} />,
     description: 'Learn to identify and neutralize sophisticated email threats.',
-    position: { x: 50, y: 50 }
-  },
-  {
-    id: 'fin_1',
-    title: 'Financial Foundations',
-    domain: 'Finance',
-    xpRequired: 200,
-    scenarios: ['finance-emergency', 'budgeting-basics'],
-    icon: <Zap size={24} />,
-    description: 'Master the core principles of personal financial security.',
-    position: { x: 50, y: 250 }
+    position: { x: 80, y: 80 },
+    color: '#22d3ee'
   },
   {
     id: 'sec_2',
@@ -37,9 +29,73 @@ const SKILL_NODES = [
     scenarios: ['social-eng-1'],
     icon: <Target size={24} />,
     description: 'Protect yourself against human manipulation tactics.',
-    position: { x: 300, y: 50 },
-    parentId: 'sec_1'
+    position: { x: 320, y: 80 },
+    parentId: 'sec_1',
+    color: '#22d3ee'
   },
+  {
+    id: 'sec_3',
+    title: 'Deepfake Detective',
+    domain: 'Cybersecurity',
+    xpRequired: 1200,
+    scenarios: ['deepfake-analysis'],
+    icon: <BookOpen size={24} />,
+    description: 'Train your optical sensors to identify synthetic media.',
+    position: { x: 560, y: 80 },
+    parentId: 'sec_2',
+    color: '#22d3ee'
+  },
+  {
+    id: 'sec_4',
+    title: 'Zero-Day Defense',
+    domain: 'Cybersecurity',
+    xpRequired: 2500,
+    scenarios: ['network-breach-response'],
+    icon: <Skull size={24} />,
+    description: 'Elite-level mitigation of previously unknown vulnerabilities.',
+    position: { x: 800, y: 80 },
+    parentId: 'sec_3',
+    color: '#f43f5e'
+  },
+
+  // --- FINANCE PATH (GOLD) ---
+  {
+    id: 'fin_1',
+    title: 'Financial Foundations',
+    domain: 'Finance',
+    xpRequired: 200,
+    scenarios: ['finance-emergency', 'budgeting-basics'],
+    icon: <Zap size={24} />,
+    description: 'Master the core principles of personal financial security.',
+    position: { x: 80, y: 320 },
+    color: '#fbbf24'
+  },
+  {
+    id: 'fin_2',
+    title: 'Investment Risk',
+    domain: 'Finance',
+    xpRequired: 1000,
+    scenarios: ['market-volatility'],
+    icon: <TrendingUp size={24} />,
+    description: 'Navigate high-stakes market scenarios without losing capital.',
+    position: { x: 320, y: 320 },
+    parentId: 'fin_1',
+    color: '#fbbf24'
+  },
+  {
+    id: 'fin_3',
+    title: 'Crypto Security',
+    domain: 'Finance',
+    xpRequired: 2000,
+    scenarios: ['wallet-security'],
+    icon: <Lock size={24} />,
+    description: 'Advanced protection for decentralized assets and private keys.',
+    position: { x: 560, y: 320 },
+    parentId: 'fin_2',
+    color: '#fbbf24'
+  },
+
+  // --- LIFE SKILLS PATH (ROSE) ---
   {
     id: 'life_1',
     title: 'Emergency Response',
@@ -48,19 +104,21 @@ const SKILL_NODES = [
     scenarios: ['fire-safety-kitchen'],
     icon: <Shield size={24} />,
     description: 'Critical skills for handling real-world physical emergencies.',
-    position: { x: 300, y: 250 },
-    parentId: 'fin_1'
+    position: { x: 320, y: 520 },
+    parentId: 'fin_1',
+    color: '#f43f5e'
   },
   {
-    id: 'sec_3',
-    title: 'Encryption Expert',
-    domain: 'Cybersecurity',
-    xpRequired: 1500,
-    scenarios: ['encryption-basics'],
-    icon: <Star size={24} />,
-    description: 'Advanced data protection and cryptographic protocols.',
-    position: { x: 550, y: 50 },
-    parentId: 'sec_2'
+    id: 'life_2',
+    title: 'Crisis Negotiation',
+    domain: 'Life Skills',
+    xpRequired: 1800,
+    scenarios: ['de-escalation-tactics'],
+    icon: <Users size={24} />,
+    description: 'Master the art of psychological de-escalation in high-pressure conflicts.',
+    position: { x: 560, y: 520 },
+    parentId: 'life_1',
+    color: '#f43f5e'
   }
 ];
 
@@ -100,21 +158,61 @@ export default function RoadmapPage() {
         }}>
           {/* SVG Lines */}
           <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}>
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
             {SKILL_NODES.filter(n => n.parentId).map(node => {
               const parent = SKILL_NODES.find(p => p.id === node.parentId);
               const isUnlocked = userXp >= node.xpRequired;
+              
+              // Create a curved Bezier path
+              const startX = parent.position.x + 40;
+              const startY = parent.position.y + 40;
+              const endX = node.position.x + 40;
+              const endY = node.position.y + 40;
+              
+              const midX = (startX + endX) / 2;
+              const pathData = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+
               return (
-                <line 
-                  key={`${parent.id}-${node.id}`}
-                  x1={`${parent.position.x + 40}`} 
-                  y1={`${parent.position.y + 40}`} 
-                  x2={`${node.position.x + 40}`} 
-                  y2={`${node.position.y + 40}`} 
-                  stroke={isUnlocked ? 'var(--accent-primary)' : 'var(--glass-border)'}
-                  strokeWidth="2"
-                  strokeDasharray={isUnlocked ? "0" : "5,5"}
-                  style={{ transition: 'all 0.5s ease' }}
-                />
+                <g key={`${parent.id}-${node.id}`}>
+                  <path 
+                    d={pathData}
+                    fill="none"
+                    stroke={isUnlocked ? (node.color || 'var(--accent-primary)') : 'var(--glass-border)'}
+                    strokeWidth={isUnlocked ? "3" : "2"}
+                    strokeOpacity={isUnlocked ? "0.6" : "0.3"}
+                    strokeDasharray={isUnlocked ? "0" : "5,5"}
+                    style={{ transition: 'all 0.5s ease' }}
+                    filter={isUnlocked ? "url(#glow)" : "none"}
+                  />
+                  {isUnlocked && (
+                    <motion.path
+                      d={pathData}
+                      fill="none"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ 
+                        pathLength: [0, 1], 
+                        opacity: [0, 1, 0],
+                        pathOffset: [0, 1]
+                      }}
+                      transition={{ 
+                        duration: 3, 
+                        repeat: Infinity, 
+                        ease: "linear" 
+                      }}
+                    />
+                  )}
+                </g>
               );
             })}
           </svg>
@@ -138,14 +236,14 @@ export default function RoadmapPage() {
                   height: '80px',
                   borderRadius: '20px',
                   background: isUnlocked ? 'var(--bg-tertiary)' : 'rgba(15, 23, 42, 0.8)',
-                  border: `2px solid ${isUnlocked ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
+                  border: `2px solid ${isUnlocked ? (node.color || 'var(--accent-primary)') : 'var(--glass-border)'}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
                   zIndex: 1,
-                  boxShadow: isUnlocked ? '0 0 20px rgba(139, 92, 246, 0.2)' : 'none',
-                  color: isUnlocked ? 'var(--accent-primary)' : 'var(--text-muted)'
+                  boxShadow: isUnlocked ? `0 0 20px ${node.color}33` : 'none',
+                  color: isUnlocked ? (node.color || 'var(--accent-primary)') : 'var(--text-muted)'
                 }}
                 whileHover={{ scale: 1.1, zIndex: 10 }}
               >
@@ -184,7 +282,7 @@ export default function RoadmapPage() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                  <span style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--accent-primary)', letterSpacing: '2px' }}>{selectedNode.domain}</span>
+                  <span style={{ fontSize: '0.65rem', fontWeight: 900, color: selectedNode.color || 'var(--accent-primary)', letterSpacing: '2px' }}>{selectedNode.domain}</span>
                   <button onClick={() => setSelectedNode(null)} style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>DISMISS</button>
                 </div>
 
@@ -205,8 +303,8 @@ export default function RoadmapPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {selectedNode.scenarios.map(sId => (
                       <div key={sId} style={{ padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--glass-border)', fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>{sId}</span>
-                        <ChevronRight size={14} color="var(--accent-primary)" />
+                        <span>{sId.replace(/-/g, ' ').toUpperCase()}</span>
+                        <ChevronRight size={14} color={selectedNode.color || "var(--accent-primary)"} />
                       </div>
                     ))}
                   </div>

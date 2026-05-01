@@ -10,40 +10,58 @@ import BorderGlow from '../components/BorderGlow/BorderGlow';
 
 const SHOP_ITEMS = [
   {
-    id: 'frame_neon',
-    name: 'Neon Pulsar Frame',
-    description: 'A vibrant, animated neon border for your profile avatar.',
-    price: 500,
-    category: 'Avatar',
-    icon: <Palette size={24} />,
-    color: '#06b6d4'
-  },
-  {
-    id: 'badge_elite',
-    name: 'Elite Sentinel Badge',
-    description: 'Exclusive badge displayed next to your name on leaderboards.',
-    price: 1200,
-    category: 'Badge',
+    id: 'item_extinguisher',
+    name: 'Class-K Extinguisher',
+    description: 'Essential gear for the "Kitchen Crisis". Prevents critical failure in grease fire scenarios.',
+    price: 450,
+    category: 'Tactical',
     icon: <Shield size={24} />,
-    color: '#8b5cf6'
+    color: '#f43f5e'
   },
   {
-    id: 'theme_ghost',
-    name: 'Ghost Protocol Mode',
-    description: 'Unlock a specialized stealth-themed dashboard interface.',
-    price: 2500,
-    category: 'Theme',
+    id: 'item_yubikey',
+    name: 'Hardware Security Key',
+    description: 'Neural-link protection. Automatically detects 100% of basic phishing links in Live Drills.',
+    price: 800,
+    category: 'Cyber-Gear',
+    icon: <Lock size={24} />,
+    color: '#22d3ee'
+  },
+  {
+    id: 'item_first_aid',
+    name: 'Tactical Med-Kit',
+    description: 'Includes trauma supplies for "Emergency Response" scenarios. Increases success probability.',
+    price: 500,
+    category: 'Life-Skills',
+    icon: <Heart size={24} />,
+    color: '#10b981'
+  },
+  {
+    id: 'item_privacy_filter',
+    name: 'Neural Privacy Screen',
+    description: 'Reduces the visibility of "Social Engineering" threats by 40% during surveillance missions.',
+    price: 600,
+    category: 'Tactical',
     icon: <Ghost size={24} />,
     color: '#94a3b8'
   },
   {
-    id: 'xp_boost_small',
-    name: '2x XP Multiplier (1h)',
-    description: 'Double all XP earned from scenarios for the next hour.',
-    price: 300,
-    category: 'Boost',
+    id: 'theme_hacker',
+    name: 'Terminal Zero Theme',
+    description: 'A full-system overhaul with a high-fidelity "Black & Green" matrix aesthetic.',
+    price: 2000,
+    category: 'Interface',
+    icon: <Palette size={24} />,
+    color: '#10b981'
+  },
+  {
+    id: 'xp_boost_elite',
+    name: 'Neural Optimizer (24h)',
+    description: 'Advanced data processing. Grants a 2.5x XP multiplier for all successfully neutralized threats.',
+    price: 1500,
+    category: 'Neural',
     icon: <Zap size={24} />,
-    color: '#f59e0b'
+    color: '#fbbf24'
   }
 ];
 

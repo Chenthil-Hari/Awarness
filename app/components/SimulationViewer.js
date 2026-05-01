@@ -9,6 +9,16 @@ import Link from 'next/link';
 
 export default function SimulationViewer({ scenario, onExit }) {
   const { data: session, update } = useSession();
+  
+  // Map technical shop IDs to scenario item names
+  const mappedInventory = (session?.user?.inventory || []).map(id => {
+    if (id === 'item_extinguisher') return 'Fire Extinguisher';
+    if (id === 'item_yubikey') return 'Hardware Security Key';
+    if (id === 'item_first_aid') return 'First Aid Kit';
+    if (id === 'item_privacy_filter') return 'Privacy Filter';
+    return id;
+  });
+
   const {
     currentStep,
     score,
@@ -17,7 +27,7 @@ export default function SimulationViewer({ scenario, onExit }) {
     lastFeedback,
     makeDecision,
     reset
-  } = useSimulation(scenario);
+  } = useSimulation(scenario, mappedInventory);
 
   useEffect(() => {
     if (isComplete && !currentStep.failed) {
