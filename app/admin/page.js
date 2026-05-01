@@ -256,11 +256,17 @@ function AdminPage() {
   const handleVoiceCommand = (transcript) => {
     const cmd = transcript.toLowerCase().trim();
     setVoiceTranscript(transcript);
-    logActivity(`Buddy Heard: "${transcript}"`);
+    logActivity(`[SENTINEL_SCAN] Transcript: "${transcript}"`);
     
-    // Improved wake word detection
-    const isBuddyCalled = cmd.includes('buddy') || cmd.includes('hey body') || cmd.includes('hey butty');
-    if (!isBuddyCalled) return;
+    // Echo back to terminal for debug
+    console.log("Buddy received:", transcript);
+
+    const isBuddyCalled = cmd.includes('buddy') || cmd.includes('body') || cmd.includes('butty') || cmd.includes('buddy') || cmd.includes('buddie');
+    
+    if (!isBuddyCalled) {
+      logActivity("DEBUG: Wake-word 'Buddy' not detected in transcript.");
+      return;
+    }
 
     // Command Logic with Fuzzy/Keyword Matching
     if (cmd.includes('lockdown') || cmd.includes('maintenance') || cmd.includes('offline') || cmd.includes('close')) {
@@ -294,23 +300,31 @@ function AdminPage() {
 
   const toggleNeuralLink = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return alert("Neural Link requires a modern browser uplink.");
+    if (!SpeechRecognition) {
+      logActivity("CRITICAL_ERROR: SPEECH_API_NOT_SUPPORTED");
+      return alert("Your browser does not support the Neural Link (Speech API). Please use Chrome or Edge.");
+    }
 
     if (isListening) {
       setIsListening(false);
       if (window.recognitionInstance) window.recognitionInstance.stop();
+      logActivity("NEURAL_LINK: UPLINK_MANUALLY_TERMINATED");
       return;
     }
 
+    logActivity("NEURAL_LINK: INITIATING_DEEP_SCAN...");
     const recognition = new SpeechRecognition();
-    recognition.continuous = true; // KEEP LISTENING LIKE JARVIS
-    recognition.interimResults = true; // PROCESS AS YOU SPEAK
-    recognition.lang = 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    
+    // Auto-detect or fallback locale
+    recognition.lang = navigator.language || 'en-US';
+    logActivity(`SYNCHRONIZING_LOCALE: ${recognition.lang}`);
 
     recognition.onstart = () => {
       setIsListening(true);
-      logActivity("JARVIS_UPLINK: ACTIVE");
-      sentinelSpeak("Neural link established. I'm listening, Commander.");
+      logActivity("JARVIS_UPLINK: ACTIVE_AND_LISTENING");
+      sentinelSpeak("Neural link established. At your service, Commander.");
     };
 
     recognition.onresult = (event) => {
@@ -326,25 +340,30 @@ function AdminPage() {
     };
 
     recognition.onend = () => {
-      // Automatic Restart if Buddy is still "active"
       if (isListening) {
+        logActivity("NEURAL_LINK: RECONNECTING...");
         try { recognition.start(); } catch(e) {}
-      } else {
-        logActivity("JARVIS_UPLINK: TERMINATED");
       }
     };
 
     recognition.onerror = (event) => {
-      if (event.error === 'no-speech') return; // Ignore silence
       logActivity(`JARVIS_ERROR: ${event.error.toUpperCase()}`);
-      if (event.error === 'not-allowed') {
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         setIsListening(false);
-        alert("Microphone access denied. Uplink failed.");
+        sentinelSpeak("Commander, I'm being blocked. Please authorize microphone access in your browser settings.");
+        alert("CRITICAL: Microphone access is BLOCKED by your browser. Please click the lock icon in your address bar and allow 'Microphone'.");
+      } else if (event.error === 'network') {
+        sentinelSpeak("Network interference detected. The neural link requires a stable connection.");
       }
     };
 
     window.recognitionInstance = recognition;
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (err) {
+      logActivity("NEURAL_LINK: START_FAILURE");
+      console.error(err);
+    }
   };
 
   const fetchAdminData = async () => {
