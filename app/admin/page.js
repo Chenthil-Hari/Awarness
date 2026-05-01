@@ -142,6 +142,7 @@ function AdminPage() {
       fail: { text: 'Unfortunate. Try again!', isFinal: true, failed: true }
     }
   });
+  const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   const [nodes, setNodes] = useState([
     { id: 'start', title: 'Phishing Hook', x: 50, y: 150, type: 'trigger' },
@@ -752,6 +753,35 @@ function AdminPage() {
     }
   };
 
+  const handleBulkReward = async () => {
+    if (selectedUsers.length === 0) return alert('No citizens selected');
+    const amountStr = prompt(`Grant XP to ${selectedUsers.length} selected citizens:`, 100);
+    if (!amountStr) return;
+    const xpAmount = parseInt(amountStr);
+    if (isNaN(xpAmount)) return alert("Invalid XP amount");
+
+    const reason = prompt("Enter reason for bulk reward:", "Bulk Commendation");
+    if (!reason) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/users/reward-bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: selectedUsers, xpAmount, reason })
+      });
+      if (res.ok) {
+        alert(`Successfully rewarded ${selectedUsers.length} citizens!`);
+        setSelectedUsers([]);
+        fetchAdminData();
+      }
+    } catch (error) {
+      alert('Bulk reward failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleExportUsers = () => {
     try {
       const exportData = users.map(user => ({
@@ -1032,70 +1062,103 @@ function AdminPage() {
           )}
 
           {activeTab === 'users' && (
-            <div className="glass-card" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden', background: isDark ? 'var(--glass-bg)' : 'white' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ background: isDark ? 'var(--bg-tertiary)' : '#f1f5f9', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.05)' }}>
-                    <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>CITIZEN</th>
-                    <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>USERNAME</th>
-                    <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>EXPERIENCE (XP)</th>
-                    <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>ROLE</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map(user => (
-                    <tr key={user._id} style={{ borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.05)' }}>
-                      <td style={{ padding: '1.2rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isDark ? 'var(--bg-tertiary)' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <User size={16} />
-                          </div>
-                          <div>
-                            <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: isDark ? 'white' : '#0f172a' }}>{user.name}</p>
-                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '1.2rem', fontWeight: 600, color: isDark ? 'white' : '#475569' }}>@{user.username}</td>
-                      <td style={{ padding: '1.2rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, color: isDark ? 'white' : '#0f172a' }}>
-                          <ArrowUpRight size={16} color="var(--accent-success)" />
-                          {user.xp} XP
-                        </div>
-                      </td>
-                      <td style={{ padding: '1.2rem' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <span style={{
-                            padding: '0.3rem 0.8rem', borderRadius: 'var(--radius-full)', fontSize: '0.7rem', fontWeight: 800,
-                            background: user.role === 'admin' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-                            color: user.role === 'admin' ? 'var(--accent-primary)' : 'var(--text-muted)'
-                          }}>
-                            {user.role?.toUpperCase() || 'USER'}
-                          </span>
-                          {user.role !== 'admin' && (
-                            <div style={{ display: 'flex', gap: '0.4rem' }}>
-                              <button
-                                onClick={() => handleRewardUser(user._id)}
-                                title="Grant Custom Reward"
-                                style={{ color: 'var(--accent-success)', opacity: 0.8 }}
-                              >
-                                <Zap size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleImpersonate(user._id, user.username)}
-                                title="Ghost Mode (Impersonate)"
-                                style={{ color: 'var(--accent-secondary)', opacity: 0.6 }}
-                              >
-                                <Ghost size={16} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </td>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isDark ? 'rgba(124, 58, 237, 0.05)' : '#f1f5f9', padding: '1rem 1.5rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700 }}>{selectedUsers.length} CITIZENS SELECTED</p>
+                  {selectedUsers.length > 0 && (
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={handleBulkReward} className="btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', gap: '0.4rem' }}><Zap size={14} /> BULK REWARD</button>
+                      <button onClick={() => setSelectedUsers([])} className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>CLEAR</button>
+                    </div>
+                  )}
+                </div>
+                <button onClick={handleExportUsers} className="btn-secondary" style={{ padding: '0.6rem 1.2rem', gap: '0.5rem' }}>
+                   <Download size={18} /> EXCEL REPORT
+                </button>
+              </div>
+
+              <div className="glass-card" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ background: isDark ? 'var(--bg-tertiary)' : '#f1f5f9', borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.05)' }}>
+                      <th style={{ padding: '1.2rem', width: '40px' }}>
+                        <input 
+                          type="checkbox" 
+                          onChange={(e) => setSelectedUsers(e.target.checked ? users.map(u => u._id) : [])}
+                          checked={selectedUsers.length === users.length && users.length > 0}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </th>
+                      <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>CITIZEN</th>
+                      <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>USERNAME</th>
+                      <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>EXPERIENCE (XP)</th>
+                      <th style={{ padding: '1.2rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>ROLE</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {users.map(user => (
+                      <tr key={user._id} style={{ borderBottom: isDark ? '1px solid var(--glass-border)' : '1px solid rgba(0,0,0,0.05)', background: selectedUsers.includes(user._id) ? 'rgba(124, 58, 237, 0.05)' : 'transparent' }}>
+                        <td style={{ padding: '1.2rem' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedUsers.includes(user._id)}
+                            onChange={() => setSelectedUsers(prev => prev.includes(user._id) ? prev.filter(id => id !== user._id) : [...prev, user._id])}
+                            style={{ cursor: 'pointer' }}
+                          />
+                        </td>
+                        <td style={{ padding: '1.2rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isDark ? 'var(--bg-tertiary)' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <User size={16} />
+                            </div>
+                            <div>
+                              <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: isDark ? 'white' : '#0f172a' }}>{user.name}</p>
+                              <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '1.2rem', fontWeight: 600, color: isDark ? 'white' : '#475569' }}>@{user.username}</td>
+                        <td style={{ padding: '1.2rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, color: isDark ? 'white' : '#0f172a' }}>
+                            <ArrowUpRight size={16} color="var(--accent-success)" />
+                            {user.xp} XP
+                          </div>
+                        </td>
+                        <td style={{ padding: '1.2rem' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <span style={{
+                              padding: '0.3rem 0.8rem', borderRadius: 'var(--radius-full)', fontSize: '0.7rem', fontWeight: 800,
+                              background: user.role === 'admin' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                              color: user.role === 'admin' ? 'var(--accent-primary)' : 'var(--text-muted)'
+                            }}>
+                              {user.role?.toUpperCase() || 'USER'}
+                            </span>
+                            {user.role !== 'admin' && (
+                              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                <button
+                                  onClick={() => handleRewardUser(user._id)}
+                                  title="Grant Custom Reward"
+                                  style={{ color: 'var(--accent-success)', opacity: 0.8 }}
+                                >
+                                  <Zap size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleImpersonate(user._id, user.username)}
+                                  title="Ghost Mode (Impersonate)"
+                                  style={{ color: 'var(--accent-secondary)', opacity: 0.6 }}
+                                >
+                                  <Ghost size={16} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
@@ -1549,8 +1612,8 @@ function AdminPage() {
           )}
 
           {activeTab === 'designer' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              <div className="glass-card" style={{ padding: '2rem', height: '600px', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', height: '650px', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', position: 'relative', zIndex: 10 }}>
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <Workflow size={20} color="var(--accent-primary)" /> Simulation Flow Designer
@@ -1567,7 +1630,7 @@ function AdminPage() {
                   {nodes.map((node, i) => i < nodes.length - 1 && (
                     <line 
                       key={i} 
-                      x1={node.x + 100} y1={node.y + 30} 
+                      x1={node.x + 90} y1={node.y + 30} 
                       x2={nodes[i+1].x} y2={nodes[i+1].y + 30} 
                       stroke="var(--accent-primary)" strokeWidth="2" strokeDasharray="5,5" opacity="0.3" 
                     />
@@ -1589,13 +1652,13 @@ function AdminPage() {
                       width: '180px',
                       padding: '1rem',
                       background: isDark ? 'rgba(10, 10, 11, 0.95)' : 'white',
-                      border: `1px solid ${selectedNode === node.id ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
+                      border: `1px solid ${selectedNode?.id === node.id ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
                       borderRadius: '12px',
                       cursor: 'grab',
-                      boxShadow: selectedNode === node.id ? '0 0 20px rgba(124, 58, 237, 0.3)' : '0 10px 25px rgba(0,0,0,0.2)',
-                      zIndex: selectedNode === node.id ? 100 : 1
+                      boxShadow: selectedNode?.id === node.id ? '0 0 20px rgba(124, 58, 237, 0.3)' : '0 10px 25px rgba(0,0,0,0.2)',
+                      zIndex: selectedNode?.id === node.id ? 100 : 1
                     }}
-                    onClick={() => setSelectedNode(node.id)}
+                    onClick={() => setSelectedNode(node)}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: node.type === 'trigger' ? '#f59e0b' : node.type === 'outcome' ? '#10b981' : 'var(--accent-primary)' }} />
@@ -1608,10 +1671,63 @@ function AdminPage() {
                 <div style={{ position: 'absolute', bottom: '2rem', left: '2rem', background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)', zIndex: 10 }}>
                   <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>Node Controls</p>
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    <button className="btn-secondary" style={{ padding: '0.4rem' }}><Plus size={14} /></button>
-                    <button className="btn-secondary" style={{ padding: '0.4rem' }}><Trash2 size={14} /></button>
+                    <button onClick={() => {
+                      const id = `node_${Date.now()}`;
+                      setNodes([...nodes, { id, title: 'New Interaction', x: 100, y: 100, type: 'question' }]);
+                    }} className="btn-secondary" style={{ padding: '0.4rem' }}><Plus size={14} /></button>
+                    <button onClick={() => {
+                      if (selectedNode) setNodes(nodes.filter(n => n.id !== selectedNode.id));
+                      setSelectedNode(null);
+                    }} className="btn-secondary" style={{ padding: '0.4rem' }}><Trash2 size={14} /></button>
                   </div>
                 </div>
+              </div>
+
+              {/* NODE PROPERTIES PANEL */}
+              <div className="glass-card" style={{ padding: '1.5rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <h4 style={{ fontSize: '0.9rem', fontWeight: 900, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Settings size={16} /> NODE PROPERTIES
+                </h4>
+                {selectedNode ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>LABEL</label>
+                      <input 
+                        value={selectedNode.title} 
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNodes(nodes.map(n => n.id === selectedNode.id ? { ...n, title: val } : n));
+                          setSelectedNode({ ...selectedNode, title: val });
+                        }}
+                        style={{ width: '100%', padding: '0.6rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '0.8rem' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>LOGIC TYPE</label>
+                      <select 
+                        value={selectedNode.type}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNodes(nodes.map(n => n.id === selectedNode.id ? { ...n, type: val } : n));
+                          setSelectedNode({ ...selectedNode, type: val });
+                        }}
+                        style={{ width: '100%', padding: '0.6rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '0.8rem' }}
+                      >
+                        <option value="trigger">Trigger</option>
+                        <option value="question">Question</option>
+                        <option value="outcome">Outcome</option>
+                      </select>
+                    </div>
+                    <div style={{ padding: '1rem', background: 'rgba(124, 58, 237, 0.1)', borderRadius: '8px', border: '1px dashed var(--accent-primary)' }}>
+                      <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 800 }}>PRO TIP:</p>
+                      <p style={{ margin: '0.2rem 0 0', fontSize: '0.65rem', opacity: 0.6 }}>Drag the node in the designer to adjust visual positioning.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                    <p>Select a node to edit its properties.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -2201,7 +2317,77 @@ function AdminPage() {
             </div>
           )}
 
-            {activeTab === 'system' && (
+          {activeTab === 'analytics' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+                <div className="glass-card" style={{ padding: '2rem' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Brain size={22} color="var(--accent-primary)" /> Neural Risk Matrix
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1.5rem' }}>
+                    {users.slice(0, 8).map((user, i) => {
+                      const risk = Math.floor(Math.random() * 100);
+                      const color = risk > 70 ? '#ef4444' : risk > 40 ? '#f59e0b' : '#10b981';
+                      return (
+                        <div key={user._id} className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', border: `1px solid ${color}33`, textAlign: 'center' }}>
+                          <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: `${color}11`, margin: '0 auto 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${color}44` }}>
+                            <User size={20} color={color} />
+                          </div>
+                          <p style={{ margin: 0, fontWeight: 800, fontSize: '0.85rem' }}>@{user.username}</p>
+                          <p style={{ margin: '0.2rem 0 1rem', fontSize: '0.65rem', color: 'var(--text-muted)' }}>ID: {user._id.slice(-6)}</p>
+                          <div style={{ fontSize: '1.2rem', fontWeight: 900, color: color }}>{risk}%</div>
+                          <p style={{ margin: 0, fontSize: '0.55rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.5 }}>Vulnerability Score</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="glass-card" style={{ padding: '2rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Platform KPIs</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+                        <span>Global Resilience</span>
+                        <span style={{ color: 'var(--accent-success)', fontWeight: 800 }}>88.4%</span>
+                      </div>
+                      <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                        <motion.div initial={{ width: 0 }} animate={{ width: '88.4%' }} style={{ height: '100%', background: 'var(--accent-success)' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+                        <span>Threat Neutralization</span>
+                        <span style={{ color: 'var(--accent-primary)', fontWeight: 800 }}>1,442</span>
+                      </div>
+                      <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                        <motion.div initial={{ width: 0 }} animate={{ width: '65%' }} style={{ height: '100%', background: 'var(--accent-primary)' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '2.5rem', padding: '1.5rem', background: 'rgba(124, 58, 237, 0.05)', borderRadius: '16px', border: '1px solid rgba(124, 58, 237, 0.1)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1rem' }}>
+                      <Activity size={20} color="var(--accent-primary)" />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 900 }}>SYSTEM PULSE</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '40px' }}>
+                      {[...Array(12)].map((_, i) => (
+                        <motion.div 
+                          key={i}
+                          animate={{ height: [15, 40, 20] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: i * 0.1 }}
+                          style={{ flex: 1, background: 'var(--accent-primary)', borderRadius: '2px', opacity: 0.3 }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'system' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                   <div className="glass-card" style={{ padding: '2rem' }}>
