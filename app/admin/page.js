@@ -172,58 +172,6 @@ function AdminPage() {
     }
   };
 
-  const handleCreatePoll = async () => {
-    try {
-      const res = await fetch('/api/admin/polls', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: newPoll.question,
-          options: newPoll.options.map(o => ({ text: o, votes: 0 })),
-          scheduledFor: newPoll.scheduledFor
-        })
-      });
-      if (res.ok) {
-        setNewPoll({ question: '', options: ['', ''] });
-        fetchAdminData();
-      }
-    } catch (err) {
-      console.error('Failed to create poll');
-    }
-  };
-
-  const handlePublishPoll = async (id) => {
-    try {
-      await fetch(`/api/admin/polls/${id}/publish`, { method: 'POST' });
-      fetchAdminData();
-    } catch (err) {
-      console.error('Failed to publish poll');
-    }
-  };
-
-  const handleDeletePoll = async (id) => {
-    if (!confirm('Permanent deletion authorized?')) return;
-    try {
-      await fetch(`/api/admin/polls/${id}`, { method: 'DELETE' });
-      fetchAdminData();
-    } catch (err) {
-      console.error('Failed to delete poll');
-    }
-  };
-
-  const handleReviewSuggestion = async (id, status) => {
-    try {
-      await fetch(`/api/admin/suggestions/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      });
-      fetchAdminData();
-    } catch (err) {
-      console.error('Failed to review suggestion');
-    }
-  };
-
   useEffect(() => {
     // Command Bar Listener (Ctrl + K)
     const handleKeyDown = (e) => {
