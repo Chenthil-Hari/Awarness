@@ -257,28 +257,29 @@ function AdminPage() {
     const cmd = transcript.toLowerCase();
     setVoiceTranscript(transcript);
     
-    if (!cmd.includes('sentinel')) return;
+    // Wake word check for "Buddy"
+    if (!cmd.includes('buddy')) return;
 
     if (cmd.includes('lockdown') || cmd.includes('maintenance')) {
-      sentinelSpeak("Acknowledge. Initiating platform lockdown protocol.");
+      sentinelSpeak("Acknowledge. Initiating platform lockdown protocol, Buddy style.");
       setTempMaintenanceUntil(new Date(Date.now() + 3600000).toISOString().slice(0, 16));
       setShowMaintenanceModal(true);
     } else if (cmd.includes('reward') || cmd.includes('grant')) {
-      sentinelSpeak("Confirming operative commendation. Please specify quantity in the command relay.");
+      sentinelSpeak("Buddy's on it. Operative commendation confirmed. Just tell me how much XP.");
       setActiveTab('users');
     } else if (cmd.includes('status') || cmd.includes('overview')) {
-      sentinelSpeak(`Status Report: System nominal. ${stats.users} citizens active. ${reports.length} pending reports.`);
+      sentinelSpeak(`Here's the situation: ${stats.users} citizens active. ${reports.length} pending reports. Systems are nominal.`);
       setActiveTab('overview');
     } else if (cmd.includes('email') || cmd.includes('mail')) {
-      sentinelSpeak("Opening Email Architect. Visual uplink established.");
+      sentinelSpeak("Opening the Architect. Let's design something great.");
       setActiveTab('email');
     } else if (cmd.includes('security') || cmd.includes('threat')) {
-      sentinelSpeak("Scanning for threat vectors. Shield status: Optimal.");
+      sentinelSpeak("Scanning the perimeter. Shield status is optimal. No intruders detected.");
       setActiveTab('security');
-    } else if (cmd.includes('hello') || cmd.includes('hi')) {
-      sentinelSpeak("Greetings, Commander. All systems are under your direct control.");
+    } else if (cmd.includes('hello') || cmd.includes('hi') || cmd.includes('hey')) {
+      sentinelSpeak("Hey there! Buddy is standing by and ready for your next move.");
     } else {
-      sentinelSpeak("Command recognized, but intent is ambiguous. Please re-state.");
+      sentinelSpeak("Command recognized, but I'm not quite sure what you need. Can you try again?");
     }
   };
 
