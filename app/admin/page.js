@@ -147,6 +147,8 @@ function AdminPage() {
   const [isListening, setIsListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [sentinelVoice, setSentinelVoice] = useState(null);
+  const [terminalInput, setTerminalInput] = useState('');
+  const [buddyProcessing, setBuddyProcessing] = useState(false);
   const mediaRecorderRef = useState(null)[0]; // We'll use a local variable or ref
   const audioChunksRef = useState([])[0];
   const [nodes, setNodes] = useState([
@@ -297,6 +299,46 @@ function AdminPage() {
     } else {
       sentinelSpeak("I'm sorry, Commander. I heard you, but I don't have a protocol for that specific request.");
       logActivity("JARVIS_ERROR: UNKNOWN_PROTOCOL");
+    }
+  };
+
+  // AI-Powered Terminal Command Handler (JARVIS Mode)
+  const handleTerminalCommand = async (e) => {
+    if (e.key !== 'Enter' || !terminalInput.trim()) return;
+    
+    const userInput = terminalInput.trim();
+    setTerminalInput('');
+    logActivity(`> ${userInput}`);
+    setBuddyProcessing(true);
+
+    try {
+      const res = await fetch('/api/admin/voice/intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          message: userInput, 
+          stats: { users: stats.users, reports: reports.length, guides: stats.guides } 
+        }),
+      });
+      const data = await res.json();
+
+      if (data.speech) {
+        logActivity(`Buddy: ${data.speech}`);
+        sentinelSpeak(data.speech);
+      }
+
+      // Execute the action
+      if (data.tab) {
+        setActiveTab(data.tab);
+      }
+      if (data.action === 'initiate_lockdown') {
+        setTempMaintenanceUntil(new Date(Date.now() + 3600000).toISOString().slice(0, 16));
+        setShowMaintenanceModal(true);
+      }
+    } catch (err) {
+      logActivity('Buddy: Sorry, I couldn\'t process that. Network error.');
+    } finally {
+      setBuddyProcessing(false);
     }
   };
 
@@ -2758,7 +2800,7 @@ function AdminPage() {
                         />
                       ))}
                     </div>
-                    <p style={{ fontSize: '0.7rem', color: '#ef4444', textTransform: 'uppercase', letterSpacing: '2px' }}>Waiting for "Sentinel" command...</p>
+                    <p style={{ fontSize: '0.7rem', color: '#ef4444', textTransform: 'uppercase', letterSpacing: '2px' }}>Waiting for "Buddy" command...</p>
                     {voiceTranscript && <p style={{ fontSize: '0.8rem', color: 'white', opacity: 0.6 }}>"{voiceTranscript}"</p>}
                   </div>
                 ) : (
@@ -2777,10 +2819,20 @@ function AdminPage() {
                   value={terminalInput}
                   onChange={(e) => setTerminalInput(e.target.value)}
                   onKeyDown={handleTerminalCommand}
-                  placeholder="Enter system command..."
-                  style={{ background: 'none', border: 'none', outline: 'none', color: '#10b981', width: '100%', fontSize: '0.85rem', fontFamily: 'inherit' }}
+                  placeholder={buddyProcessing ? 'Buddy is thinking...' : 'Ask Buddy anything... (e.g. "show me citizens")'}
+                  disabled={buddyProcessing}
+                  style={{ background: 'none', border: 'none', outline: 'none', color: buddyProcessing ? '#f59e0b' : '#10b981', width: '100%', fontSize: '0.85rem', fontFamily: 'inherit' }}
                   autoFocus
                 />
+                {buddyProcessing && (
+                  <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    style={{ color: '#f59e0b' }}
+                  >
+                    <RefreshCw size={16} />
+                  </motion.div>
+                )}
               </div>
             </motion.div>
           )}
