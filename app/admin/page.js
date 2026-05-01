@@ -259,39 +259,36 @@ function AdminPage() {
     logActivity(`Buddy Heard: "${transcript}"`);
     
     // Improved wake word detection
-    const isBuddyCalled = cmd.includes('buddy');
-    if (!isBuddyCalled) {
-      logActivity("Buddy: Waiting for wake-word...");
-      return;
-    }
+    const isBuddyCalled = cmd.includes('buddy') || cmd.includes('hey body') || cmd.includes('hey butty');
+    if (!isBuddyCalled) return;
 
     // Command Logic with Fuzzy/Keyword Matching
-    if (cmd.includes('lockdown') || cmd.includes('maintenance') || cmd.includes('offline')) {
-      sentinelSpeak("Acknowledged. Moving platform to maintenance mode now.");
+    if (cmd.includes('lockdown') || cmd.includes('maintenance') || cmd.includes('offline') || cmd.includes('close')) {
+      sentinelSpeak("Understood. Initiating platform lockdown protocol. All non-admin access is being severed.");
       setTempMaintenanceUntil(new Date(Date.now() + 3600000).toISOString().slice(0, 16));
       setShowMaintenanceModal(true);
-      logActivity("EXECUTING_COMMAND: PLATFORM_LOCKDOWN");
+      logActivity("JARVIS_EXEC: PLATFORM_LOCKDOWN");
     } else if (cmd.includes('reward') || cmd.includes('grant') || cmd.includes('give') || cmd.includes('xp') || cmd.includes('citizen') || cmd.includes('list') || cmd.includes('users') || cmd.includes('show')) {
-      sentinelSpeak("Buddy's on it. I've opened the Citizen Grid for you. Accessing operative database.");
+      sentinelSpeak("At your service. Accessing the citizen database and operative grid.");
       setActiveTab('users'); 
-      logActivity("EXECUTING_COMMAND: OPEN_CITIZEN_DATABASE");
-    } else if (cmd.includes('status') || cmd.includes('report') || cmd.includes('how') || cmd.includes('situation')) {
-      sentinelSpeak(`Here's the briefing: ${stats.users} citizens active, ${reports.length} pending issues. Everything's running smooth.`);
+      logActivity("JARVIS_EXEC: CITIZEN_DATABASE_UPLINK");
+    } else if (cmd.includes('status') || cmd.includes('report') || cmd.includes('how') || cmd.includes('situation') || cmd.includes('stats')) {
+      sentinelSpeak(`Current Status: ${stats.users} active citizens. System integrity is at 99.9%. ${reports.length} pending reports require your attention.`);
       setActiveTab('overview');
-      logActivity("EXECUTING_COMMAND: STATUS_BRIEFING");
-    } else if (cmd.includes('email') || cmd.includes('mail') || cmd.includes('template') || cmd.includes('architect')) {
-      sentinelSpeak("Opening the Email Architect. Visual uplink established.");
+      logActivity("JARVIS_EXEC: STATUS_BRIEFING");
+    } else if (cmd.includes('email') || cmd.includes('mail') || cmd.includes('template') || cmd.includes('architect') || cmd.includes('write')) {
+      sentinelSpeak("Opening the Email Architect. Visual uplink established, Commander.");
       setActiveTab('email');
-      logActivity("EXECUTING_COMMAND: OPEN_EMAIL_ARCHITECT");
-    } else if (cmd.includes('security') || cmd.includes('threat') || cmd.includes('ban') || cmd.includes('attack')) {
-      sentinelSpeak("Scanning the perimeter. Shield status is optimal. Threat map is live.");
+      logActivity("JARVIS_EXEC: EMAIL_ARCHITECT_UPLINK");
+    } else if (cmd.includes('security') || cmd.includes('threat') || cmd.includes('ban') || cmd.includes('attack') || cmd.includes('shield')) {
+      sentinelSpeak("Scanning for threat vectors. Shield status: Optimal. Tactical map is now live.");
       setActiveTab('security');
-      logActivity("EXECUTING_COMMAND: SECURITY_UPLINK");
-    } else if (cmd.includes('hello') || cmd.includes('hi') || cmd.includes('hey')) {
-      sentinelSpeak("Hey there! Buddy is standing by. What's the mission?");
+      logActivity("JARVIS_EXEC: SECURITY_TACTICAL_VIEW");
+    } else if (cmd.includes('hello') || cmd.includes('hi') || cmd.includes('hey') || cmd.includes('buddy')) {
+      sentinelSpeak("Always a pleasure. Buddy is standing by for your instructions.");
     } else {
-      sentinelSpeak("I heard you, but I don't have a protocol for that command. Can you say it differently?");
-      logActivity("BUDDY_ERROR: UNKNOWN_INTENT");
+      sentinelSpeak("I'm sorry, Commander. I heard you, but I don't have a protocol for that specific request.");
+      logActivity("JARVIS_ERROR: UNKNOWN_PROTOCOL");
     }
   };
 
@@ -301,33 +298,52 @@ function AdminPage() {
 
     if (isListening) {
       setIsListening(false);
+      if (window.recognitionInstance) window.recognitionInstance.stop();
       return;
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true; // KEEP LISTENING LIKE JARVIS
+    recognition.interimResults = true; // PROCESS AS YOU SPEAK
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
       setIsListening(true);
-      logActivity("NEURAL_LINK: UPLINK_ESTABLISHED");
-      sentinelSpeak("Listening.");
-    };
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      handleVoiceCommand(transcript);
-    };
-    recognition.onend = () => {
-      setIsListening(false);
-      logActivity("NEURAL_LINK: UPLINK_TERMINATED");
-    };
-    recognition.onerror = (event) => {
-      setIsListening(false);
-      logActivity(`BUDDY_ERROR: ${event.error.toUpperCase()}`);
-      sentinelSpeak("Sorry, Buddy lost the connection. Can you check your mic?");
+      logActivity("JARVIS_UPLINK: ACTIVE");
+      sentinelSpeak("Neural link established. I'm listening, Commander.");
     };
 
+    recognition.onresult = (event) => {
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        }
+      }
+      if (finalTranscript) {
+        handleVoiceCommand(finalTranscript);
+      }
+    };
+
+    recognition.onend = () => {
+      // Automatic Restart if Buddy is still "active"
+      if (isListening) {
+        try { recognition.start(); } catch(e) {}
+      } else {
+        logActivity("JARVIS_UPLINK: TERMINATED");
+      }
+    };
+
+    recognition.onerror = (event) => {
+      if (event.error === 'no-speech') return; // Ignore silence
+      logActivity(`JARVIS_ERROR: ${event.error.toUpperCase()}`);
+      if (event.error === 'not-allowed') {
+        setIsListening(false);
+        alert("Microphone access denied. Uplink failed.");
+      }
+    };
+
+    window.recognitionInstance = recognition;
     recognition.start();
   };
 
