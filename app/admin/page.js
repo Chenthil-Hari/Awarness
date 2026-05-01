@@ -2772,7 +2772,6 @@ function AdminPage() {
           )}
         </AnimatePresence>
 
-
           {/* SYSTEM SHELL TOGGLE */}
           <button
             onClick={() => setIsTerminalOpen(!isTerminalOpen)}
@@ -2810,7 +2809,6 @@ function AdminPage() {
               }} />
             )}
           </button>
-        </div>
       </div>
     </main>
 
