@@ -306,6 +306,18 @@ function AdminPage() {
       if (data.action === 'status_report') {
         logActivity(`Buddy: ${stats.users} citizens | ${reports.length} reports | ${stats.guides} guides`);
       }
+      if (data.action === 'reward_user' && data.reward) {
+        setPendingAction(data);
+      }
+      if (data.action === 'create_poll' && data.params) {
+        setNewPoll({
+          question: data.params.question,
+          options: data.params.options || ['', ''],
+          scheduledFor: data.params.scheduledFor || ''
+        });
+        setActiveTab('democracy');
+        setPendingAction(data);
+      }
     } catch (err) {
       logActivity('Buddy: Sorry, I couldn\'t process that. Network error.');
     } finally {
@@ -337,6 +349,24 @@ function AdminPage() {
           sentinelSpeak(`${params.xpAmount} XP has been issued to ${params.userName}. Mission accomplished.`);
         } else {
           logActivity(`Buddy: ❌ Reward failed - ${data.error}`);
+        }
+
+      } else if (action === 'create_poll') {
+        const res = await fetch('/api/admin/polls', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: params.question,
+            options: params.options.map(opt => ({ text: opt, votes: 0 })),
+            scheduledFor: params.scheduledFor
+          }),
+        });
+        if (res.ok) {
+          logActivity(`Buddy: ✅ Global poll "${params.question}" deployed successfully.`);
+          sentinelSpeak(`The poll has been deployed to the platform, Commander. Operation Democracy is live.`);
+          fetchAdminData();
+        } else {
+          logActivity('Buddy: ❌ Poll deployment failed.');
         }
 
       } else if (action === 'reply_ticket') {
@@ -3038,6 +3068,20 @@ function AdminPage() {
                       <p style={{ margin: 0, fontSize: '0.8rem', lineHeight: 1.5, opacity: 0.9 }}>{reply.replyMessage}</p>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {pendingAction.action === 'create_poll' && pendingAction.params && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'white' }}>{pendingAction.params.question}</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '1rem' }}>
+                    {pendingAction.params.options?.map((opt, i) => (
+                      <div key={i} style={{ background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', fontSize: '0.8rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        {opt}
+                      </div>
+                    ))}
+                  </div>
+                  {pendingAction.params.scheduledFor && <p style={{ margin: '1rem 0 0 0', fontSize: '0.7rem', color: 'var(--text-muted)' }}>Scheduled for: {new Date(pendingAction.params.scheduledFor).toLocaleString()}</p>}
                 </div>
               )}
 
