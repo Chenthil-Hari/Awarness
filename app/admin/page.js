@@ -2087,7 +2087,7 @@ function AdminPage() {
                   <div>
                     <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>POLL QUESTION</label>
                     <input 
-                      value={newPoll.question} 
+                      value={newPoll?.question || ''} 
                       onChange={e => setNewPoll({...newPoll, question: e.target.value})} 
                       placeholder="e.g. Which awareness topic should we focus on next?" 
                       style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: isDark ? 'white' : '#0f172a' }} 
@@ -2096,10 +2096,10 @@ function AdminPage() {
                   <div>
                     <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>OPTIONS</label>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                      {newPoll.options.map((opt, i) => (
+                      {newPoll?.options?.map((opt, i) => (
                         <div key={i} style={{ display: 'flex', gap: '0.5rem' }}>
                           <input 
-                            value={opt} 
+                            value={opt || ''} 
                             onChange={e => {
                               const newOpts = [...newPoll.options];
                               newOpts[i] = e.target.value;
@@ -2113,14 +2113,14 @@ function AdminPage() {
                           )}
                         </div>
                       ))}
-                      <button onClick={() => setNewPoll({...newPoll, options: [...newPoll.options, '']})} className="btn-secondary" style={{ width: 'fit-content', padding: '0.5rem 1rem', fontSize: '0.75rem' }}><Plus size={14} /> Add Option</button>
+                      <button onClick={() => setNewPoll({...newPoll, options: [...(newPoll?.options || []), '']})} className="btn-secondary" style={{ width: 'fit-content', padding: '0.5rem 1rem', fontSize: '0.75rem' }}><Plus size={14} /> Add Option</button>
                     </div>
                   </div>
                   <div>
                     <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>GO-LIVE DATE (OPTIONAL)</label>
                     <input 
                       type="datetime-local"
-                      value={newPoll.scheduledFor || ''} 
+                      value={newPoll?.scheduledFor || ''} 
                       onChange={e => setNewPoll({...newPoll, scheduledFor: e.target.value})} 
                       style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: isDark ? 'white' : '#0f172a' }} 
                     />
@@ -2131,24 +2131,24 @@ function AdminPage() {
                 <div style={{ marginTop: '3rem' }}>
                   <h4 style={{ fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Active Polls & Sentiment</h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {polls.map(poll => (
+                    {Array.isArray(polls) && polls.map(poll => (
                       <div key={poll._id} className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                          <p style={{ margin: 0, fontWeight: 700 }}>{poll.question}</p>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{poll.options.reduce((a, b) => a + (b.votes || 0), 0)} Votes</span>
+                          <p style={{ margin: 0, fontWeight: 700 }}>{poll?.question || 'Untitled Poll'}</p>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{poll?.options?.reduce((a, b) => a + (b?.votes || 0), 0) || 0} Votes</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                          {poll.options.map((opt, i) => {
-                            const total = poll.options.reduce((a, b) => a + (b.votes || 0), 0);
-                            const percent = total > 0 ? Math.round(((opt.votes || 0) / total) * 100) : 0;
+                          {poll?.options?.map((opt, i) => {
+                            const total = poll?.options?.reduce((a, b) => a + (b?.votes || 0), 0) || 0;
+                            const percent = total > 0 ? Math.round(((opt?.votes || 0) / total) * 100) : 0;
                             return (
                               <div key={i}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.3rem' }}>
-                                  <span>{opt.text}</span>
+                                  <span>{opt?.text || `Option ${i+1}`}</span>
                                   <span style={{ fontWeight: 800 }}>{percent}%</span>
                                 </div>
                                 <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                                  <motion.div initial={{ width: 0 }} animate={{ width: `${percent}%` }} style={{ height: '100%', background: poll.status === 'published' ? 'var(--accent-success)' : 'var(--accent-primary)' }} />
+                                  <motion.div initial={{ width: 0 }} animate={{ width: `${percent}%` }} style={{ height: '100%', background: poll?.status === 'published' ? 'var(--accent-success)' : 'var(--accent-primary)' }} />
                                 </div>
                               </div>
                             );
@@ -2156,13 +2156,13 @@ function AdminPage() {
                         </div>
                         
                         <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                          {poll.status !== 'published' ? (
+                          {poll?.status !== 'published' ? (
                             <button 
                               onClick={() => handlePublishPoll(poll._id)}
                               className="btn-secondary" 
                               style={{ flex: 2, background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}
                             >
-                              <CheckCircle size={16} /> PUBLISH RESULTS
+                              <ShieldCheck size={16} /> PUBLISH RESULTS
                             </button>
                           ) : (
                             <div style={{ flex: 2, textAlign: 'center', padding: '0.8rem', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '8px', color: '#10b981', fontSize: '0.7rem', fontWeight: 800 }}>
@@ -2174,7 +2174,7 @@ function AdminPage() {
                             className="btn-secondary" 
                             style={{ flex: 1, color: 'var(--accent-danger)', borderColor: 'rgba(239, 68, 68, 0.2)' }}
                           >
-                            <Trash2 size={16} />
+                            <AlertTriangle size={16} />
                           </button>
                         </div>
                       </div>
@@ -2186,14 +2186,14 @@ function AdminPage() {
               <div className="glass-card" style={{ padding: '2rem' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '2rem' }}>Suggestion Box</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {suggestions.length === 0 ? (
+                  {(!suggestions || suggestions.length === 0) ? (
                     <div style={{ textAlign: 'center', padding: '2rem', opacity: 0.5 }}>No suggestions yet</div>
                   ) : (
                     suggestions.map(s => (
                       <div key={s._id} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600 }}>"{s.text}"</p>
+                        <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600 }}>"{s?.text || 'Empty suggestion'}"</p>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>by @{s.userName}</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>by @{s?.userName || 'unknown'}</span>
                           <div style={{ display: 'flex', gap: '0.4rem' }}>
                             <button onClick={() => handleReviewSuggestion(s._id, 'approved')} className="btn-secondary" style={{ padding: '0.4rem', color: 'var(--accent-success)' }}><ThumbsUp size={14} /></button>
                             <button onClick={() => handleReviewSuggestion(s._id, 'rejected')} className="btn-secondary" style={{ padding: '0.4rem', color: 'var(--accent-danger)' }}><ThumbsDown size={14} /></button>
