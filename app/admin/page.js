@@ -2711,24 +2711,6 @@ function AdminPage() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(0,0,0,0.3)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <button 
-                  onClick={toggleNeuralLink}
-                  style={{ 
-                    background: isListening ? '#ef4444' : 'var(--accent-primary)', 
-                    border: 'none', 
-                    borderRadius: '50%', 
-                    width: '32px', 
-                    height: '32px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    color: 'white', 
-                    cursor: 'pointer',
-                    boxShadow: isListening ? '0 0 15px rgba(239, 68, 68, 0.4)' : 'none'
-                  }}
-                >
-                  <Mic size={16} />
-                </button>
                 <span style={{ color: 'var(--accent-primary)', fontWeight: 900 }}>$</span>
                 <input 
                   value={terminalInput}
@@ -2743,7 +2725,40 @@ function AdminPage() {
           )}
         </AnimatePresence>
 
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          {/* NEURAL LINK (BUDDY) BUTTON */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={toggleNeuralLink}
+            style={{
+              width: '50px',
+              height: '50px',
+              borderRadius: '16px',
+              background: isListening ? '#ef4444' : 'rgba(124, 58, 237, 0.1)',
+              border: isListening ? 'none' : '1px solid rgba(124, 58, 237, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: isListening ? 'white' : 'var(--accent-primary)',
+              cursor: 'pointer',
+              boxShadow: isListening ? '0 0 20px rgba(239, 68, 68, 0.5)' : '0 10px 25px rgba(0,0,0,0.2)',
+              position: 'relative',
+              overflow: 'hidden',
+              backdropFilter: 'blur(10px)'
+            }}
+          >
+            {isListening && (
+              <motion.div 
+                animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
+                transition={{ duration: 1, repeat: Infinity }}
+                style={{ position: 'absolute', inset: 0, borderRadius: '16px', border: '2px solid #ef4444' }}
+              />
+            )}
+            <Mic size={24} />
+          </motion.button>
+
+          {/* SYSTEM SHELL TOGGLE */}
           <button
             onClick={() => setIsTerminalOpen(!isTerminalOpen)}
             style={{
