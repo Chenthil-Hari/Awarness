@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Lock, CheckCircle2, ChevronRight, Zap, Target, BookOpen, Star, Users } from 'lucide-react';
+import { Shield, Lock, CheckCircle2, ChevronRight, Zap, Target, BookOpen, Star, Users, Skull, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
 const SKILL_NODES = [
