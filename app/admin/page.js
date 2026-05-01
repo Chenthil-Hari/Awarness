@@ -145,6 +145,7 @@ function AdminPage() {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   const [buddyProcessing, setBuddyProcessing] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
   const [nodes, setNodes] = useState([
     { id: 'start', title: 'Phishing Hook', x: 50, y: 150, type: 'trigger' },
     { id: 'q1', title: 'Check Link?', x: 250, y: 100, type: 'question' },
@@ -280,7 +281,10 @@ function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           message: userInput, 
-          stats: { users: stats.users, reports: reports.length, guides: stats.guides } 
+          stats: { users: stats.users, reports: reports.length, guides: stats.guides },
+          userList: users.map(u => ({ _id: u._id, name: u.name, username: u.username })),
+          ticketList: tickets.map(t => ({ _id: t._id, name: t.name, email: t.email, message: t.message })),
+          reportList: reports.map(r => ({ _id: r._id, title: r.title || r.reason, reportedBy: r.reportedBy }))
         }),
       });
       const data = await res.json();
@@ -290,18 +294,110 @@ function AdminPage() {
         sentinelSpeak(data.speech);
       }
 
-      // Execute the action
-      if (data.tab) {
-        setActiveTab(data.tab);
+      // Non-confirmation actions: execute immediately
+      if (!data.requiresConfirmation) {
+        if (data.tab) setActiveTab(data.tab);
+      } else {
+        // Queue action for confirmation
+        setPendingAction(data);
       }
-      if (data.action === 'initiate_lockdown') {
-        setTempMaintenanceUntil(new Date(Date.now() + 3600000).toISOString().slice(0, 16));
-        setShowMaintenanceModal(true);
+
+      if (data.action === 'status_report') {
+        logActivity(`Buddy: ${stats.users} citizens | ${reports.length} reports | ${stats.guides} guides`);
       }
     } catch (err) {
       logActivity('Buddy: Sorry, I couldn\'t process that. Network error.');
     } finally {
       setBuddyProcessing(false);
+    }
+  };
+
+  // Universal Action Executor — runs after admin confirms
+  const executePendingAction = async () => {
+    if (!pendingAction) return;
+    const { action, params } = pendingAction;
+    logActivity(`BUDDY_EXEC: Executing ${action}...`);
+
+    try {
+      if (action === 'reward_user') {
+        const res = await fetch('/api/admin/users/reward', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: params.userId,
+            xpAmount: params.xpAmount,
+            reason: params.reason || 'Admin reward via Buddy'
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          logActivity(`Buddy: ✅ ${params.xpAmount} XP issued to ${params.userName}. New total: ${data.newXp} XP.`);
+          sentinelSpeak(`${params.xpAmount} XP has been issued to ${params.userName}. Mission accomplished.`);
+        } else {
+          logActivity(`Buddy: ❌ Reward failed - ${data.error}`);
+        }
+
+      } else if (action === 'reply_ticket') {
+        const res = await fetch('/api/admin/support', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ticketId: params.ticketId,
+            reply: params.replyMessage,
+            status: 'resolved'
+          }),
+        });
+        if (res.ok) {
+          logActivity(`Buddy: ✅ Reply sent to ${params.ticketFrom}'s ticket.`);
+          sentinelSpeak(`Reply dispatched to ${params.ticketFrom}. Ticket resolved.`);
+          setTickets(prev => prev.filter(t => t._id !== params.ticketId));
+        } else {
+          logActivity('Buddy: ❌ Failed to send reply.');
+        }
+
+      } else if (action === 'resolve_report') {
+        const res = await fetch(`/api/admin/reports`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reportId: params.reportId,
+            status: params.resolution
+          }),
+        });
+        if (res.ok) {
+          logActivity(`Buddy: ✅ Report "${params.reportTitle}" ${params.resolution}.`);
+          sentinelSpeak(`Report ${params.resolution}. Record updated.`);
+          setReports(prev => prev.filter(r => r._id !== params.reportId));
+        } else {
+          logActivity('Buddy: ❌ Failed to resolve report.');
+        }
+
+      } else if (action === 'send_broadcast') {
+        const res = await fetch('/api/admin/broadcast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: params.type || 'announcement',
+            subject: params.subject,
+            message: params.message
+          }),
+        });
+        if (res.ok) {
+          logActivity(`Buddy: ✅ Broadcast "${params.subject}" sent to all operatives.`);
+          sentinelSpeak(`Broadcast transmitted. All operatives notified.`);
+        } else {
+          logActivity('Buddy: ❌ Broadcast transmission failed.');
+        }
+
+      } else if (action === 'initiate_lockdown') {
+        setTempMaintenanceUntil(new Date(Date.now() + 3600000).toISOString().slice(0, 16));
+        setShowMaintenanceModal(true);
+        logActivity('Buddy: ✅ Lockdown scheduler opened.');
+      }
+    } catch (err) {
+      logActivity(`Buddy: ❌ Execution failed - ${err.message}`);
+    } finally {
+      setPendingAction(null);
     }
   };
 
@@ -2851,6 +2947,101 @@ function AdminPage() {
                 style={{ flex: 2, padding: '1rem' }}
               >
                 INITIATE LOCKDOWN
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+
+    {/* BUDDY CONFIRMATION MODAL */}
+    <AnimatePresence>
+      {pendingAction && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="glass-card"
+            style={{ maxWidth: '500px', width: '100%', padding: '2.5rem', border: '1px solid var(--accent-primary)', borderRadius: '24px' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ padding: '0.8rem', background: 'rgba(124, 58, 237, 0.15)', borderRadius: '12px' }}>
+                <Bot size={24} color="var(--accent-primary)" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 900, margin: 0 }}>Buddy Confirmation</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', margin: 0 }}>Action requires your approval</p>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(124, 58, 237, 0.05)', borderRadius: '16px', padding: '1.5rem', border: '1px solid rgba(124, 58, 237, 0.15)', marginBottom: '1.5rem' }}>
+              <p style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.8rem' }}>
+                {pendingAction.action === 'reward_user' && '🎖️ REWARD USER'}
+                {pendingAction.action === 'reply_ticket' && '💬 REPLY TO TICKET'}
+                {pendingAction.action === 'resolve_report' && '📋 RESOLVE REPORT'}
+                {pendingAction.action === 'send_broadcast' && '📡 SEND BROADCAST'}
+                {pendingAction.action === 'initiate_lockdown' && '🔒 PLATFORM LOCKDOWN'}
+              </p>
+
+              {pendingAction.action === 'reward_user' && pendingAction.params && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>User:</strong> {pendingAction.params.userName}</p>
+                  <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>Amount:</strong> <span style={{ color: '#10b981', fontWeight: 900 }}>{pendingAction.params.xpAmount} XP</span></p>
+                  <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>Reason:</strong> {pendingAction.params.reason}</p>
+                </div>
+              )}
+
+              {pendingAction.action === 'reply_ticket' && pendingAction.params && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>To:</strong> {pendingAction.params.ticketFrom}</p>
+                  {pendingAction.params.originalQuery && <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Query: "{pendingAction.params.originalQuery}"</p>}
+                  <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
+                    <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: 1.6 }}>{pendingAction.params.replyMessage}</p>
+                  </div>
+                </div>
+              )}
+
+              {pendingAction.action === 'resolve_report' && pendingAction.params && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>Report:</strong> {pendingAction.params.reportTitle}</p>
+                  <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>Resolution:</strong> <span style={{ color: pendingAction.params.resolution === 'approved' ? '#10b981' : '#ef4444', fontWeight: 900 }}>{pendingAction.params.resolution?.toUpperCase()}</span></p>
+                </div>
+              )}
+
+              {pendingAction.action === 'send_broadcast' && pendingAction.params && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>Type:</strong> {pendingAction.params.type}</p>
+                  <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>Subject:</strong> {pendingAction.params.subject}</p>
+                  <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
+                    <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: 1.6 }}>{pendingAction.params.message}</p>
+                  </div>
+                </div>
+              )}
+
+              {pendingAction.action === 'initiate_lockdown' && (
+                <p style={{ margin: 0, fontSize: '0.9rem' }}>The platform will enter maintenance mode. All non-admin access will be suspended.</p>
+              )}
+            </div>
+
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem', textAlign: 'center' }}>
+              Do you authorize this action, Commander?
+            </p>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button 
+                onClick={() => { setPendingAction(null); logActivity('Buddy: Action cancelled by Commander.'); }}
+                className="btn-secondary" 
+                style={{ flex: 1, padding: '1rem' }}
+              >
+                DENY
+              </button>
+              <button 
+                onClick={executePendingAction}
+                className="btn-primary" 
+                style={{ flex: 2, padding: '1rem' }}
+              >
+                ✅ AUTHORIZE EXECUTION
               </button>
             </div>
           </motion.div>
