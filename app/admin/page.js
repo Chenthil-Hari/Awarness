@@ -147,6 +147,8 @@ function AdminPage() {
   const [isListening, setIsListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [sentinelVoice, setSentinelVoice] = useState(null);
+  const mediaRecorderRef = useState(null)[0]; // We'll use a local variable or ref
+  const audioChunksRef = useState([])[0];
   const [nodes, setNodes] = useState([
     { id: 'start', title: 'Phishing Hook', x: 50, y: 150, type: 'trigger' },
     { id: 'q1', title: 'Check Link?', x: 250, y: 100, type: 'question' },
@@ -298,71 +300,72 @@ function AdminPage() {
     }
   };
 
-  const toggleNeuralLink = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      logActivity("CRITICAL_ERROR: SPEECH_API_NOT_SUPPORTED");
-      return alert("Your browser does not support the Neural Link (Speech API). Please use Chrome or Edge.");
-    }
-
+  const toggleNeuralLink = async () => {
     if (isListening) {
       setIsListening(false);
-      if (window.recognitionInstance) window.recognitionInstance.stop();
-      logActivity("NEURAL_LINK: UPLINK_MANUALLY_TERMINATED");
+      // Logic handled by mediaRecorder.stop()
       return;
     }
 
-    logActivity("NEURAL_LINK: INITIATING_DEEP_SCAN...");
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    
-    // Auto-detect or fallback locale
-    recognition.lang = navigator.language || 'en-US';
-    logActivity(`SYNCHRONIZING_LOCALE: ${recognition.lang}`);
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      logActivity("JARVIS_UPLINK: ACTIVE_AND_LISTENING");
-      sentinelSpeak("Neural link established. At your service, Commander.");
-    };
-
-    recognition.onresult = (event) => {
-      let finalTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        }
-      }
-      if (finalTranscript) {
-        handleVoiceCommand(finalTranscript);
-      }
-    };
-
-    recognition.onend = () => {
-      if (isListening) {
-        logActivity("NEURAL_LINK: RECONNECTING...");
-        try { recognition.start(); } catch(e) {}
-      }
-    };
-
-    recognition.onerror = (event) => {
-      logActivity(`JARVIS_ERROR: ${event.error.toUpperCase()}`);
-      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-        setIsListening(false);
-        sentinelSpeak("Commander, I'm being blocked. Please authorize microphone access in your browser settings.");
-        alert("CRITICAL: Microphone access is BLOCKED by your browser. Please click the lock icon in your address bar and allow 'Microphone'.");
-      } else if (event.error === 'network') {
-        sentinelSpeak("Network interference detected. The neural link requires a stable connection.");
-      }
-    };
-
-    window.recognitionInstance = recognition;
     try {
-      recognition.start();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      const chunks = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      mediaRecorder.onstart = () => {
+        setIsListening(true);
+        logActivity("WHISPER_UPLINK: ACTIVE");
+        sentinelSpeak("Neural link established. I'm listening, Commander.");
+      };
+
+      mediaRecorder.onstop = async () => {
+        setIsListening(false);
+        logActivity("WHISPER_UPLINK: PROCESSING...");
+        
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('file', audioBlob, 'voice.webm');
+
+        try {
+          const res = await fetch('/api/admin/voice/transcribe', {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await res.json();
+          if (data.text) {
+            handleVoiceCommand(data.text);
+          } else {
+            logActivity(`WHISPER_ERROR: ${data.error || 'Unknown error'}`);
+          }
+        } catch (err) {
+          logActivity("WHISPER_ERROR: NETWORK_FAILURE");
+        }
+        
+        // Stop all tracks to release mic
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      // Auto-stop after 6 seconds if not stopped manually
+      setTimeout(() => {
+        if (mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        }
+      }, 6000);
+
+      mediaRecorder.start();
+      
+      // Store stop function to handle manual toggle
+      window.stopRecording = () => {
+        if (mediaRecorder.state === 'recording') mediaRecorder.stop();
+      };
+
     } catch (err) {
-      logActivity("NEURAL_LINK: START_FAILURE");
-      console.error(err);
+      logActivity("WHISPER_ERROR: MIC_ACCESS_DENIED");
+      alert("Microphone access is required for the Neural Link.");
     }
   };
 
@@ -2788,7 +2791,13 @@ function AdminPage() {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={toggleNeuralLink}
+            onClick={() => {
+              if (isListening && window.stopRecording) {
+                window.stopRecording();
+              } else {
+                toggleNeuralLink();
+              }
+            }}
             style={{
               width: '50px',
               height: '50px',
