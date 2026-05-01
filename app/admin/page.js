@@ -234,6 +234,11 @@ function AdminPage() {
     return () => clearInterval(interval);
   }, [activeTab]);
 
+  // Activity Logger for System Shell
+  const logActivity = (msg, type = 'system') => {
+    setActivityLog(prev => [{ id: Date.now(), type, user: 'Admin', time: 'Just now', msg }, ...prev.slice(0, 19)]);
+  };
+
   // Sentinel Voice Setup
   useEffect(() => {
     const synth = window.speechSynthesis;
