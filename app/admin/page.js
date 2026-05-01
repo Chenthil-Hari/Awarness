@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -149,8 +149,8 @@ function AdminPage() {
   const [sentinelVoice, setSentinelVoice] = useState(null);
   const [terminalInput, setTerminalInput] = useState('');
   const [buddyProcessing, setBuddyProcessing] = useState(false);
-  const mediaRecorderRef = useState(null)[0]; // We'll use a local variable or ref
-  const audioChunksRef = useState([])[0];
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
   const [nodes, setNodes] = useState([
     { id: 'start', title: 'Phishing Hook', x: 50, y: 150, type: 'trigger' },
     { id: 'q1', title: 'Check Link?', x: 250, y: 100, type: 'question' },
