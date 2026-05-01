@@ -271,10 +271,10 @@ function AdminPage() {
       setTempMaintenanceUntil(new Date(Date.now() + 3600000).toISOString().slice(0, 16));
       setShowMaintenanceModal(true);
       logActivity("EXECUTING_COMMAND: PLATFORM_LOCKDOWN");
-    } else if (cmd.includes('reward') || cmd.includes('grant') || cmd.includes('give') || cmd.includes('xp')) {
-      sentinelSpeak("Buddy's on it. I've opened the Citizen grid for you. Who's getting rewarded?");
-      setActiveTab('citizens'); // Ensure tab name matches
-      logActivity("EXECUTING_COMMAND: OPEN_CITIZEN_REWARDS");
+    } else if (cmd.includes('reward') || cmd.includes('grant') || cmd.includes('give') || cmd.includes('xp') || cmd.includes('citizen') || cmd.includes('list') || cmd.includes('users') || cmd.includes('show')) {
+      sentinelSpeak("Buddy's on it. I've opened the Citizen Grid for you. Accessing operative database.");
+      setActiveTab('users'); 
+      logActivity("EXECUTING_COMMAND: OPEN_CITIZEN_DATABASE");
     } else if (cmd.includes('status') || cmd.includes('report') || cmd.includes('how') || cmd.includes('situation')) {
       sentinelSpeak(`Here's the briefing: ${stats.users} citizens active, ${reports.length} pending issues. Everything's running smooth.`);
       setActiveTab('overview');
