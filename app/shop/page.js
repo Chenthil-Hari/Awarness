@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Zap, Shield, Sparkles, Check, Lock, Star, Palette, Ghost } from 'lucide-react';
+import { ShoppingBag, Zap, Shield, Sparkles, Check, Lock, Star, Palette, Ghost, Heart } from 'lucide-react';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 
 const SHOP_ITEMS = [
