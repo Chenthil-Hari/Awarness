@@ -8,7 +8,7 @@ import TrophyIcon from '../components/TrophyIcon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Medal, Star, Target, Crown, Shield, Zap, Swords, Info, X, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { calculateLevel } from '../lib/game';
+import { calculateLevel } from '@/lib/game';
 
 const LEAGUES = ['Bronze', 'Silver', 'Gold', 'Hacker-Tier'];
 
