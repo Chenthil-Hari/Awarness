@@ -295,28 +295,26 @@ function AdminPage() {
         sentinelSpeak(data.speech);
       }
 
-      // Non-confirmation actions: execute immediately
-      if (!data.requiresConfirmation) {
-        if (data.tab) setActiveTab(data.tab);
-      } else {
-        // Queue action for confirmation
-        setPendingAction(data);
-      }
-
-      if (data.action === 'status_report') {
-        logActivity(`Buddy: ${stats.users} citizens | ${reports.length} reports | ${stats.guides} guides`);
-      }
-      if (data.action === 'reward_user' && data.reward) {
-        setPendingAction(data);
-      }
+      // 1. Initial State Updates based on Intent
       if (data.action === 'create_poll' && data.params) {
         setNewPoll({
-          question: data.params.question,
+          question: data.params.question || '',
           options: data.params.options || ['', ''],
           scheduledFor: data.params.scheduledFor || ''
         });
         setActiveTab('democracy');
+      }
+
+      // 2. Handle Confirmation Flow
+      if (data.requiresConfirmation) {
         setPendingAction(data);
+      } else if (data.tab) {
+        setActiveTab(data.tab);
+      }
+
+      // 3. Special Instant Actions
+      if (data.action === 'status_report') {
+        logActivity(`Buddy: ${stats.users} citizens | ${reports.length} reports | ${stats.guides} guides`);
       }
     } catch (err) {
       logActivity('Buddy: Sorry, I couldn\'t process that. Network error.');
