@@ -310,6 +310,29 @@ function AdminPage() {
     logActivity(`> ${userInput}`);
     setBuddyProcessing(true);
 
+    const cmd = userInput.toLowerCase().trim();
+    
+    // Manual Command Overrides
+    if (cmd === '/clear') {
+      setActivityLog([]);
+      setBuddyProcessing(false);
+      return;
+    }
+
+    if (cmd === '/maintenance on') {
+      handleUpdateConfig({ ...config, maintenanceMode: true });
+      logActivity('Maintenance mode activated via shell');
+      setBuddyProcessing(false);
+      return;
+    }
+
+    if (cmd === '/maintenance off') {
+      handleUpdateConfig({ ...config, maintenanceMode: false });
+      logActivity('Maintenance mode deactivated via shell');
+      setBuddyProcessing(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/admin/voice/intent', {
         method: 'POST',
@@ -1031,36 +1054,6 @@ Current Stats: ${stats.users} active citizens, ${reports.length} pending reports
     }
   };
 
-  const handleTerminalCommand = (e) => {
-    if (e.key !== 'Enter') return;
-    const cmd = terminalInput.toLowerCase().trim();
-    setTerminalInput('');
-
-    const logEntry = (msg, type = 'system') => {
-      setActivityLog(prev => [{ id: Date.now(), type, user: 'Admin', time: 'Just now', msg }, ...prev.slice(0, 19)]);
-    };
-
-    if (cmd === '/clear') {
-      setActivityLog([]);
-      return;
-    }
-
-    if (cmd === '/maintenance on') {
-      handleUpdateConfig({ ...config, maintenanceMode: true });
-      logEntry('Maintenance mode activated via shell', 'security');
-    } else if (cmd === '/maintenance off') {
-      handleUpdateConfig({ ...config, maintenanceMode: false });
-      logEntry('Maintenance mode deactivated via shell', 'security');
-    } else if (cmd.startsWith('/reward')) {
-      const parts = cmd.split(' ');
-      if (parts.length >= 3) {
-        logEntry(`Issued reward of ${parts[2]} XP via shell`, 'reward');
-        alert('Reward command queued. Processing...');
-      }
-    } else {
-      logEntry(`Unknown command: ${cmd}`, 'error');
-    }
-  };
 
   const handleBulkReward = async () => {
     if (selectedUsers.length === 0) return alert('No citizens selected');
