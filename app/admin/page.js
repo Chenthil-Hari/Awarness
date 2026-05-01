@@ -254,32 +254,44 @@ function AdminPage() {
   };
 
   const handleVoiceCommand = (transcript) => {
-    const cmd = transcript.toLowerCase();
+    const cmd = transcript.toLowerCase().trim();
     setVoiceTranscript(transcript);
+    logActivity(`Buddy Heard: "${transcript}"`);
     
-    // Wake word check for "Buddy"
-    if (!cmd.includes('buddy')) return;
+    // Improved wake word detection
+    const isBuddyCalled = cmd.includes('buddy');
+    if (!isBuddyCalled) {
+      logActivity("Buddy: Waiting for wake-word...");
+      return;
+    }
 
-    if (cmd.includes('lockdown') || cmd.includes('maintenance')) {
-      sentinelSpeak("Acknowledge. Initiating platform lockdown protocol, Buddy style.");
+    // Command Logic with Fuzzy/Keyword Matching
+    if (cmd.includes('lockdown') || cmd.includes('maintenance') || cmd.includes('offline')) {
+      sentinelSpeak("Acknowledged. Moving platform to maintenance mode now.");
       setTempMaintenanceUntil(new Date(Date.now() + 3600000).toISOString().slice(0, 16));
       setShowMaintenanceModal(true);
-    } else if (cmd.includes('reward') || cmd.includes('grant')) {
-      sentinelSpeak("Buddy's on it. Operative commendation confirmed. Just tell me how much XP.");
-      setActiveTab('users');
-    } else if (cmd.includes('status') || cmd.includes('overview')) {
-      sentinelSpeak(`Here's the situation: ${stats.users} citizens active. ${reports.length} pending reports. Systems are nominal.`);
+      logActivity("EXECUTING_COMMAND: PLATFORM_LOCKDOWN");
+    } else if (cmd.includes('reward') || cmd.includes('grant') || cmd.includes('give') || cmd.includes('xp')) {
+      sentinelSpeak("Buddy's on it. I've opened the Citizen grid for you. Who's getting rewarded?");
+      setActiveTab('citizens'); // Ensure tab name matches
+      logActivity("EXECUTING_COMMAND: OPEN_CITIZEN_REWARDS");
+    } else if (cmd.includes('status') || cmd.includes('report') || cmd.includes('how') || cmd.includes('situation')) {
+      sentinelSpeak(`Here's the briefing: ${stats.users} citizens active, ${reports.length} pending issues. Everything's running smooth.`);
       setActiveTab('overview');
-    } else if (cmd.includes('email') || cmd.includes('mail')) {
-      sentinelSpeak("Opening the Architect. Let's design something great.");
+      logActivity("EXECUTING_COMMAND: STATUS_BRIEFING");
+    } else if (cmd.includes('email') || cmd.includes('mail') || cmd.includes('template') || cmd.includes('architect')) {
+      sentinelSpeak("Opening the Email Architect. Visual uplink established.");
       setActiveTab('email');
-    } else if (cmd.includes('security') || cmd.includes('threat')) {
-      sentinelSpeak("Scanning the perimeter. Shield status is optimal. No intruders detected.");
+      logActivity("EXECUTING_COMMAND: OPEN_EMAIL_ARCHITECT");
+    } else if (cmd.includes('security') || cmd.includes('threat') || cmd.includes('ban') || cmd.includes('attack')) {
+      sentinelSpeak("Scanning the perimeter. Shield status is optimal. Threat map is live.");
       setActiveTab('security');
+      logActivity("EXECUTING_COMMAND: SECURITY_UPLINK");
     } else if (cmd.includes('hello') || cmd.includes('hi') || cmd.includes('hey')) {
-      sentinelSpeak("Hey there! Buddy is standing by and ready for your next move.");
+      sentinelSpeak("Hey there! Buddy is standing by. What's the mission?");
     } else {
-      sentinelSpeak("Command recognized, but I'm not quite sure what you need. Can you try again?");
+      sentinelSpeak("I heard you, but I don't have a protocol for that command. Can you say it differently?");
+      logActivity("BUDDY_ERROR: UNKNOWN_INTENT");
     }
   };
 
@@ -297,13 +309,24 @@ function AdminPage() {
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
-    recognition.onstart = () => setIsListening(true);
+    recognition.onstart = () => {
+      setIsListening(true);
+      logActivity("NEURAL_LINK: UPLINK_ESTABLISHED");
+      sentinelSpeak("Listening.");
+    };
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       handleVoiceCommand(transcript);
     };
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => {
+      setIsListening(false);
+      logActivity("NEURAL_LINK: UPLINK_TERMINATED");
+    };
+    recognition.onerror = (event) => {
+      setIsListening(false);
+      logActivity(`BUDDY_ERROR: ${event.error.toUpperCase()}`);
+      sentinelSpeak("Sorry, Buddy lost the connection. Can you check your mic?");
+    };
 
     recognition.start();
   };
