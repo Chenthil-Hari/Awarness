@@ -144,12 +144,7 @@ function AdminPage() {
   });
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
-  const [isListening, setIsListening] = useState(false);
-  const [voiceTranscript, setVoiceTranscript] = useState('');
-  const [sentinelVoice, setSentinelVoice] = useState(null);
   const [buddyProcessing, setBuddyProcessing] = useState(false);
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
   const [nodes, setNodes] = useState([
     { id: 'start', title: 'Phishing Hook', x: 50, y: 150, type: 'trigger' },
     { id: 'q1', title: 'Check Link?', x: 250, y: 100, type: 'question' },
@@ -239,71 +234,12 @@ function AdminPage() {
     setActivityLog(prev => [{ id: Date.now(), type, user: 'Admin', time: 'Just now', msg }, ...prev.slice(0, 19)]);
   };
 
-  // Sentinel Voice Setup
-  useEffect(() => {
-    const synth = window.speechSynthesis;
-    const loadVoices = () => {
-      const voices = synth.getVoices();
-      // Try to find a professional sounding male/robotic voice
-      const preferred = voices.find(v => v.name.includes('Google UK English Male') || v.name.includes('Daniel') || v.name.includes('Robo'));
-      setSentinelVoice(preferred || voices[0]);
-    };
-    loadVoices();
-    if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
-  }, []);
-
   const sentinelSpeak = (text) => {
     if (!window.speechSynthesis) return;
     const utterance = new SpeechSynthesisUtterance(text);
-    if (sentinelVoice) utterance.voice = sentinelVoice;
-    utterance.pitch = 0.85; // Slightly lower for a professional feel
+    utterance.pitch = 0.85;
     utterance.rate = 1.0;
     window.speechSynthesis.speak(utterance);
-  };
-
-  const handleVoiceCommand = (transcript) => {
-    const cmd = transcript.toLowerCase().trim();
-    setVoiceTranscript(transcript);
-    logActivity(`[SENTINEL_SCAN] Transcript: "${transcript}"`);
-    
-    // Echo back to terminal for debug
-    console.log("Buddy received:", transcript);
-
-    const isBuddyCalled = cmd.includes('buddy') || cmd.includes('body') || cmd.includes('butty') || cmd.includes('buddy') || cmd.includes('buddie');
-    
-    if (!isBuddyCalled) {
-      logActivity("DEBUG: Wake-word 'Buddy' not detected in transcript.");
-      return;
-    }
-
-    // Command Logic with Fuzzy/Keyword Matching
-    if (cmd.includes('lockdown') || cmd.includes('maintenance') || cmd.includes('offline') || cmd.includes('close')) {
-      sentinelSpeak("Understood. Initiating platform lockdown protocol. All non-admin access is being severed.");
-      setTempMaintenanceUntil(new Date(Date.now() + 3600000).toISOString().slice(0, 16));
-      setShowMaintenanceModal(true);
-      logActivity("JARVIS_EXEC: PLATFORM_LOCKDOWN");
-    } else if (cmd.includes('reward') || cmd.includes('grant') || cmd.includes('give') || cmd.includes('xp') || cmd.includes('citizen') || cmd.includes('list') || cmd.includes('users') || cmd.includes('show')) {
-      sentinelSpeak("At your service. Accessing the citizen database and operative grid.");
-      setActiveTab('users'); 
-      logActivity("JARVIS_EXEC: CITIZEN_DATABASE_UPLINK");
-    } else if (cmd.includes('status') || cmd.includes('report') || cmd.includes('how') || cmd.includes('situation') || cmd.includes('stats')) {
-      sentinelSpeak(`Current Status: ${stats.users} active citizens. System integrity is at 99.9%. ${reports.length} pending reports require your attention.`);
-      setActiveTab('overview');
-      logActivity("JARVIS_EXEC: STATUS_BRIEFING");
-    } else if (cmd.includes('email') || cmd.includes('mail') || cmd.includes('template') || cmd.includes('architect') || cmd.includes('write')) {
-      sentinelSpeak("Opening the Email Architect. Visual uplink established, Commander.");
-      setActiveTab('email');
-      logActivity("JARVIS_EXEC: EMAIL_ARCHITECT_UPLINK");
-    } else if (cmd.includes('security') || cmd.includes('threat') || cmd.includes('ban') || cmd.includes('attack') || cmd.includes('shield')) {
-      sentinelSpeak("Scanning for threat vectors. Shield status: Optimal. Tactical map is now live.");
-      setActiveTab('security');
-      logActivity("JARVIS_EXEC: SECURITY_TACTICAL_VIEW");
-    } else if (cmd.includes('hello') || cmd.includes('hi') || cmd.includes('hey') || cmd.includes('buddy')) {
-      sentinelSpeak("Always a pleasure. Buddy is standing by for your instructions.");
-    } else {
-      sentinelSpeak("I'm sorry, Commander. I heard you, but I don't have a protocol for that specific request.");
-      logActivity("JARVIS_ERROR: UNKNOWN_PROTOCOL");
-    }
   };
 
   // AI-Powered Terminal Command Handler (JARVIS Mode)
@@ -366,202 +302,6 @@ function AdminPage() {
       logActivity('Buddy: Sorry, I couldn\'t process that. Network error.');
     } finally {
       setBuddyProcessing(false);
-    }
-  };
-
-  const toggleNeuralLink = async () => {
-    // If already connected, disconnect
-    if (isListening) {
-      setIsListening(false);
-      if (window.buddySocket) {
-        window.buddySocket.close();
-        window.buddySocket = null;
-      }
-      if (window.buddyStream) {
-        window.buddyStream.getTracks().forEach(t => t.stop());
-        window.buddyStream = null;
-      }
-      logActivity("BUDDY_AGENT: DISCONNECTED");
-      return;
-    }
-
-    logActivity("BUDDY_AGENT: INITIALIZING...");
-
-    try {
-      // Get Deepgram API key from secure backend
-      const tokenRes = await fetch('/api/admin/voice/deepgram-token');
-      const tokenData = await tokenRes.json();
-      if (!tokenData.apiKey) throw new Error('No API key');
-
-      // Get mic access
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { 
-          sampleRate: 48000, 
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true 
-        } 
-      });
-      window.buddyStream = stream;
-
-      // Connect to Deepgram Voice Agent
-      const ws = new WebSocket('wss://agent.deepgram.com/agent', ['token', tokenData.apiKey]);
-      window.buddySocket = ws;
-
-      ws.onopen = () => {
-        logActivity("BUDDY_AGENT: UPLINK_ESTABLISHED");
-        setIsListening(true);
-
-        // Send agent configuration
-        const config = {
-          type: "SettingsConfiguration",
-          audio: {
-            input: { encoding: "linear16", sample_rate: 48000 },
-            output: { encoding: "linear16", sample_rate: 24000, container: "none" }
-          },
-          agent: {
-            speak: {
-              provider: { type: "deepgram", model: "aura-2-jupiter-en" }
-            },
-            listen: {
-              provider: { type: "deepgram", version: "v2", model: "flux-general-en" }
-            },
-            think: {
-              provider: { type: "google", model: "gemini-2.5-flash" },
-              prompt: `#Role
-You are "Buddy", the AI assistant for the Awareness Pro cybersecurity training platform's Admin Command Center. You speak directly to the platform administrator.
-
-#Context
-The admin manages a cybersecurity awareness training platform with these features:
-- Citizens (Users) management - tab id: "users"
-- Email Architect - tab id: "email"
-- Security & Threat Intelligence - tab id: "security"
-- Analytics & Risk Matrix - tab id: "analytics"
-- Simulation Designer - tab id: "designer"
-- System Health Monitor - tab id: "system"
-- Global Broadcast - tab id: "broadcast"
-- Sentinel AI Moderation - tab id: "sentinel"
-- Overview Dashboard - tab id: "overview"
-- Reports Management - tab id: "reports"
-- Missions - tab id: "missions"
-- Achievements/Badges - tab id: "achievements"
-
-Current Stats: ${stats.users} active citizens, ${reports.length} pending reports.
-
-#Instructions
-- Be concise, professional, and tactical. You are a command center AI.
-- Use military/tech terminology naturally (e.g., "Affirmative", "Uplink established", "Scanning perimeter").
-- When asked to navigate somewhere, respond with confirmation AND include the tab id in your response wrapped in double brackets like [[tab:users]] or [[tab:security]].
-- When asked for status, provide real stats.
-- When asked to lock/maintain the platform, say you're initiating lockdown and include [[action:lockdown]].
-- Keep responses under 2 sentences.
-- Address the admin as "Commander" occasionally.
-
-#Greeting
-"Buddy online. All systems nominal, Commander. What's the mission?"`
-            },
-            greeting: "Buddy online. All systems nominal, Commander. What's the mission?"
-          }
-        };
-        ws.send(JSON.stringify(config));
-
-        // Start streaming microphone audio
-        const audioContext = new AudioContext({ sampleRate: 48000 });
-        const source = audioContext.createMediaStreamSource(stream);
-        const processor = audioContext.createScriptProcessor(4096, 1, 1);
-        
-        processor.onaudioprocess = (e) => {
-          if (ws.readyState === WebSocket.OPEN) {
-            const inputData = e.inputBuffer.getChannelData(0);
-            const pcm16 = new Int16Array(inputData.length);
-            for (let i = 0; i < inputData.length; i++) {
-              pcm16[i] = Math.max(-32768, Math.min(32767, Math.floor(inputData[i] * 32768)));
-            }
-            ws.send(pcm16.buffer);
-          }
-        };
-
-        source.connect(processor);
-        processor.connect(audioContext.destination);
-        window.buddyProcessor = processor;
-        window.buddyAudioContext = audioContext;
-      };
-
-      // Audio playback context for Deepgram TTS responses
-      const playbackContext = new AudioContext({ sampleRate: 24000 });
-      let nextPlayTime = 0;
-
-      ws.onmessage = async (event) => {
-        if (event.data instanceof Blob || event.data instanceof ArrayBuffer) {
-          // Audio response from Deepgram TTS
-          try {
-            const arrayBuffer = event.data instanceof Blob ? await event.data.arrayBuffer() : event.data;
-            const int16 = new Int16Array(arrayBuffer);
-            const float32 = new Float32Array(int16.length);
-            for (let i = 0; i < int16.length; i++) {
-              float32[i] = int16[i] / 32768.0;
-            }
-            const audioBuffer = playbackContext.createBuffer(1, float32.length, 24000);
-            audioBuffer.copyToChannel(float32, 0);
-            const bufferSource = playbackContext.createBufferSource();
-            bufferSource.buffer = audioBuffer;
-            bufferSource.connect(playbackContext.destination);
-            const currentTime = playbackContext.currentTime;
-            const startTime = Math.max(currentTime, nextPlayTime);
-            bufferSource.start(startTime);
-            nextPlayTime = startTime + audioBuffer.duration;
-          } catch (err) {
-            // Skip malformed audio chunks
-          }
-        } else {
-          // Text/JSON messages
-          try {
-            const msg = JSON.parse(event.data);
-            if (msg.type === 'AgentThinking') {
-              logActivity("BUDDY: Processing...");
-            } else if (msg.type === 'AgentStartedSpeaking') {
-              logActivity("BUDDY: Speaking...");
-            } else if (msg.type === 'ConversationText' && msg.role === 'assistant') {
-              logActivity(`Buddy: ${msg.content}`);
-              setVoiceTranscript(msg.content);
-              
-              // Parse action commands from Buddy's response
-              const tabMatch = msg.content.match(/\[\[tab:(\w+)\]\]/);
-              if (tabMatch) {
-                setActiveTab(tabMatch[1]);
-              }
-              const actionMatch = msg.content.match(/\[\[action:(\w+)\]\]/);
-              if (actionMatch && actionMatch[1] === 'lockdown') {
-                setTempMaintenanceUntil(new Date(Date.now() + 3600000).toISOString().slice(0, 16));
-                setShowMaintenanceModal(true);
-              }
-            } else if (msg.type === 'UserStartedSpeaking') {
-              logActivity("BUDDY: Listening to Commander...");
-            } else if (msg.type === 'ConversationText' && msg.role === 'user') {
-              logActivity(`Commander: ${msg.content}`);
-            }
-          } catch (e) {
-            // Non-JSON message, skip
-          }
-        }
-      };
-
-      ws.onerror = (err) => {
-        logActivity("BUDDY_AGENT: CONNECTION_ERROR");
-        setIsListening(false);
-      };
-
-      ws.onclose = () => {
-        logActivity("BUDDY_AGENT: CONNECTION_CLOSED");
-        setIsListening(false);
-        if (window.buddyProcessor) window.buddyProcessor.disconnect();
-        if (window.buddyAudioContext) window.buddyAudioContext.close();
-      };
-
-    } catch (err) {
-      logActivity(`BUDDY_AGENT: INIT_FAILURE - ${err.message}`);
-      setIsListening(false);
-      alert("Microphone access is required for the Neural Link.");
     }
   };
 
@@ -2893,48 +2633,22 @@ Current Stats: ${stats.users} active citizens, ${reports.length} pending reports
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ width: '8px', height: '8px', background: isListening ? '#ef4444' : '#10b981', borderRadius: '50%', boxShadow: isListening ? '0 0 8px #ef4444' : '0 0 8px #10b981' }} />
-                  <span style={{ color: 'var(--accent-primary)', fontSize: '0.7rem', fontWeight: 900, letterSpacing: '1px' }}>SYSTEM_SHELL v2.4</span>
+                  <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 8px #10b981' }} />
+                  <span style={{ color: 'var(--accent-primary)', fontSize: '0.7rem', fontWeight: 900, letterSpacing: '1px' }}>BUDDY_AI v3.0</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  {isListening && (
-                    <motion.div 
-                      animate={{ opacity: [0.3, 1, 0.3] }} 
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                      style={{ fontSize: '0.6rem', color: '#ef4444', fontWeight: 800 }}
-                    >
-                      LISTENING...
-                    </motion.div>
-                  )}
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem' }}>CONNECTED // SECURE</span>
                 </div>
               </div>
               
               <div style={{ flex: 1, overflowY: 'auto', fontSize: '0.85rem', color: '#10b981', marginBottom: '1rem' }} className="no-scrollbar">
                 <p style={{ margin: '0 0 0.8rem 0', opacity: 0.5, fontSize: '0.7rem' }}># GDI_OS KERNEL LOADED...</p>
-                {isListening ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '30px' }}>
-                      {[...Array(15)].map((_, i) => (
-                        <motion.div 
-                          key={i}
-                          animate={{ height: [5, Math.random() * 25 + 5, 5] }}
-                          transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.05 }}
-                          style={{ width: '3px', background: '#ef4444', borderRadius: '2px' }}
-                        />
-                      ))}
-                    </div>
-                    <p style={{ fontSize: '0.7rem', color: '#ef4444', textTransform: 'uppercase', letterSpacing: '2px' }}>Waiting for "Buddy" command...</p>
-                    {voiceTranscript && <p style={{ fontSize: '0.8rem', color: 'white', opacity: 0.6 }}>"{voiceTranscript}"</p>}
-                  </div>
-                ) : (
-                  activityLog.slice(0, 8).reverse().map(log => (
+                {activityLog.slice(0, 8).reverse().map(log => (
                     <p key={log.id} style={{ margin: '0 0 0.4rem 0', display: 'flex', gap: '0.8rem' }}>
                       <span style={{ opacity: 0.3, minWidth: '70px' }}>[{new Date(log.id).toLocaleTimeString()}]</span> 
                       <span>{log.msg}</span>
                     </p>
-                  ))
-                )}
+                  ))}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(0,0,0,0.3)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -2962,38 +2676,6 @@ Current Stats: ${stats.users} active citizens, ${reports.length} pending reports
           )}
         </AnimatePresence>
 
-        <div style={{ position: 'relative', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {/* NEURAL LINK (BUDDY) BUTTON */}
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleNeuralLink}
-            style={{
-              width: '50px',
-              height: '50px',
-              borderRadius: '16px',
-              background: isListening ? '#ef4444' : 'rgba(124, 58, 237, 0.1)',
-              border: isListening ? 'none' : '1px solid rgba(124, 58, 237, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: isListening ? 'white' : 'var(--accent-primary)',
-              cursor: 'pointer',
-              boxShadow: isListening ? '0 0 20px rgba(239, 68, 68, 0.5)' : '0 10px 25px rgba(0,0,0,0.2)',
-              position: 'relative',
-              overflow: 'hidden',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            {isListening && (
-              <motion.div 
-                animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
-                transition={{ duration: 1, repeat: Infinity }}
-                style={{ position: 'absolute', inset: 0, borderRadius: '16px', border: '2px solid #ef4444' }}
-              />
-            )}
-            <Mic size={24} />
-          </motion.button>
 
           {/* SYSTEM SHELL TOGGLE */}
           <button
