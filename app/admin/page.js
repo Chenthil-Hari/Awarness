@@ -343,70 +343,197 @@ function AdminPage() {
   };
 
   const toggleNeuralLink = async () => {
+    // If already connected, disconnect
     if (isListening) {
       setIsListening(false);
-      // Logic handled by mediaRecorder.stop()
+      if (window.buddySocket) {
+        window.buddySocket.close();
+        window.buddySocket = null;
+      }
+      if (window.buddyStream) {
+        window.buddyStream.getTracks().forEach(t => t.stop());
+        window.buddyStream = null;
+      }
+      logActivity("BUDDY_AGENT: DISCONNECTED");
       return;
     }
 
+    logActivity("BUDDY_AGENT: INITIALIZING...");
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      const chunks = [];
+      // Get Deepgram API key from secure backend
+      const tokenRes = await fetch('/api/admin/voice/deepgram-token');
+      const tokenData = await tokenRes.json();
+      if (!tokenData.apiKey) throw new Error('No API key');
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
+      // Get mic access
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { 
+          sampleRate: 48000, 
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true 
+        } 
+      });
+      window.buddyStream = stream;
 
-      mediaRecorder.onstart = () => {
+      // Connect to Deepgram Voice Agent
+      const ws = new WebSocket('wss://agent.deepgram.com/agent', ['token', tokenData.apiKey]);
+      window.buddySocket = ws;
+
+      ws.onopen = () => {
+        logActivity("BUDDY_AGENT: UPLINK_ESTABLISHED");
         setIsListening(true);
-        logActivity("WHISPER_UPLINK: ACTIVE");
-        sentinelSpeak("Neural link established. I'm listening, Commander.");
-      };
 
-      mediaRecorder.onstop = async () => {
-        setIsListening(false);
-        logActivity("WHISPER_UPLINK: PROCESSING...");
-        
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-        const formData = new FormData();
-        formData.append('file', audioBlob, 'voice.webm');
+        // Send agent configuration
+        const config = {
+          type: "SettingsConfiguration",
+          audio: {
+            input: { encoding: "linear16", sample_rate: 48000 },
+            output: { encoding: "linear16", sample_rate: 24000, container: "none" }
+          },
+          agent: {
+            speak: {
+              provider: { type: "deepgram", model: "aura-2-jupiter-en" }
+            },
+            listen: {
+              provider: { type: "deepgram", version: "v2", model: "flux-general-en" }
+            },
+            think: {
+              provider: { type: "google", model: "gemini-2.5-flash" },
+              prompt: `#Role
+You are "Buddy", the AI assistant for the Awareness Pro cybersecurity training platform's Admin Command Center. You speak directly to the platform administrator.
 
-        try {
-          const res = await fetch('/api/admin/voice/transcribe', {
-            method: 'POST',
-            body: formData,
-          });
-          const data = await res.json();
-          if (data.text) {
-            handleVoiceCommand(data.text);
-          } else {
-            logActivity(`WHISPER_ERROR: ${data.error || 'Unknown error'}`);
+#Context
+The admin manages a cybersecurity awareness training platform with these features:
+- Citizens (Users) management - tab id: "users"
+- Email Architect - tab id: "email"
+- Security & Threat Intelligence - tab id: "security"
+- Analytics & Risk Matrix - tab id: "analytics"
+- Simulation Designer - tab id: "designer"
+- System Health Monitor - tab id: "system"
+- Global Broadcast - tab id: "broadcast"
+- Sentinel AI Moderation - tab id: "sentinel"
+- Overview Dashboard - tab id: "overview"
+- Reports Management - tab id: "reports"
+- Missions - tab id: "missions"
+- Achievements/Badges - tab id: "achievements"
+
+Current Stats: ${stats.users} active citizens, ${reports.length} pending reports.
+
+#Instructions
+- Be concise, professional, and tactical. You are a command center AI.
+- Use military/tech terminology naturally (e.g., "Affirmative", "Uplink established", "Scanning perimeter").
+- When asked to navigate somewhere, respond with confirmation AND include the tab id in your response wrapped in double brackets like [[tab:users]] or [[tab:security]].
+- When asked for status, provide real stats.
+- When asked to lock/maintain the platform, say you're initiating lockdown and include [[action:lockdown]].
+- Keep responses under 2 sentences.
+- Address the admin as "Commander" occasionally.
+
+#Greeting
+"Buddy online. All systems nominal, Commander. What's the mission?"`
+            },
+            greeting: "Buddy online. All systems nominal, Commander. What's the mission?"
           }
-        } catch (err) {
-          logActivity("WHISPER_ERROR: NETWORK_FAILURE");
-        }
+        };
+        ws.send(JSON.stringify(config));
+
+        // Start streaming microphone audio
+        const audioContext = new AudioContext({ sampleRate: 48000 });
+        const source = audioContext.createMediaStreamSource(stream);
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
         
-        // Stop all tracks to release mic
-        stream.getTracks().forEach(track => track.stop());
+        processor.onaudioprocess = (e) => {
+          if (ws.readyState === WebSocket.OPEN) {
+            const inputData = e.inputBuffer.getChannelData(0);
+            const pcm16 = new Int16Array(inputData.length);
+            for (let i = 0; i < inputData.length; i++) {
+              pcm16[i] = Math.max(-32768, Math.min(32767, Math.floor(inputData[i] * 32768)));
+            }
+            ws.send(pcm16.buffer);
+          }
+        };
+
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+        window.buddyProcessor = processor;
+        window.buddyAudioContext = audioContext;
       };
 
-      // Auto-stop after 6 seconds if not stopped manually
-      setTimeout(() => {
-        if (mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
-        }
-      }, 6000);
+      // Audio playback context for Deepgram TTS responses
+      const playbackContext = new AudioContext({ sampleRate: 24000 });
+      let nextPlayTime = 0;
 
-      mediaRecorder.start();
-      
-      // Store stop function to handle manual toggle
-      window.stopRecording = () => {
-        if (mediaRecorder.state === 'recording') mediaRecorder.stop();
+      ws.onmessage = async (event) => {
+        if (event.data instanceof Blob || event.data instanceof ArrayBuffer) {
+          // Audio response from Deepgram TTS
+          try {
+            const arrayBuffer = event.data instanceof Blob ? await event.data.arrayBuffer() : event.data;
+            const int16 = new Int16Array(arrayBuffer);
+            const float32 = new Float32Array(int16.length);
+            for (let i = 0; i < int16.length; i++) {
+              float32[i] = int16[i] / 32768.0;
+            }
+            const audioBuffer = playbackContext.createBuffer(1, float32.length, 24000);
+            audioBuffer.copyToChannel(float32, 0);
+            const bufferSource = playbackContext.createBufferSource();
+            bufferSource.buffer = audioBuffer;
+            bufferSource.connect(playbackContext.destination);
+            const currentTime = playbackContext.currentTime;
+            const startTime = Math.max(currentTime, nextPlayTime);
+            bufferSource.start(startTime);
+            nextPlayTime = startTime + audioBuffer.duration;
+          } catch (err) {
+            // Skip malformed audio chunks
+          }
+        } else {
+          // Text/JSON messages
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'AgentThinking') {
+              logActivity("BUDDY: Processing...");
+            } else if (msg.type === 'AgentStartedSpeaking') {
+              logActivity("BUDDY: Speaking...");
+            } else if (msg.type === 'ConversationText' && msg.role === 'assistant') {
+              logActivity(`Buddy: ${msg.content}`);
+              setVoiceTranscript(msg.content);
+              
+              // Parse action commands from Buddy's response
+              const tabMatch = msg.content.match(/\[\[tab:(\w+)\]\]/);
+              if (tabMatch) {
+                setActiveTab(tabMatch[1]);
+              }
+              const actionMatch = msg.content.match(/\[\[action:(\w+)\]\]/);
+              if (actionMatch && actionMatch[1] === 'lockdown') {
+                setTempMaintenanceUntil(new Date(Date.now() + 3600000).toISOString().slice(0, 16));
+                setShowMaintenanceModal(true);
+              }
+            } else if (msg.type === 'UserStartedSpeaking') {
+              logActivity("BUDDY: Listening to Commander...");
+            } else if (msg.type === 'ConversationText' && msg.role === 'user') {
+              logActivity(`Commander: ${msg.content}`);
+            }
+          } catch (e) {
+            // Non-JSON message, skip
+          }
+        }
+      };
+
+      ws.onerror = (err) => {
+        logActivity("BUDDY_AGENT: CONNECTION_ERROR");
+        setIsListening(false);
+      };
+
+      ws.onclose = () => {
+        logActivity("BUDDY_AGENT: CONNECTION_CLOSED");
+        setIsListening(false);
+        if (window.buddyProcessor) window.buddyProcessor.disconnect();
+        if (window.buddyAudioContext) window.buddyAudioContext.close();
       };
 
     } catch (err) {
-      logActivity("WHISPER_ERROR: MIC_ACCESS_DENIED");
+      logActivity(`BUDDY_AGENT: INIT_FAILURE - ${err.message}`);
+      setIsListening(false);
       alert("Microphone access is required for the Neural Link.");
     }
   };
@@ -2843,13 +2970,7 @@ function AdminPage() {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => {
-              if (isListening && window.stopRecording) {
-                window.stopRecording();
-              } else {
-                toggleNeuralLink();
-              }
-            }}
+            onClick={toggleNeuralLink}
             style={{
               width: '50px',
               height: '50px',
