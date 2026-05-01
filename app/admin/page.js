@@ -147,7 +147,6 @@ function AdminPage() {
   const [isListening, setIsListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [sentinelVoice, setSentinelVoice] = useState(null);
-  const [terminalInput, setTerminalInput] = useState('');
   const [buddyProcessing, setBuddyProcessing] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
