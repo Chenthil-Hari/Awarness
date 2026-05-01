@@ -357,6 +357,32 @@ function AdminPage() {
           logActivity('Buddy: ❌ Failed to send reply.');
         }
 
+      } else if (action === 'bulk_reply_tickets') {
+        const { replies } = params;
+        if (!replies || replies.length === 0) return;
+        
+        logActivity(`BUDDY_EXEC: Dispatched ${replies.length} personalized replies...`);
+        let count = 0;
+        
+        for (const reply of replies) {
+          const res = await fetch('/api/admin/support', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ticketId: reply.ticketId,
+              reply: reply.replyMessage,
+              status: 'resolved'
+            }),
+          });
+          if (res.ok) {
+            count++;
+            setTickets(prev => prev.filter(t => t._id !== reply.ticketId));
+          }
+        }
+        
+        logActivity(`Buddy: ✅ Successfully addressed ${count} queries individually.`);
+        sentinelSpeak(`Platform maintenance complete. ${count} operatives have been notified of their query resolutions.`);
+
       } else if (action === 'resolve_report') {
         const res = await fetch(`/api/admin/reports`, {
           method: 'PUT',
@@ -3000,6 +3026,18 @@ function AdminPage() {
                   <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
                     <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: 1.6 }}>{pendingAction.params.replyMessage}</p>
                   </div>
+                </div>
+              )}
+
+              {pendingAction.action === 'bulk_reply_tickets' && pendingAction.params && pendingAction.params.replies && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '300px', overflowY: 'auto' }} className="no-scrollbar">
+                  {pendingAction.params.replies.map((reply, idx) => (
+                    <div key={idx} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.75rem', fontWeight: 900, color: '#10b981' }}>REPLY TO: {reply.ticketFrom}</p>
+                      <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Query: "{reply.originalQuery?.substring(0, 60)}..."</p>
+                      <p style={{ margin: 0, fontSize: '0.8rem', lineHeight: 1.5, opacity: 0.9 }}>{reply.replyMessage}</p>
+                    </div>
+                  ))}
                 </div>
               )}
 
