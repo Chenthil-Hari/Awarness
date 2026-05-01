@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, BarChart2, Brain, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save, Globe, Send, Sparkles, ShieldCheck, Vote, Map as MapIcon, ThumbsUp, ThumbsDown, Trophy, Calendar, Image as ImageIcon, Folder, FileText, Upload, Key, Lock, Workflow, Activity, Settings, Award, Monitor, Smartphone, RefreshCw, AlertCircle, Download } from 'lucide-react';
+import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, BarChart2, Brain, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save, Globe, Send, Sparkles, ShieldCheck, Vote, Map as MapIcon, ThumbsUp, ThumbsDown, Trophy, Calendar, Image as ImageIcon, Folder, FileText, Upload, Key, Lock, Workflow, Activity, Settings, Award, Monitor, Smartphone, RefreshCw, AlertCircle, Download, Mic } from 'lucide-react';
 import AdminCommandBar from '../components/AdminCommandBar';
 import * as XLSX from 'xlsx';
 import { getPusherClient } from '@/lib/pusher';
@@ -144,6 +144,9 @@ function AdminPage() {
   });
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [sentinelVoice, setSentinelVoice] = useState(null);
   const [nodes, setNodes] = useState([
     { id: 'start', title: 'Phishing Hook', x: 50, y: 150, type: 'trigger' },
     { id: 'q1', title: 'Check Link?', x: 250, y: 100, type: 'question' },
@@ -227,6 +230,82 @@ function AdminPage() {
     }, 2000);
     return () => clearInterval(interval);
   }, [activeTab]);
+
+  // Sentinel Voice Setup
+  useEffect(() => {
+    const synth = window.speechSynthesis;
+    const loadVoices = () => {
+      const voices = synth.getVoices();
+      // Try to find a professional sounding male/robotic voice
+      const preferred = voices.find(v => v.name.includes('Google UK English Male') || v.name.includes('Daniel') || v.name.includes('Robo'));
+      setSentinelVoice(preferred || voices[0]);
+    };
+    loadVoices();
+    if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+  }, []);
+
+  const sentinelSpeak = (text) => {
+    if (!window.speechSynthesis) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    if (sentinelVoice) utterance.voice = sentinelVoice;
+    utterance.pitch = 0.85; // Slightly lower for a professional feel
+    utterance.rate = 1.0;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleVoiceCommand = (transcript) => {
+    const cmd = transcript.toLowerCase();
+    setVoiceTranscript(transcript);
+    
+    if (!cmd.includes('sentinel')) return;
+
+    if (cmd.includes('lockdown') || cmd.includes('maintenance')) {
+      sentinelSpeak("Acknowledge. Initiating platform lockdown protocol.");
+      setTempMaintenanceUntil(new Date(Date.now() + 3600000).toISOString().slice(0, 16));
+      setShowMaintenanceModal(true);
+    } else if (cmd.includes('reward') || cmd.includes('grant')) {
+      sentinelSpeak("Confirming operative commendation. Please specify quantity in the command relay.");
+      setActiveTab('users');
+    } else if (cmd.includes('status') || cmd.includes('overview')) {
+      sentinelSpeak(`Status Report: System nominal. ${stats.users} citizens active. ${reports.length} pending reports.`);
+      setActiveTab('overview');
+    } else if (cmd.includes('email') || cmd.includes('mail')) {
+      sentinelSpeak("Opening Email Architect. Visual uplink established.");
+      setActiveTab('email');
+    } else if (cmd.includes('security') || cmd.includes('threat')) {
+      sentinelSpeak("Scanning for threat vectors. Shield status: Optimal.");
+      setActiveTab('security');
+    } else if (cmd.includes('hello') || cmd.includes('hi')) {
+      sentinelSpeak("Greetings, Commander. All systems are under your direct control.");
+    } else {
+      sentinelSpeak("Command recognized, but intent is ambiguous. Please re-state.");
+    }
+  };
+
+  const toggleNeuralLink = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return alert("Neural Link requires a modern browser uplink.");
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      handleVoiceCommand(transcript);
+    };
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+
+    recognition.start();
+  };
 
   const fetchAdminData = async () => {
     try {
@@ -2586,23 +2665,69 @@ function AdminPage() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 8px #10b981' }} />
+                  <div style={{ width: '8px', height: '8px', background: isListening ? '#ef4444' : '#10b981', borderRadius: '50%', boxShadow: isListening ? '0 0 8px #ef4444' : '0 0 8px #10b981' }} />
                   <span style={{ color: 'var(--accent-primary)', fontSize: '0.7rem', fontWeight: 900, letterSpacing: '1px' }}>SYSTEM_SHELL v2.4</span>
                 </div>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem' }}>CONNECTED // SECURE</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  {isListening && (
+                    <motion.div 
+                      animate={{ opacity: [0.3, 1, 0.3] }} 
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      style={{ fontSize: '0.6rem', color: '#ef4444', fontWeight: 800 }}
+                    >
+                      LISTENING...
+                    </motion.div>
+                  )}
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem' }}>CONNECTED // SECURE</span>
+                </div>
               </div>
               
               <div style={{ flex: 1, overflowY: 'auto', fontSize: '0.85rem', color: '#10b981', marginBottom: '1rem' }} className="no-scrollbar">
                 <p style={{ margin: '0 0 0.8rem 0', opacity: 0.5, fontSize: '0.7rem' }}># GDI_OS KERNEL LOADED...</p>
-                {activityLog.slice(0, 8).reverse().map(log => (
-                  <p key={log.id} style={{ margin: '0 0 0.4rem 0', display: 'flex', gap: '0.8rem' }}>
-                    <span style={{ opacity: 0.3, minWidth: '70px' }}>[{new Date(log.id).toLocaleTimeString()}]</span> 
-                    <span>{log.msg}</span>
-                  </p>
-                ))}
+                {isListening ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '30px' }}>
+                      {[...Array(15)].map((_, i) => (
+                        <motion.div 
+                          key={i}
+                          animate={{ height: [5, Math.random() * 25 + 5, 5] }}
+                          transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.05 }}
+                          style={{ width: '3px', background: '#ef4444', borderRadius: '2px' }}
+                        />
+                      ))}
+                    </div>
+                    <p style={{ fontSize: '0.7rem', color: '#ef4444', textTransform: 'uppercase', letterSpacing: '2px' }}>Waiting for "Sentinel" command...</p>
+                    {voiceTranscript && <p style={{ fontSize: '0.8rem', color: 'white', opacity: 0.6 }}>"{voiceTranscript}"</p>}
+                  </div>
+                ) : (
+                  activityLog.slice(0, 8).reverse().map(log => (
+                    <p key={log.id} style={{ margin: '0 0 0.4rem 0', display: 'flex', gap: '0.8rem' }}>
+                      <span style={{ opacity: 0.3, minWidth: '70px' }}>[{new Date(log.id).toLocaleTimeString()}]</span> 
+                      <span>{log.msg}</span>
+                    </p>
+                  ))
+                )}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(0,0,0,0.3)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <button 
+                  onClick={toggleNeuralLink}
+                  style={{ 
+                    background: isListening ? '#ef4444' : 'var(--accent-primary)', 
+                    border: 'none', 
+                    borderRadius: '50%', 
+                    width: '32px', 
+                    height: '32px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    color: 'white', 
+                    cursor: 'pointer',
+                    boxShadow: isListening ? '0 0 15px rgba(239, 68, 68, 0.4)' : 'none'
+                  }}
+                >
+                  <Mic size={16} />
+                </button>
                 <span style={{ color: 'var(--accent-primary)', fontWeight: 900 }}>$</span>
                 <input 
                   value={terminalInput}
