@@ -34,10 +34,21 @@ function DuelContent() {
   const { members, broadcast, on, isConnected } = useMultiplayer(roomCode, !!myId);
 
   // 3. Game State
-  const [gameState, setGameState] = useState('waiting'); // waiting, countdown, playing, result
+  const [gameState, setGameState] = useState('waiting'); // waiting, wager, crafting, playing, result
   const [isReady, setIsReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
   
+  // Wager State
+  const [wager, setWager] = useState(100);
+  const [opponentWager, setOpponentWager] = useState(null);
+  const [wagerAccepted, setWagerAccepted] = useState(false);
+
+  // Crafting State
+  const [myPhish, setMyPhish] = useState({ sender: '', link: '', urgency: 'High' });
+  const [opponentPhish, setOpponentPhish] = useState(null);
+  const [isCraftingDone, setIsCraftingDone] = useState(false);
+  const [opponentCraftingDone, setOpponentCraftingDone] = useState(false);
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [myProgress, setMyProgress] = useState(0);
   const [opponentProgress, setOpponentProgress] = useState(0);
@@ -73,6 +84,21 @@ function DuelContent() {
       }
     });
 
+    const offWager = on('propose-wager', (data) => {
+      if (data.senderId === opponentId) setOpponentWager(data.wager);
+    });
+
+    const offWagerAccept = on('accept-wager', (data) => {
+      if (data.senderId === opponentId) setWagerAccepted(true);
+    });
+
+    const offPhishData = on('phish-crafted', (data) => {
+      if (data.senderId === opponentId) {
+        setOpponentPhish(data.phish);
+        setOpponentCraftingDone(true);
+      }
+    });
+
     const offProgress = on('duel-progress', (data) => {
       if (data.senderId === opponentId) setOpponentProgress(data.progress);
     });
@@ -82,7 +108,6 @@ function DuelContent() {
     });
 
     const offSync = on('request-sync', () => {
-      console.log("Duel: Sync Requested");
       if (isReady) broadcast('player-ready', { status: 'ready' });
     });
 
@@ -91,6 +116,9 @@ function DuelContent() {
 
     return () => {
       offReady();
+      offWager();
+      offWagerAccept();
+      offPhishData();
       offProgress();
       offFinished();
       offSync();
@@ -100,11 +128,22 @@ function DuelContent() {
   // 6. Game Start Logic
   useEffect(() => {
     if (isReady && opponentReady && gameState === 'waiting') {
-      console.log("Duel: Both players locked. Starting...");
+      setGameState('wager');
+    }
+  }, [isReady, opponentReady, gameState]);
+
+  useEffect(() => {
+    if (wager === opponentWager && wagerAccepted && gameState === 'wager') {
+      setGameState('crafting');
+    }
+  }, [wager, opponentWager, wagerAccepted, gameState]);
+
+  useEffect(() => {
+    if (isCraftingDone && opponentCraftingDone && gameState === 'crafting') {
       setGameState('countdown');
       setTimeout(() => setGameState('playing'), 3000);
     }
-  }, [isReady, opponentReady, gameState]);
+  }, [isCraftingDone, opponentCraftingDone, gameState]);
 
   // 7. Combat Mechanics
   useEffect(() => {
@@ -151,9 +190,9 @@ function DuelContent() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            xpToAdd: 500, 
-            badgeAwarded: 'duel-victor',
-            scenarioId: `duel-win-${roomCode}`,
+            xpToAdd: wager * 2, // Winner takes all
+            badgeAwarded: 'phish-master',
+            scenarioId: `phish-off-${roomCode}`,
             category: 'Tactical',
             isSuccess: true
           })
@@ -162,7 +201,39 @@ function DuelContent() {
       } catch (e) {
         console.error("Victory save fail:", e);
       }
+    } else {
+      // Deduct wager on loss
+      try {
+        await fetch('/api/user/complete-simulation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            xpToAdd: -wager, 
+            scenarioId: `phish-off-loss-${roomCode}`,
+            category: 'Tactical',
+            isSuccess: false
+          })
+        });
+        update();
+      } catch (e) {
+        console.error("Loss save fail:", e);
+      }
     }
+  };
+
+  const proposeWager = (val) => {
+    setWager(val);
+    broadcast('propose-wager', { wager: val });
+  };
+
+  const acceptWager = () => {
+    setWagerAccepted(true);
+    broadcast('accept-wager', { status: 'accepted' });
+  };
+
+  const finishCrafting = () => {
+    setIsCraftingDone(true);
+    broadcast('phish-crafted', { phish: myPhish });
   };
 
   return (
@@ -212,6 +283,117 @@ function DuelContent() {
           </motion.div>
         )}
 
+        {gameState === 'wager' && (
+          <motion.div key="wager" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ maxWidth: '600px', margin: '4rem auto' }}>
+            <BorderGlow animated={true} glowColor="251 191 36" borderRadius={24}>
+              <div style={{ padding: '3rem', textAlign: 'center' }}>
+                <h3 style={{ fontSize: '1.5rem', marginBottom: '2rem', fontWeight: 900 }}>PROPOSE XP WAGER</h3>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '3rem' }}>
+                  {[100, 250, 500].map(val => (
+                    <button 
+                      key={val} 
+                      onClick={() => proposeWager(val)}
+                      className="btn-secondary"
+                      style={{ 
+                        padding: '1.5rem', 
+                        flex: 1, 
+                        border: wager === val ? '2px solid var(--accent-warning)' : '1px solid var(--glass-border)',
+                        background: wager === val ? 'rgba(251, 191, 36, 0.1)' : 'var(--bg-tertiary)'
+                      }}
+                    >
+                      <Zap size={20} color={wager === val ? 'var(--accent-warning)' : 'var(--text-muted)'} style={{ marginBottom: '0.5rem' }} />
+                      <div style={{ fontWeight: 900 }}>{val} XP</div>
+                    </button>
+                  ))}
+                </div>
+                
+                <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Opponent Proposal: <span style={{ color: 'white', fontWeight: 800 }}>{opponentWager || 'Pending...'}</span></p>
+                </div>
+
+                <button 
+                  disabled={!opponentWager || wager !== opponentWager} 
+                  onClick={acceptWager} 
+                  className="btn-primary" 
+                  style={{ width: '100%', background: 'var(--accent-warning)' }}
+                >
+                  {wagerAccepted ? 'WAGER LOCKED' : (wager === opponentWager ? 'ACCEPT WAGER' : 'WAITING FOR SYNC')}
+                </button>
+              </div>
+            </BorderGlow>
+          </motion.div>
+        )}
+
+        {gameState === 'crafting' && (
+          <motion.div key="crafting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ maxWidth: '800px', margin: '2rem auto' }}>
+            <div className="glass-card" style={{ padding: '3rem', borderRadius: '32px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
+                <Zap size={32} color="var(--accent-danger)" />
+                <h2 style={{ fontSize: '2rem', fontWeight: 900 }}>CRAFT YOUR <span className="gradient-text">ATTACK</span></h2>
+              </div>
+              
+              <div style={{ display: 'grid', gap: '2rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)' }}>SELECT SENDER IDENTITY</label>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    {['Apple Support', 'Amazon Billing', 'IT Department', 'Payroll Admin'].map(s => (
+                      <button 
+                        key={s} 
+                        onClick={() => setMyPhish({...myPhish, sender: s})}
+                        className="btn-secondary"
+                        style={{ background: myPhish.sender === s ? 'var(--accent-primary)' : 'var(--bg-tertiary)', borderColor: myPhish.sender === s ? 'var(--accent-primary)' : 'var(--glass-border)' }}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)' }}>MALICIOUS RED FLAG (URL)</label>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    {['bit.ly/secure-now', 'support-verify-com.xyz', 'internal-it.secure-portal.net', 'urgent-action.tk'].map(l => (
+                      <button 
+                        key={l} 
+                        onClick={() => setMyPhish({...myPhish, link: l})}
+                        className="btn-secondary"
+                        style={{ background: myPhish.link === l ? 'var(--accent-primary)' : 'var(--bg-tertiary)', borderColor: myPhish.link === l ? 'var(--accent-primary)' : 'var(--glass-border)' }}
+                      >
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)' }}>THREAT LEVEL</label>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    {['Medium', 'High', 'CRITICAL'].map(u => (
+                      <button 
+                        key={u} 
+                        onClick={() => setMyPhish({...myPhish, urgency: u})}
+                        className="btn-secondary"
+                        style={{ flex: 1, background: myPhish.urgency === u ? 'var(--accent-danger)' : 'var(--bg-tertiary)', borderColor: myPhish.urgency === u ? 'var(--accent-danger)' : 'var(--glass-border)' }}
+                      >
+                        {u}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button 
+                  disabled={!myPhish.sender || !myPhish.link || isCraftingDone} 
+                  onClick={finishCrafting} 
+                  className="btn-primary" 
+                  style={{ marginTop: '2rem', padding: '1.2rem' }}
+                >
+                  {isCraftingDone ? 'ATTACK READY - WAITING FOR OPPONENT' : 'FINISH ATTACK'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {gameState === 'countdown' && (
           <motion.div key="countdown" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} style={{ textAlign: 'center', paddingTop: '10rem' }}>
             <motion.h2 
@@ -251,15 +433,39 @@ function DuelContent() {
             </div>
 
             <div className="glass-card" style={{ padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--glass-border)' }}>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>{duelQuestions[currentQuestion].title}</h3>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '3rem', fontSize: '1.1rem' }}>{duelQuestions[currentQuestion].description}</p>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                {duelQuestions[currentQuestion].options.map((opt, i) => (
-                  <button key={i} onClick={() => handleAnswer(opt)} className="btn-secondary" style={{ padding: '1.5rem', textAlign: 'left', background: 'var(--bg-tertiary)' }}>
-                    {opt.text}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                <Shield size={28} color="var(--accent-success)" />
+                <h3 style={{ fontSize: '1.5rem', margin: 0 }}>NEUTRALIZE THE <span className="gradient-text">ATTACK</span></h3>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--glass-border)', marginBottom: '3rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
+                  <div style={{ width: '40px', height: '40px', background: 'var(--bg-tertiary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>
+                    {opponentPhish?.sender[0]}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '1rem', fontWeight: 800 }}>{opponentPhish?.sender} <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.8rem' }}>&lt;security@auth-verify.net&gt;</span></div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--accent-danger)', fontWeight: 900 }}>URGENCY: {opponentPhish?.urgency}</div>
+                  </div>
+                </div>
+
+                <p style={{ fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+                  Dear User, we have detected a suspicious login attempt. Please review your activity and secure your account immediately to prevent unauthorized access.
+                </p>
+
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <button 
+                    onClick={() => handleAnswer({ correct: true })}
+                    className="btn-secondary" 
+                    style={{ padding: '1rem 2rem', color: 'var(--accent-danger)', border: '1px solid var(--accent-danger)', background: 'rgba(239, 68, 68, 0.05)' }}
+                  >
+                    {opponentPhish?.link}
                   </button>
-                ))}
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                Tip: Click the suspicious link to neutralize the phish!
               </div>
             </div>
           </motion.div>
@@ -273,14 +479,15 @@ function DuelContent() {
                   <>
                     <Trophy size={80} color="var(--accent-warning)" style={{ marginBottom: '2rem' }} />
                     <h2 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1rem' }}>VICTORY</h2>
-                    <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>You breached the target faster than {opponentName}!</p>
-                    <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--accent-primary)', marginBottom: '3rem' }}>+500 XP EARNED</div>
+                    <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>You neutralized the target faster than {opponentName}!</p>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--accent-primary)', marginBottom: '3rem' }}>+{wager * 2} XP EARNED</div>
                   </>
                 ) : (
                   <>
                     <XCircle size={80} color="var(--accent-danger)" style={{ marginBottom: '2rem' }} />
                     <h2 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1rem' }}>DEFEAT</h2>
-                    <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '3rem' }}>{opponentName} bypassed your defenses first.</p>
+                    <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>{opponentName} bypassed your defenses first.</p>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--accent-danger)', marginBottom: '3rem' }}>-{wager} XP DEDUCTED</div>
                   </>
                 )}
                 <button onClick={() => router.push('/')} className="btn-primary" style={{ width: '100%' }}>RETURN TO DASHBOARD</button>

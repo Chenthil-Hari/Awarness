@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save, Globe, Send, Sparkles, ShieldCheck, Vote, Map as MapIcon, ThumbsUp, ThumbsDown, Trophy, Calendar, Image as ImageIcon, Folder, FileText, Upload, Key, Lock, Workflow, Activity, Settings } from 'lucide-react';
+import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save, Globe, Send, Sparkles, ShieldCheck, Vote, Map as MapIcon, ThumbsUp, ThumbsDown, Trophy, Calendar, Image as ImageIcon, Folder, FileText, Upload, Key, Lock, Workflow, Activity, Settings, Award, Monitor, Smartphone, RefreshCw, AlertCircle } from 'lucide-react';
 import AdminCommandBar from '../components/AdminCommandBar';
 import * as XLSX from 'xlsx';
 import { getPusherClient } from '@/lib/pusher';
@@ -114,6 +114,8 @@ export default function AdminPage() {
   const [forecast, setForecast] = useState(null);
   const [newPoll, setNewPoll] = useState({ question: '', options: ['', ''] });
   const [newTournament, setNewTournament] = useState({ title: '', prizePool: 1000, duration: 24 });
+  const [mailStatus, setMailStatus] = useState({ status: 'checking', error: null });
+  const [previewDevice, setPreviewDevice] = useState('desktop');
 
   const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
   const [configPoll, setConfigPoll] = useState(null);
@@ -201,6 +203,20 @@ export default function AdminPage() {
     }
   }, [session, status]);
 
+  const checkMailHealth = async () => {
+    try {
+      const res = await fetch('/api/admin/test-mail/health');
+      const data = await res.json();
+      setMailStatus(data);
+    } catch (err) {
+      setMailStatus({ status: 'offline', error: 'Connection Refused' });
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'email') checkMailHealth();
+  }, [activeTab]);
+
   // Simulated Telemetry Oscillation
   useEffect(() => {
     if (activeTab !== 'system') return;
@@ -213,27 +229,28 @@ export default function AdminPage() {
 
   const fetchAdminData = async () => {
     try {
-      const [statsRes, reportsRes, usersRes, ticketsRes, missionsRes, auditRes, configRes, analyticsRes, guidesRes] = await Promise.all([
-        fetch('/api/admin/stats'),
-        fetch('/api/admin/reports'),
-        fetch('/api/admin/users'),
-        fetch('/api/admin/support'),
-        fetch('/api/admin/pending-missions'),
-        fetch('/api/admin/audit'),
-        fetch('/api/admin/config'),
-        fetch('/api/admin/analytics'),
-        fetch('/api/guides')
-      ]);
+      const fetchData = async (url, fallback = []) => {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) return fallback;
+          return await res.json();
+        } catch (e) {
+          console.error(`Fetch error for ${url}:`, e);
+          return fallback;
+        }
+      };
 
-      const statsData = await statsRes.json();
-      const reportsData = await reportsRes.json();
-      const usersData = await usersRes.json();
-      const ticketsData = await ticketsRes.json();
-      const missionsData = await missionsRes.json();
-      const auditData = await auditRes.json();
-      const configData = await configRes.json();
-      const analyticsData = await analyticsRes.json();
-      const guidesData = await guidesRes.json();
+      const [statsData, reportsData, usersData, ticketsData, missionsData, auditData, configData, analyticsData, guidesData] = await Promise.all([
+        fetchData('/api/admin/stats', { users: 0, guides: 0, reports: 0 }),
+        fetchData('/api/admin/reports'),
+        fetchData('/api/admin/users', []),
+        fetchData('/api/admin/support'),
+        fetchData('/api/admin/pending-missions', { missions: [] }),
+        fetchData('/api/admin/audit'),
+        fetchData('/api/admin/config', {}),
+        fetchData('/api/admin/analytics', {}),
+        fetchData('/api/guides')
+      ]);
 
       // Fetch Email Templates from DB
       try {
@@ -241,11 +258,9 @@ export default function AdminPage() {
         if (templatesRes.ok) {
           const tData = await templatesRes.json();
           if (tData.length > 0) {
-            // Load templates from DB if they exist
             tData.forEach(t => {
               TEMPLATES[t.name] = t.html;
             });
-            // Also update the initial state if the current selected matches
             if (TEMPLATES[selectedTemplate]) {
               setTemplateCode(TEMPLATES[selectedTemplate]);
             }
@@ -263,40 +278,35 @@ export default function AdminPage() {
       setAnalytics(analyticsData);
       setAllGuides(guidesData || []);
       
-      setAnalytics(analyticsData);
-      setAllGuides(guidesData || []);
-      
       // Fetch Democracy data
-      try {
-        const [ipRes, badgeRes, pollsRes, suggRes, tourRes, assetRes, rolesRes] = await Promise.all([
-          fetch('/api/admin/security/blocklist'),
-          fetch('/api/admin/badges'),
-          fetch('/api/admin/polls'),
-          fetch('/api/admin/suggestions'),
-          fetch('/api/admin/tournaments'),
-          fetch('/api/admin/assets'),
-          fetch('/api/admin/roles')
-        ]);
-        if (ipRes.ok) setBlockedIPs(await ipRes.json());
-        if (pollsRes.ok) setPolls(await pollsRes.json());
-        if (suggRes.ok) setSuggestions(await suggRes.json());
-        if (tourRes.ok) setTournaments(await tourRes.json());
-        if (assetRes.ok) setAssets(await assetRes.json());
-        if (rolesRes.ok) setRoles(await rolesRes.json());
-        
-        const [heatmapRes, forecastRes] = await Promise.all([
-          fetch('/api/admin/heatmap'),
-          fetch('/api/admin/analytics/forecast')
-        ]);
-        if (heatmapRes.ok) setHeatmapDots(await heatmapRes.json());
-        if (forecastRes.ok) setForecast(await forecastRes.json());
-      } catch (err) {
-        console.error("New modules fetch error:", err);
-      }
+      const [ipData, badgeData, pollsData, suggData, tourData, assetData, rolesData] = await Promise.all([
+        fetchData('/api/admin/security/blocklist'),
+        fetchData('/api/admin/badges'),
+        fetchData('/api/admin/polls'),
+        fetchData('/api/admin/suggestions'),
+        fetchData('/api/admin/tournaments'),
+        fetchData('/api/admin/assets'),
+        fetchData('/api/admin/roles')
+      ]);
+
+      setBlockedIPs(ipData);
+      setPolls(pollsData);
+      setSuggestions(suggData);
+      setTournaments(tourData);
+      setAssets(assetData);
+      setRoles(rolesData);
+      
+      const [heatmapData, forecastData] = await Promise.all([
+        fetchData('/api/admin/heatmap'),
+        fetchData('/api/admin/analytics/forecast')
+      ]);
+
+      setHeatmapDots(heatmapData);
+      setForecast(forecastData);
 
       setLoading(false);
     } catch (error) {
-      console.error('Failed to fetch admin data');
+      console.error('Critical failure in admin data synchronization');
     } finally {
       setLoading(false);
     }
@@ -785,10 +795,19 @@ export default function AdminPage() {
     <>
     <main style={{ 
       minHeight: '100vh', 
-      background: 'var(--bg-primary)', 
+      background: isDark ? 'radial-gradient(circle at 50% -20%, #1e1b4b 0%, #020617 100%)' : 'var(--bg-primary)', 
       color: 'var(--text-primary)',
-      display: 'flex'
+      display: 'flex',
+      position: 'relative',
+      overflow: 'hidden'
     }}>
+      {/* Neural Background Pulse */}
+      {isDark && (
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.4, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '40%', height: '40%', background: 'var(--accent-primary)', filter: 'blur(150px)', opacity: 0.1, borderRadius: '50%' }} />
+          <div style={{ position: 'absolute', bottom: '10%', right: '5%', width: '30%', height: '30%', background: 'var(--accent-secondary)', filter: 'blur(120px)', opacity: 0.05, borderRadius: '50%' }} />
+        </div>
+      )}
       <AdminCommandBar
         isOpen={isCommandBarOpen}
         onClose={() => setIsCommandBarOpen(false)}
@@ -1255,13 +1274,36 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'email' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr 1fr', gap: '2rem' }} className="flex-mobile-column">
+            <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr 400px', gap: '2rem' }} className="flex-mobile-column">
               {/* LEFT: TEMPLATE VAULT */}
-              <div className="glass-card" style={{ padding: '1.5rem', height: 'calc(100vh - 250px)', overflowY: 'auto' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Award size={18} color="var(--accent-primary)" /> Template Vault
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="glass-card" style={{ padding: '1.5rem', height: 'calc(100vh - 250px)', overflowY: 'auto', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Award size={18} color="var(--accent-primary)" /> Template Vault
+                  </h3>
+                  <button onClick={checkMailHealth} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                    <RefreshCw size={14} className={mailStatus.status === 'checking' ? 'spin' : ''} />
+                  </button>
+                </div>
+
+                <div style={{ 
+                  padding: '0.75rem', 
+                  borderRadius: '10px', 
+                  background: mailStatus.status === 'online' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  border: `1px solid ${mailStatus.status === 'online' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+                  marginBottom: '1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem'
+                }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: mailStatus.status === 'online' ? '#10b981' : '#ef4444', boxShadow: `0 0 10px ${mailStatus.status === 'online' ? '#10b981' : '#ef4444'}` }} />
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 900, color: mailStatus.status === 'online' ? '#10b981' : '#ef4444' }}>MAIL SERVER: {mailStatus.status?.toUpperCase()}</p>
+                    {mailStatus.error && <p style={{ margin: 0, fontSize: '0.6rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{mailStatus.error}</p>}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {Object.keys(TEMPLATES).map(t => (
                     <button 
                       key={t} 
@@ -1271,13 +1313,13 @@ export default function AdminPage() {
                       }}
                       style={{ 
                         textAlign: 'left', 
-                        padding: '1rem', 
-                        background: selectedTemplate === t ? 'rgba(124, 58, 237, 0.1)' : 'rgba(255,255,255,0.03)', 
-                        border: `1px solid ${selectedTemplate === t ? 'var(--accent-primary)' : 'var(--glass-border)'}`, 
-                        borderRadius: '12px', 
-                        fontSize: '0.85rem', 
+                        padding: '0.8rem 1rem', 
+                        background: selectedTemplate === t ? 'rgba(124, 58, 237, 0.1)' : 'transparent', 
+                        border: `1px solid ${selectedTemplate === t ? 'var(--accent-primary)' : 'transparent'}`, 
+                        borderRadius: '10px', 
+                        fontSize: '0.8rem', 
                         color: selectedTemplate === t ? 'white' : 'var(--text-secondary)',
-                        fontWeight: selectedTemplate === t ? 800 : 600,
+                        fontWeight: selectedTemplate === t ? 800 : 500,
                         transition: 'all 0.2s ease'
                       }}
                     >
@@ -1286,61 +1328,124 @@ export default function AdminPage() {
                   ))}
                 </div>
 
-                <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-                  <p style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Available Tokens</p>
+                <div style={{ marginTop: '2rem', padding: '1.2rem', background: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                  <p style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Variable Inserter</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                     {['name', 'username', 'xp', 'reason', 'reset_url'].map(token => (
-                      <code key={token} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', color: 'var(--accent-secondary)' }}>&#123;&#123;{token}&#125;&#125;</code>
+                      <button 
+                        key={token} 
+                        onClick={() => setTemplateCode(prev => prev + `{{${token}}}`)}
+                        style={{ fontSize: '0.65rem', background: isDark ? 'rgba(255,255,255,0.05)' : 'white', border: '1px solid var(--glass-border)', padding: '4px 8px', borderRadius: '6px', color: 'var(--accent-secondary)', cursor: 'pointer', fontWeight: 700 }}
+                      >
+                        {token}
+                      </button>
                     ))}
                   </div>
                 </div>
               </div>
 
               {/* MIDDLE: ARCHITECT EDITOR */}
-              <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column' }}>
+              <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', background: isDark ? 'var(--glass-bg)' : 'white' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Template Architect</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>Template Architect</h3>
+                    <div style={{ height: '20px', width: '1px', background: 'var(--glass-border)' }} />
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{selectedTemplate}</p>
+                  </div>
                   <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button onClick={handleTestEmail} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>Send Test</button>
-                    <button onClick={handleSaveTemplate} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}><Save size={14} /> Save</button>
+                    <button 
+                      onClick={handleTestEmail} 
+                      className="btn-secondary" 
+                      style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem', gap: '0.5rem', background: 'rgba(124, 58, 237, 0.05)', color: 'var(--accent-primary)', border: '1px solid rgba(124, 58, 237, 0.2)' }}
+                    >
+                      <Send size={14} /> TEST DISPATCH
+                    </button>
+                    <button onClick={handleSaveTemplate} className="btn-primary" style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem', gap: '0.5rem' }}>
+                      <Save size={14} /> DEPLOY UPDATE
+                    </button>
                   </div>
                 </div>
-                <textarea 
-                  value={templateCode}
-                  onChange={(e) => setTemplateCode(e.target.value)}
-                  style={{ 
-                    flex: 1, 
-                    width: '100%', 
-                    background: 'rgba(0,0,0,0.3)', 
-                    border: '1px solid var(--glass-border)', 
-                    borderRadius: '12px', 
-                    padding: '1.5rem', 
-                    color: '#10b981', 
-                    fontFamily: 'monospace', 
-                    fontSize: '0.9rem', 
-                    outline: 'none',
-                    resize: 'none',
-                    lineHeight: 1.6
-                  }}
-                />
+                <div style={{ flex: 1, position: 'relative', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
+                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '30px', background: isDark ? 'rgba(255,255,255,0.03)' : '#f1f5f9', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', px: '1rem', gap: '4px', zIndex: 5 }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff5f56' }} />
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffbd2e' }} />
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#27c93f' }} />
+                      <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginLeft: '1rem', fontWeight: 800, textTransform: 'uppercase' }}>email_compiler.html</span>
+                   </div>
+                  <textarea 
+                    value={templateCode}
+                    onChange={(e) => setTemplateCode(e.target.value)}
+                    className="no-scrollbar"
+                    style={{ 
+                      width: '100%', 
+                      height: '100%',
+                      background: isDark ? '#0a0a0b' : '#fafafa', 
+                      padding: '3rem 1.5rem 1.5rem', 
+                      color: isDark ? '#10b981' : '#059669', 
+                      fontFamily: '"Fira Code", monospace', 
+                      fontSize: '0.85rem', 
+                      outline: 'none',
+                      resize: 'none',
+                      lineHeight: 1.6,
+                      border: 'none'
+                    }}
+                  />
+                </div>
               </div>
 
               {/* RIGHT: LIVE VISUAL UPLINK */}
-              <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-muted)' }}>Visual Uplink</h3>
+              <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-muted)' }}>Visual Uplink</h3>
+                  <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '2px' }}>
+                    <button 
+                      onClick={() => setPreviewDevice('desktop')}
+                      style={{ padding: '4px 8px', borderRadius: '6px', background: previewDevice === 'desktop' ? 'var(--accent-primary)' : 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
+                    >
+                      <Monitor size={14} />
+                    </button>
+                    <button 
+                      onClick={() => setPreviewDevice('mobile')}
+                      style={{ padding: '4px 8px', borderRadius: '6px', background: previewDevice === 'mobile' ? 'var(--accent-primary)' : 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
+                    >
+                      <Smartphone size={14} />
+                    </button>
+                  </div>
+                </div>
+
                 <div style={{ 
                   flex: 1, 
-                  background: 'white', 
-                  borderRadius: '12px', 
-                  overflow: 'hidden',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  background: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc',
+                  borderRadius: '16px',
+                  padding: '1rem',
+                  overflow: 'hidden'
                 }}>
-                  <div 
-                    dangerouslySetInnerHTML={{ __html: templateCode }}
-                    style={{ width: '100%', height: '100%', overflowY: 'auto' }}
-                  />
+                  <motion.div 
+                    animate={{ width: previewDevice === 'desktop' ? '100%' : '280px' }}
+                    style={{ 
+                      height: '100%',
+                      background: 'white', 
+                      borderRadius: previewDevice === 'mobile' ? '32px' : '8px', 
+                      overflow: 'hidden',
+                      boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+                      border: previewDevice === 'mobile' ? '8px solid #1a1a1a' : '1px solid #e2e8f0',
+                      position: 'relative'
+                    }}
+                  >
+                    {previewDevice === 'mobile' && (
+                      <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', width: '40px', height: '4px', background: '#333', borderRadius: '2px' }} />
+                    )}
+                    <div 
+                      dangerouslySetInnerHTML={{ __html: templateCode }}
+                      className="no-scrollbar"
+                      style={{ width: '100%', height: '100%', overflowY: 'auto', paddingTop: previewDevice === 'mobile' ? '25px' : '0' }}
+                    />
+                  </motion.div>
                 </div>
-                <p style={{ marginTop: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                <p style={{ marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', fontStyle: 'italic' }}>
                   Real-time rendering of the operative's briefing view.
                 </p>
               </div>
@@ -1980,44 +2085,75 @@ export default function AdminPage() {
                   </h3>
                   <div style={{ 
                     height: '400px', 
-                    background: 'rgba(0,0,0,0.4)', 
-                    borderRadius: '16px', 
+                    background: isDark ? 'rgba(0,0,0,0.4)' : '#f8fafc', 
+                    borderRadius: '24px', 
                     position: 'relative', 
                     overflow: 'hidden',
-                    border: '1px solid rgba(255,255,255,0.05)'
+                    border: '1px solid var(--glass-border)',
+                    boxShadow: 'inset 0 0 30px rgba(0,0,0,0.5)'
                   }}>
-                    {/* Simulated World Map SVG */}
-                    <svg viewBox="0 0 1000 500" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.1, fill: 'var(--accent-primary)' }}>
-                      <path d="M150,100 Q400,50 850,100 T150,400 T150,100" opacity="0.3" fill="none" stroke="currentColor" strokeWidth="1" />
-                      <circle cx="200" cy="150" r="2" /> <circle cx="400" cy="250" r="2" /> <circle cx="700" cy="180" r="2" />
+                    {/* High-Fidelity World Grid */}
+                    <div style={{ 
+                      position: 'absolute', 
+                      inset: 0, 
+                      background: 'radial-gradient(circle, var(--accent-primary) 0.5px, transparent 0.5px)', 
+                      backgroundSize: '30px 30px', 
+                      opacity: 0.1 
+                    }} />
+                    
+                    <svg viewBox="0 0 1000 500" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.15, stroke: 'var(--accent-primary)', fill: 'none' }}>
+                      <path d="M150,100 Q400,50 850,100 T150,400 T150,100" strokeWidth="0.5" />
+                      <path d="M50,250 L950,250" strokeWidth="0.2" strokeDasharray="10,10" />
+                      <circle cx="200" cy="150" r="1.5" /> <circle cx="400" cy="250" r="1.5" /> <circle cx="700" cy="180" r="1.5" />
                     </svg>
                     
-                    {heatmapDots.map(dot => (
-                      <motion.div
-                        key={dot.id}
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: [1, 2, 1.5], opacity: [0, 1, 0.4] }}
-                        transition={{ duration: 2, repeat: Infinity, delay: Math.random() * 2 }}
-                        style={{
+                    {heatmapDots.map((dot, idx) => (
+                      <div key={idx} style={{ position: 'absolute', left: `${dot.x}%`, top: `${dot.y}%`, transform: 'translate(-50%, -50%)' }}>
+                        <motion.div
+                          animate={{ 
+                            scale: [1, 2.5, 1.2], 
+                            opacity: [0.8, 0, 0.4] 
+                          }}
+                          transition={{ 
+                            duration: 2.5, 
+                            repeat: Infinity, 
+                            delay: Math.random() * 2 
+                          }}
+                          style={{
+                            width: '30px',
+                            height: '30px',
+                            borderRadius: '50%',
+                            background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)',
+                          }}
+                        />
+                        <div style={{
                           position: 'absolute',
-                          left: `${dot.x}%`,
-                          top: `${dot.y}%`,
-                          width: '12px',
-                          height: '12px',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          width: '6px',
+                          height: '6px',
                           borderRadius: '50%',
-                          background: 'var(--accent-primary)',
-                          boxShadow: '0 0 15px var(--accent-primary)',
+                          background: 'white',
+                          boxShadow: '0 0 10px var(--accent-primary)',
                           zIndex: 2
-                        }}
-                      />
+                        }} />
+                      </div>
                     ))}
 
-                    <div style={{ position: 'absolute', bottom: '1.5rem', right: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)' }} /> LIVE SIMULATIONS
+                    <div style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', display: 'flex', gap: '1rem' }}>
+                      <div style={{ padding: '0.4rem 0.8rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '6px', fontSize: '0.6rem', fontWeight: 900, color: '#10b981' }}>
+                        DEFENSE STATUS: OPTIMAL
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-danger)' }} /> SECURITY BREACHES
+                      <div style={{ padding: '0.4rem 0.8rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '6px', fontSize: '0.6rem', fontWeight: 900, color: '#ef4444' }}>
+                        THREAT LEVEL: LOW
+                      </div>
+                    </div>
+
+                    <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', maxWidth: '150px' }}>
+                      <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: 900, color: 'var(--text-muted)', marginBottom: '0.4rem' }}>LIVE TELEMETRY</p>
+                      <div style={{ height: '2px', width: '100%', background: 'rgba(255,255,255,0.1)', borderRadius: '1px', overflow: 'hidden' }}>
+                        <motion.div animate={{ x: ['-100%', '100%'] }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} style={{ height: '100%', width: '40%', background: 'var(--accent-primary)' }} />
                       </div>
                     </div>
                   </div>
@@ -2464,5 +2600,13 @@ export default function AdminPage() {
       )}
     </AnimatePresence>
     </>
+  );
+}
+
+export default function AdminPageWrapper() {
+  return (
+    <Suspense fallback={<LoadingSpinner message="Decrypting Admin Channel..." />}>
+      <AdminPage />
+    </Suspense>
   );
 }
