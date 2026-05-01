@@ -146,6 +146,7 @@ function AdminPage() {
   const [selectedNode, setSelectedNode] = useState(null);
   const [buddyProcessing, setBuddyProcessing] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [isExecutingAction, setIsExecutingAction] = useState(false);
   const [nodes, setNodes] = useState([
     { id: 'start', title: 'Phishing Hook', x: 50, y: 150, type: 'trigger' },
     { id: 'q1', title: 'Check Link?', x: 250, y: 100, type: 'question' },
@@ -314,7 +315,8 @@ function AdminPage() {
 
   // Universal Action Executor — runs after admin confirms
   const executePendingAction = async () => {
-    if (!pendingAction) return;
+    if (!pendingAction || isExecutingAction) return;
+    setIsExecutingAction(true);
     const { action, params } = pendingAction;
     logActivity(`BUDDY_EXEC: Executing ${action}...`);
 
@@ -398,6 +400,7 @@ function AdminPage() {
       logActivity(`Buddy: ❌ Execution failed - ${err.message}`);
     } finally {
       setPendingAction(null);
+      setIsExecutingAction(false);
     }
   };
 
@@ -3037,9 +3040,10 @@ function AdminPage() {
               <button 
                 onClick={executePendingAction}
                 className="btn-primary" 
-                style={{ flex: 2, padding: '1rem' }}
+                style={{ flex: 2, padding: '1rem', opacity: isExecutingAction ? 0.7 : 1 }}
+                disabled={isExecutingAction}
               >
-                ✅ AUTHORIZE EXECUTION
+                {isExecutingAction ? 'EXECUTING...' : '✅ AUTHORIZE EXECUTION'}
               </button>
             </div>
           </motion.div>

@@ -22,7 +22,11 @@ export async function POST(req) {
       { returnDocument: 'after' }
     );
 
-    const updatedUser = result.value || result;
+    const updatedUser = result?.value || result;
+
+    if (!updatedUser || !updatedUser.xp && updatedUser.xp !== 0) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
     // Trigger real-time update via Pusher
     try {
