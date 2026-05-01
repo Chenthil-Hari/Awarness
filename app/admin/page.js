@@ -1331,7 +1331,7 @@ function AdminPage() {
                 <div style={{ marginTop: '2rem', padding: '1.2rem', background: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
                   <p style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Variable Inserter</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                    {['name', 'username', 'xp', 'reason', 'reset_url'].map(token => (
+                    {['name', 'username', 'xp', 'reason', 'reset_url', 'original_query', 'reply_message'].map(token => (
                       <button 
                         key={token} 
                         onClick={() => setTemplateCode(prev => prev + `{{${token}}}`)}
@@ -1520,11 +1520,23 @@ function AdminPage() {
                         </button>
                         <button
                           onClick={() => {
+                            setSelectedTemplate('Support Response');
+                            let html = TEMPLATES['Support Response'];
+                            
+                            // Auto-inject ticket data
+                            const latestReply = ticket.replies && ticket.replies.length > 0 
+                              ? ticket.replies[ticket.replies.length - 1].message 
+                              : "Our command center has reviewed your request.";
+                              
+                            html = html.replace(/{{name}}/g, ticket.userName || 'Operative');
+                            html = html.replace(/{{original_query}}/g, ticket.message || 'N/A');
+                            html = html.replace(/{{reply_message}}/g, latestReply);
+                            
+                            setTemplateCode(html);
                             setActiveTab('email');
-                            alert(`Redirecting to Email Architect for ${ticket.userEmail}`);
                           }}
                           className="btn-secondary"
-                          style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem', gap: '0.5rem' }}
+                          style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem', gap: '0.5rem', background: 'rgba(124, 58, 237, 0.1)', border: '1px solid var(--accent-primary)' }}
                         >
                           <Mail size={16} /> Contact Operative
                         </button>
