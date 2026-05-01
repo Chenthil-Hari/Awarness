@@ -8,9 +8,6 @@ import TrophyIcon from './TrophyIcon';
 import LevelIcon from './LevelIcon';
 import ProfileIcon from './ProfileIcon';
 import SettingsIcon from './SettingsIcon';
-import Lottie from 'lottie-react';
-import bellAnimation from '../../images/bell.json';
-import mobileWifiAnimation from '../../images/mobile-wifi.json';
 import GooeyNav from './GooeyNav/GooeyNav';
 import { calculateLevel } from '@/lib/game';
 

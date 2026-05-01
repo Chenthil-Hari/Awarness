@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 import { Shield, Lightbulb, TrendingUp, Users, Skull, ShoppingBag, Eye } from 'lucide-react';
 import Link from 'next/link';
 import BorderGlow from './components/BorderGlow/BorderGlow';
-import { calculateLevel } from '../lib/game';
+import { calculateLevel } from '@/lib/game';
 import CommunityPoll from './components/CommunityPoll';
 import LandingPage from './components/LandingPage';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -112,17 +112,17 @@ export default function Home() {
       <div style={{ position: 'relative', zIndex: 1 }}>
         <Navbar score={userXp} level={level} />
 
-      <div className="container" style={{ padding: '0 1rem' }}>
-        {/* Hero Section */}
-        <header style={{ textAlign: 'center', padding: '3rem 0 4rem' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="hero-title" style={{ fontSize: '3rem', marginBottom: '1rem', fontWeight: 800, lineHeight: 1.1 }}>
-              Welcome back, <span className="gradient-text">{ghostUser ? ghostUser.username : (session.user.username || 'Learner')}</span>
-            </h1>
+        <div className="container" style={{ padding: '0 1rem' }}>
+          {/* Hero Section */}
+          <header style={{ textAlign: 'center', padding: '3rem 0 4rem' }}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h1 className="hero-title" style={{ fontSize: '3rem', marginBottom: '1rem', fontWeight: 800, lineHeight: 1.1 }}>
+                Welcome back, <span className="gradient-text">{ghostUser ? ghostUser.username : (session?.user?.username || 'Learner')}</span>
+              </h1>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '700px', margin: '0 auto 2.5rem', padding: '0 1rem' }}>
               Pick up where you left off and continue mastering real-world challenges.
             </p>
