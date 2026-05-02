@@ -2555,7 +2555,7 @@ function AdminPage() {
                         if (data.pdfUrl) {
                           window.open(data.pdfUrl, '_blank');
                         } else {
-                          alert('Error: ' + (data.error || 'Failed to generate PDF'));
+                          alert('Error: ' + data.error + '\n\nRaw Data: ' + JSON.stringify(data.rawResponse, null, 2));
                         }
                       } catch (err) {
                         alert('Critical Error: Could not connect to PDF service');
