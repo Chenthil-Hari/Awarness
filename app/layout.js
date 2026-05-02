@@ -28,7 +28,7 @@ import MaintenanceGuard from "./components/MaintenanceGuard";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${outfit.variable} ${plusJakarta.variable}`} data-theme="dark" suppressHydrationWarning>
+    <html lang="en" className={`${outfit.variable} ${plusJakarta.variable}`} suppressHydrationWarning>
       <body>
         <Providers>
           <MaintenanceGuard>

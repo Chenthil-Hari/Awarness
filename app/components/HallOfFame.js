@@ -28,7 +28,7 @@ const HologramPlayer = ({ user, rank }) => {
       <div style={{
         width: isFirst ? '180px' : '140px',
         height: '40px',
-        background: 'rgba(0, 0, 0, 0.3)',
+        background: 'rgba(0, 0, 0, 0.1)',
         borderRadius: '50%',
         position: 'absolute',
         bottom: '-10px',
@@ -190,8 +190,8 @@ export default function HallOfFame() {
         }
         .hof-card:hover {
           transform: translateY(-5px);
-          background: rgba(255, 255, 255, 0.1) !important;
-          border-color: rgba(255, 255, 255, 0.2) !important;
+          background: var(--bg-tertiary) !important;
+          border-color: var(--accent-primary) !important;
         }
         .scanlines {
           position: absolute;

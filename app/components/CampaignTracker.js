@@ -74,7 +74,7 @@ export default function CampaignTracker({ onSelectScenario }) {
               key={mission.id}
               edgeSensitivity={30}
               glowColor={isCompleted ? "140 80 50" : (isUnlocked ? "260 80 50" : "200 10 10")}
-              backgroundColor={isUnlocked ? "var(--bg-primary)" : "rgba(255,255,255,0.02)"}
+              backgroundColor={isUnlocked ? "var(--bg-primary)" : "var(--bg-tertiary)"}
               borderRadius={24}
               glowRadius={40}
               glowIntensity={isUnlocked ? 1.0 : 0.2}
@@ -106,8 +106,16 @@ export default function CampaignTracker({ onSelectScenario }) {
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, flex: 1 }}>{mission.description}</p>
                 
                 <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', padding: '4px 8px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '4px' }}>
-                    {mission.difficulty}
+                  <span style={{ 
+                    fontSize: '0.75rem', 
+                    padding: '4px 10px', 
+                    background: 'var(--bg-tertiary)', 
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--glass-border)',
+                    color: 'var(--text-muted)',
+                    fontWeight: 700
+                  }}>
+                    {mission.difficulty.toUpperCase()}
                   </span>
                   {isUnlocked && !isCompleted && (
                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>

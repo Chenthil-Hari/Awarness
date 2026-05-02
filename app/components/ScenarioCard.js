@@ -60,9 +60,10 @@ export default function ScenarioCard({ scenario, onSelect }) {
             <span style={{ 
               fontSize: '0.7rem', 
               padding: '2px 8px', 
-              background: 'rgba(255, 255, 255, 0.05)', 
+              background: 'var(--bg-tertiary)', 
               borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--glass-border)'
+              border: '1px solid var(--glass-border)',
+              color: 'var(--text-muted)'
             }}>{scenario.difficulty}</span>
           </div>
           <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>{scenario.title}</h3>

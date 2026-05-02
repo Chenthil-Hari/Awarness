@@ -57,7 +57,7 @@ export default function Navbar({ score = null, level = null }) {
     <>
       <div style={{
         padding: '0.3rem 0.6rem',
-        background: 'rgba(255, 255, 255, 0.05)',
+        background: 'var(--bg-tertiary)',
         borderRadius: 'var(--radius-full)',
         display: 'flex',
         alignItems: 'center',
@@ -65,7 +65,7 @@ export default function Navbar({ score = null, level = null }) {
         border: '1px solid var(--glass-border)'
       }}>
         <LevelIcon size={18} />
-        <span style={{ fontWeight: 700, fontSize: '0.75rem', color: 'white' }}>Lvl {currentLevel}</span>
+        <span style={{ fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-primary)' }}>Lvl {currentLevel}</span>
       </div>
 
       {session && (
