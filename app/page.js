@@ -188,13 +188,21 @@ export default function Home() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', 
               gap: '1.5rem' 
             }}>
-              {scenarios.slice(0, 6).map((scenario) => (
-                <ScenarioCard 
-                  key={scenario.id} 
-                  scenario={scenario} 
-                  onSelect={(s) => setSelectedScenario(s)} 
-                />
-              ))}
+              {Array.isArray(scenarios) && scenarios.length > 0 ? (
+                scenarios.slice(0, 6).map((scenario) => (
+                  <ScenarioCard 
+                    key={scenario.id || scenario._id} 
+                    scenario={scenario} 
+                    onSelect={(s) => setSelectedScenario(s)} 
+                  />
+                ))
+              ) : (
+                !dataLoading && (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px dashed var(--glass-border)' }}>
+                    <p style={{ color: 'var(--text-secondary)' }}>No training modules available in this sector.</p>
+                  </div>
+                )
+              )}
             </div>
           </section>
 
