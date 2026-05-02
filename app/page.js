@@ -16,6 +16,7 @@ import LandingPage from './components/LandingPage';
 import LoadingSpinner from './components/LoadingSpinner';
 import CampaignTracker from './components/CampaignTracker';
 import HallOfFame from './components/HallOfFame';
+import PromotionModal from './components/PromotionModal';
 // import ThreeBackground from './components/ThreeBackground';
 
 export default function Home() {
@@ -111,6 +112,7 @@ export default function Home() {
       
       <div style={{ position: 'relative', zIndex: 1 }}>
         <Navbar score={userXp} level={level} />
+        <PromotionModal user={session?.user} />
 
         <div className="container" style={{ padding: '0 1rem' }}>
           {/* Hero Section */}
@@ -150,192 +152,73 @@ export default function Home() {
                 borderRadius: 'var(--radius-full)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.6rem',
+                gap: '0.5rem',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                background: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid var(--glass-border)'
               }}>
                 <span style={{ color: 'var(--accent-primary)' }}>{stat.icon}</span>
-                <span style={{ fontWeight: 600, fontSize: '0.8rem' }}>{stat.label}</span>
-                <span className="hide-mobile" style={{ fontSize: '0.75rem', opacity: 0.5 }}>{stat.count}</span>
+                {stat.label}
               </div>
             ))}
           </motion.div>
-        </header>
+          </header>
 
-        {/* The Campaign Section */}
-        <section style={{ marginBottom: '4rem' }}>
-          <CampaignTracker onSelectScenario={(s) => setSelectedScenario(s)} />
-        </section>
+          <CampaignTracker onSelectScenario={setSelectedScenario} />
 
-        {/* Main Dashboard Layout */}
-        <div className="grid-responsive" style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 800px), 1fr))',
-          gap: '2.5rem',
-          alignItems: 'start'
-        }}>
-          {/* Left Column: Scenarios */}
-          <section style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-              <div>
-                <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem', fontWeight: 800 }}>Active Scenarios</h2>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Tailored to your current level.</p>
-              </div>
-              <Link href="/scenarios" style={{ color: 'var(--accent-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>View All</Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            <div style={{ padding: '0.6rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
+              <Skull size={24} />
             </div>
-
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', 
-              gap: '1.5rem' 
-            }}>
-              {Array.isArray(scenarios) && scenarios.length > 0 ? (
-                scenarios.slice(0, 6).map((scenario) => (
-                  <ScenarioCard 
-                    key={scenario.id || scenario._id} 
-                    scenario={scenario} 
-                    onSelect={(s) => setSelectedScenario(s)} 
-                  />
-                ))
-              ) : (
-                !loadingScenarios && (
-                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px dashed var(--glass-border)' }}>
-                    <p style={{ color: 'var(--text-secondary)' }}>No training modules available in this sector.</p>
-                  </div>
-                )
-              )}
+            <div>
+              <h2 style={{ fontSize: '1.5rem', margin: 0, fontWeight: 900 }}>Threat <span className="gradient-text">Simulations</span></h2>
+              <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>Deploy into controlled environments and neutralize risks.</p>
             </div>
-          </section>
+          </div>
 
-          {/* Right Column: Community & Stats */}
-          <aside style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          {loadingScenarios ? (
+            <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <LoadingSpinner message="Decrypting scenarios..." />
+            </div>
+          ) : (
+            <div className="grid-container" style={{ marginBottom: '4rem' }}>
+              {scenarios.map((scenario) => (
+                <ScenarioCard 
+                  key={scenario._id} 
+                  scenario={scenario} 
+                  onClick={() => setSelectedScenario(scenario)} 
+                />
+              ))}
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', marginBottom: '4rem' }}>
             <CommunityPoll />
-          </aside>
-        </div>
-
-        {/* Heist Mode & Survival Mode Row */}
-        <div className="grid-responsive" style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))',
-          gap: '2rem',
-          marginTop: '4rem'
-        }}>
-          {/* Survival Mode Card */}
-          <BorderGlow
-            glowColor="0 80 50"
-            backgroundColor="var(--bg-secondary)"
-            borderRadius={32}
-            animated={true}
-          >
-            <div style={{ padding: '2rem', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <div style={{ width: '56px', height: '56px', background: 'var(--accent-danger)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 0 20px rgba(220, 38, 38, 0.4)' }}>
-                  <Skull size={28} />
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                    <span style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--accent-danger)', letterSpacing: '1px' }}>ELIMINATION EVENT</span>
+            
+            <Link href="/shop" style={{ textDecoration: 'none' }}>
+              <BorderGlow glowColor="140 80 50">
+                <div style={{ padding: '2rem', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                  <div style={{ width: '60px', height: '60px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                    <ShoppingBag size={30} color="var(--accent-primary)" />
                   </div>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 900 }}>The Gauntlet</h2>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem' }}>Neural Shop</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Exchange your hard-earned XP for premium upgrades and assets.</p>
                 </div>
-              </div>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>100 players enter, one survives. Outlast the global lobby in this high-stakes mode.</p>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <Link href="/survival" className="btn-primary" style={{ background: 'var(--accent-danger)', padding: '0.8rem', fontSize: '0.95rem', flex: 1, textAlign: 'center' }}>Enter Arena</Link>
-                <Link href="/survival?mode=friends" className="btn-secondary" style={{ padding: '0.8rem', fontSize: '0.95rem', flex: 1, textAlign: 'center', borderColor: 'var(--accent-danger)', color: 'var(--accent-danger)' }}>Play with Friends</Link>
-              </div>
-            </div>
-          </BorderGlow>
+              </BorderGlow>
+            </Link>
+          </div>
 
-          {/* Heist Mode Card */}
-          <BorderGlow
-            glowColor="190 80 50"
-            backgroundColor="var(--bg-secondary)"
-            borderRadius={32}
-            animated={true}
-          >
-            <div style={{ padding: '2rem', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <div style={{ width: '56px', height: '56px', background: 'var(--accent-secondary)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 0 20px rgba(8, 145, 178, 0.4)' }}>
-                  <Shield size={28} />
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                    <span style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--accent-secondary)', letterSpacing: '1px' }}>CO-OP MISSION</span>
-                  </div>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 900 }}>The Heist</h2>
-                </div>
-              </div>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>Coordinate with a team of specialists to breach the Void Syndicate's data vault.</p>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <Link href="/heist" className="btn-primary" style={{ background: 'var(--accent-secondary)', padding: '0.8rem', fontSize: '0.95rem', flex: 1, textAlign: 'center' }}>Start Operation</Link>
-                <Link href="/heist?mode=friends" className="btn-secondary" style={{ padding: '0.8rem', fontSize: '0.95rem', flex: 1, textAlign: 'center', borderColor: 'var(--accent-secondary)', color: 'var(--accent-secondary)' }}>Invite Crew</Link>
-              </div>
-            </div>
-          </BorderGlow>
-        </div>
-        
-        {/* Roadmap & Shop Row */}
-        <div className="grid-responsive" style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))',
-          gap: '2rem',
-          marginTop: '2rem'
-        }}>
-          {/* Roadmap Card */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', borderLeft: '4px solid var(--accent-primary)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ padding: '0.75rem', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '12px' }}>
-                <TrendingUp size={24} color="var(--accent-primary)" />
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Skill Tree</p>
-                <p style={{ fontWeight: 900, fontSize: '1rem' }}>Operational Roadmap</p>
-              </div>
-            </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, margin: '1rem 0' }}>Visualize your mastery over diverse domains and unlock advanced mission specializations.</p>
-            <Link href="/roadmap" className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>VIEW PROGRESS</Link>
-          </motion.div>
-
-          {/* Shop Card */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', borderLeft: '4px solid var(--accent-warning)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ padding: '0.75rem', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '12px' }}>
-                <ShoppingBag size={24} color="var(--accent-warning)" />
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Vault</p>
-                <p style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--accent-warning)' }}>Neural Market</p>
-              </div>
-            </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, margin: '1rem 0' }}>Exchange your neutralized threat data (XP) for high-tier cosmetic enhancements and gear.</p>
-            <Link href="/shop" className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>ACCESS SHOP</Link>
-          </motion.div>
-
-          {/* NEW: Deepfake Detective Card */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', borderLeft: '4px solid #f43f5e' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ padding: '0.75rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px' }}>
-                <Eye size={24} color="#f43f5e" />
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>AI Literacy</p>
-                <p style={{ fontWeight: 900, fontSize: '1rem', color: '#f43f5e' }}>Deepfake Lab</p>
-              </div>
-            </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, margin: '1rem 0' }}>Train your optical sensors to identify synthetic media and deepfake deceptions.</p>
-            <Link href="/deepfake-detective" className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>START ANALYSIS</Link>
-          </motion.div>
-        </div>
-
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="glass-card flex-mobile-column" 
-          style={{ 
-            marginTop: '4rem', 
-            padding: '2rem', 
-            borderRadius: 'var(--radius-xl)',
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="glass-card"
+          style={{
+            padding: '2.5rem',
+            borderRadius: '24px',
+            marginBottom: '4rem',
             background: 'linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
             display: 'flex',
             justifyContent: 'space-between',
@@ -346,7 +229,7 @@ export default function Home() {
           <div style={{ textAlign: 'inherit' }}>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Daily Awareness Challenge</h2>
             <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', fontSize: '0.9rem' }}>
-              Complete today's "Fire Safety Protocol" scenario to earn a 2x XP bonus.
+              Complete today\'s "Fire Safety Protocol" scenario to earn a 2x XP bonus.
             </p>
           </div>
           <button className="btn-primary" style={{ padding: '0.8rem 1.8rem', width: 'auto' }}>Accept</button>

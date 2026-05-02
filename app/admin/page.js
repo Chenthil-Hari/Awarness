@@ -1092,6 +1092,7 @@ function AdminPage() {
             { id: 'email', icon: <Mail size={18} />, label: 'Email' },
             { id: 'support', icon: <Bot size={18} />, label: 'Support' },
             { id: 'broadcast', icon: <Send size={18} />, label: 'Broadcast' },
+            { id: 'compliance', icon: <FileText size={18} />, label: 'Compliance' },
             { id: 'sentinel', icon: <Eye size={18} />, label: 'Sentinel' }
           ].map(tab => (
             <button

@@ -15,14 +15,48 @@ export default function CampaignTracker({ onSelectScenario }) {
 
   return (
     <div style={{ marginBottom: '4rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-        <div style={{ padding: '0.6rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
-          <ShieldAlert size={24} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ padding: '0.6rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
+            <ShieldAlert size={24} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '1.5rem', margin: 0, fontWeight: 900 }}>The Campaign: <span className="gradient-text">Global Defense Initiative</span></h2>
+            <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>Hunt down "The Void" in this story-driven progression mode.</p>
+          </div>
         </div>
-        <div>
-          <h2 style={{ fontSize: '1.5rem', margin: 0, fontWeight: 900 }}>The Campaign: <span className="gradient-text">Global Defense Initiative</span></h2>
-          <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>Hunt down "The Void" in this story-driven progression mode.</p>
-        </div>
+
+        {completedMissions.length === campaignMissions.length && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={async () => {
+              const res = await fetch('/api/pdf/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'CAMPAIGN_CERTIFICATE' })
+              });
+              const data = await res.json();
+              if (data.pdfUrl) window.open(data.pdfUrl, '_blank');
+            }}
+            style={{
+              padding: '0.75rem 1.5rem',
+              background: 'linear-gradient(90deg, #10b981, #3b82f6)',
+              border: 'none',
+              borderRadius: '12px',
+              color: 'white',
+              fontWeight: 900,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 0 20px rgba(16, 185, 129, 0.3)'
+            }}
+          >
+            <CheckCircle2 size={18} /> DOWNLOAD CERTIFICATE
+          </motion.button>
+        )}
       </div>
 
       <div style={{ 
