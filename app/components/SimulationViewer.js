@@ -6,9 +6,11 @@ import { ChevronRight, RotateCcw, X, CheckCircle2, AlertTriangle, ArrowLeft, Shi
 import { useSession } from 'next-auth/react';
 import { useSimulation } from '../hooks/useSimulation';
 import Link from 'next/link';
+import VoidTaunt from './VoidTaunt';
 
 export default function SimulationViewer({ scenario, onExit }) {
   const { data: session, update } = useSession();
+  const [showVoidTaunt, setShowVoidTaunt] = useState(false);
   
   // Map technical shop IDs to scenario item names
   const mappedInventory = (session?.user?.inventory || []).map(id => {
@@ -50,6 +52,9 @@ export default function SimulationViewer({ scenario, onExit }) {
       }).then(() => {
         if (isCampaign) {
            update(); // Refresh session to unlock next campaign mission
+        }
+        if (currentStep.failed) {
+          setShowVoidTaunt(true);
         }
       }).catch(err => console.error("Failed to save progress:", err));
     }
@@ -301,6 +306,7 @@ export default function SimulationViewer({ scenario, onExit }) {
           </div>
         </div>
       </motion.div>
+      <VoidTaunt isActive={showVoidTaunt} onComplete={() => setShowVoidTaunt(false)} />
     </div>
   );
 }

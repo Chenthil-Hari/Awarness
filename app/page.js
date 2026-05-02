@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from './components/Navbar';
 import ScenarioCard from './components/ScenarioCard';
 import SimulationViewer from './components/SimulationViewer';
+import LiveSatellite from './components/LiveSatellite';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Lightbulb, TrendingUp, Users, Skull, ShoppingBag, Eye, Zap, Target, Activity, LayoutGrid } from 'lucide-react';
 import Link from 'next/link';
@@ -155,25 +156,30 @@ export default function Home() {
               </p>
             </motion.div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-              {[
-                { label: 'COMPLETED', val: session?.user?.completedMissions?.length || 0, icon: <Shield size={18} /> },
-                { label: 'XP RATING', val: userXp?.toLocaleString(), icon: <Zap size={18} /> },
-                { label: 'NEURAL LVL', val: level, icon: <Target size={18} /> }
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + (i * 0.1) }}
-                  className="glass-card"
-                  style={{ padding: '1.5rem 2.5rem', borderRadius: '24px', minWidth: '180px' }}
-                >
-                  <div style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>{stat.icon}</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-primary)' }}>{stat.val}</div>
-                  <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--text-muted)', letterSpacing: '1px' }}>{stat.label}</div>
-                </motion.div>
-              ))}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '4rem', maxWidth: '1000px', margin: '0 auto 4rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flex: 1 }}>
+                {[
+                  { label: 'COMPLETED', val: session?.user?.completedMissions?.length || 0, icon: <Shield size={18} /> },
+                  { label: 'XP RATING', val: userXp?.toLocaleString(), icon: <Zap size={18} /> },
+                  { label: 'NEURAL LVL', val: level, icon: <Target size={18} /> }
+                ].map((stat, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 + (i * 0.1) }}
+                    className="glass-card"
+                    style={{ padding: '1.25rem', borderRadius: '24px', flex: '1 1 150px', display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'left' }}
+                  >
+                    <div style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>{stat.icon}</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-primary)' }}>{stat.val}</div>
+                    <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--text-muted)', letterSpacing: '1px' }}>{stat.label}</div>
+                  </motion.div>
+                ))}
+              </div>
+              <div style={{ height: '100%', minHeight: '200px' }}>
+                <LiveSatellite />
+              </div>
             </div>
           </header>
 
