@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import Navbar from './components/Navbar';
 import ScenarioCard from './components/ScenarioCard';
 import SimulationViewer from './components/SimulationViewer';
-import LiveSatellite from './components/LiveSatellite';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Lightbulb, TrendingUp, Users, Skull, ShoppingBag, Eye, Zap, Target, Activity, LayoutGrid } from 'lucide-react';
 import Link from 'next/link';
@@ -156,19 +155,17 @@ export default function Home() {
               </p>
             </motion.div>
 
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-              gap: '2rem', 
-              marginBottom: '4rem',
-              alignItems: 'stretch'
-            }}>
-              {/* Stats Column */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+              {/* Stats Row */}
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                gap: '1.5rem', 
+                width: '100%'
+              }}>
                 {[
-                  { label: 'COMPLETED', val: session?.user?.completedMissions?.length || 0, icon: <Shield size={18} /> },
-                  { label: 'XP RATING', val: userXp?.toLocaleString(), icon: <Zap size={18} /> },
-                  { label: 'NEURAL LVL', val: level, icon: <Target size={18} /> }
+                  { label: 'COMPLETED', val: session?.user?.completedMissions?.length || 0, icon: <Shield size={24} /> },
+                  { label: 'XP RATING', val: userXp?.toLocaleString(), icon: <Zap size={24} /> },
+                  { label: 'NEURAL LVL', val: level, icon: <Target size={24} /> }
                 ].map((stat, i) => (
                   <motion.div
                     key={i}
@@ -177,28 +174,33 @@ export default function Home() {
                     transition={{ delay: 0.4 + (i * 0.1) }}
                     className="glass-card"
                     style={{ 
-                      padding: '1.5rem', 
-                      borderRadius: '24px', 
+                      padding: '2.5rem 1.5rem', 
+                      borderRadius: '32px', 
                       display: 'flex', 
                       flexDirection: 'column', 
                       justifyContent: 'center', 
                       textAlign: 'center',
                       background: 'var(--bg-tertiary)',
-                      border: '1px solid var(--glass-border)'
+                      border: '1px solid var(--glass-border)',
+                      boxShadow: 'var(--shadow-md)',
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}
                   >
-                    <div style={{ color: 'var(--accent-primary)', marginBottom: '0.75rem', display: 'flex', justifyContent: 'center' }}>{stat.icon}</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{stat.val}</div>
-                    <div style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--text-muted)', letterSpacing: '1px', textTransform: 'uppercase' }}>{stat.label}</div>
+                    <div style={{ color: 'var(--accent-primary)', marginBottom: '1.25rem', display: 'flex', justifyContent: 'center' }}>{stat.icon}</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>{stat.val}</div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--text-muted)', letterSpacing: '2px', textTransform: 'uppercase' }}>{stat.label}</div>
+                    
+                    {/* Subtle decorative element */}
+                    <div style={{ 
+                      position: 'absolute', top: '-10%', right: '-10%', 
+                      width: '100px', height: '100px', 
+                      background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)', 
+                      opacity: 0.05, filter: 'blur(20px)' 
+                    }} />
                   </motion.div>
                 ))}
               </div>
-
-              {/* Satellite Feed */}
-              <div style={{ minHeight: '300px' }}>
-                <LiveSatellite />
-              </div>
-            </div>
           </header>
 
           <CampaignTracker onSelectScenario={setSelectedScenario} />
