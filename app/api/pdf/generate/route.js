@@ -92,6 +92,9 @@ export async function POST(req) {
 
   } catch (error) {
     console.error('PDF Route Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ 
+      error: error.message,
+      details: 'Check your .env.local for CRAFT_MY_PDF_API_KEY and Template IDs.'
+    }, { status: 500 });
   }
 }
