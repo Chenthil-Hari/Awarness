@@ -26,7 +26,7 @@ export default function HUDWrapper({ children }) {
   return (
     <>
       <HUD />
-      <div style={{ paddingTop: '0' }}> {/* HUD is fixed and doesn't push content down */}
+      <div style={{ paddingTop: '100px', position: 'relative', zIndex: 1 }}>
         {children}
       </div>
     </>

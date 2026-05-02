@@ -207,8 +207,7 @@ export default function Home() {
 
           <CampaignTracker onSelectScenario={setSelectedScenario} />
 
-          {/* 3D Tactical Deployment Section */}
-          <section style={{ marginTop: '4rem' }}>
+          <section style={{ margin: '6rem 0' }}>
              <DeploymentMap onSelectScenario={setSelectedScenario} />
           </section>
 
