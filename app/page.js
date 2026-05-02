@@ -1,60 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import Navbar from './components/Navbar';
-import ScenarioCard from './components/ScenarioCard';
-import SimulationViewer from './components/SimulationViewer';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Lightbulb, TrendingUp, Users, Skull, ShoppingBag, Eye, Zap, Target, Activity, LayoutGrid } from 'lucide-react';
-import Link from 'next/link';
-import BorderGlow from './components/BorderGlow/BorderGlow';
-import { calculateLevel } from '@/lib/game';
-import CommunityPoll from './components/CommunityPoll';
-import LandingPage from './components/LandingPage';
-import LoadingSpinner from './components/LoadingSpinner';
+import { 
+  Zap, Shield, Target, Activity, 
+  ChevronRight, LayoutGrid, Search, 
+  Filter, Star, TrendingUp, Award
+} from 'lucide-react';
+import SimulationViewer from './components/SimulationViewer';
 import CampaignTracker from './components/CampaignTracker';
-import HallOfFame from './components/HallOfFame';
-import PromotionModal from './components/PromotionModal';
-import DeploymentMap from './components/DeploymentMap/DeploymentMap';
 import NeuralPass from './components/NeuralPass/NeuralPass';
-import { useTheme } from './context/ThemeContext';
+import LoadingSpinner from './components/LoadingSpinner';
+import ScenarioCard from './components/ScenarioCard';
+import { calculateLevel } from '@/lib/game';
+import './BentoDashboard.css';
 
 export default function Home() {
   const { data: session, status } = useSession();
-  const { theme } = useTheme();
-  const router = useRouter();
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [scenarios, setScenarios] = useState([]);
   const [loadingScenarios, setLoadingScenarios] = useState(true);
-  const [userXp, setUserXp] = useState(0);
-  const [ghostUser, setGhostUser] = useState(null);
-
-  const isDark = theme === 'dark';
+  const [filter, setFilter] = useState('All');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const checkGhost = async () => {
-      const cookies = document.cookie.split('; ');
-      const ghostId = cookies.find(c => c.startsWith('impersonate_user_id='))?.split('=')[1];
-      
-      if (ghostId && session?.user?.role === 'admin') {
-        try {
-          const res = await fetch(`/api/admin/users/${ghostId}`);
-          if (res.ok) {
-            const data = await res.json();
-            setGhostUser(data);
-            setUserXp(data.xp || 0);
-          }
-        } catch (error) {
-          console.error('Failed to fetch ghost user data');
-        }
-      } else if (session?.user?.xp !== undefined) {
-        setUserXp(session.user.xp);
-        setGhostUser(null);
-      }
-    };
-
     const fetchScenarios = async () => {
       try {
         const res = await fetch('/api/scenarios');
@@ -66,215 +36,144 @@ export default function Home() {
         setLoadingScenarios(false);
       }
     };
+    if (status === 'authenticated') fetchScenarios();
+  }, [status]);
 
-    if (status === 'authenticated') {
-      checkGhost();
-      fetchScenarios();
-    }
+  const filteredScenarios = useMemo(() => {
+    return scenarios.filter(s => {
+      const matchesFilter = filter === 'All' || s.domain === filter;
+      const matchesSearch = s.title.toLowerCase().includes(search.toLowerCase());
+      return matchesFilter && matchesSearch;
+    });
+  }, [scenarios, filter, search]);
 
-    const handleXpUpdate = (e) => {
-      const { xp } = e.detail;
-      setUserXp(xp);
-    };
+  if (status === 'loading') return <div className="loader-page"><LoadingSpinner /></div>;
 
-    window.addEventListener('xp-update', handleXpUpdate);
-    return () => {
-      window.removeEventListener('xp-update', handleXpUpdate);
-    };
-  }, [session, status, router]);
-
-  const handleScenarioComplete = () => {
-    setSelectedScenario(null);
-  };
-
+  const userXp = session?.user?.xp || 0;
   const level = calculateLevel(userXp);
-
-  if (status === 'unauthenticated') {
-    return (
-      <main style={{ background: 'var(--bg-primary)' }}>
-        <Navbar />
-        <LandingPage />
-      </main>
-    );
-  }
-
-  if (status === 'loading') {
-    return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
-        <LoadingSpinner />
-      </div>
-    );
-  }
+  const xpInLevel = userXp % 100;
 
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--bg-primary)', transition: 'background-color 0.5s ease' }}>
-      <Navbar score={userXp} level={level} />
-      <PromotionModal user={session?.user} />
-
-      {/* Dynamic Background Pattern */}
-      <div style={{ 
-        position: 'fixed', inset: 0, 
-        background: isDark 
-          ? 'radial-gradient(circle at 50% -20%, #1e1b4b 0%, transparent 100%)' 
-          : 'radial-gradient(circle at 50% -20%, #e2e8f0 0%, transparent 100%)',
-        opacity: 0.4, pointerEvents: 'none', zIndex: 0 
-      }} />
-
-      <div style={{ position: 'relative', zIndex: 1, paddingBottom: '8rem' }}>
-        <div className="container">
-          {/* Enhanced Tactical Hero Section */}
-          <header style={{ textAlign: 'center', padding: '6rem 0 4rem' }}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            >
-              <div style={{ 
-                display: 'inline-flex', alignItems: 'center', gap: '0.75rem', 
-                padding: '0.6rem 1.2rem', background: 'var(--bg-tertiary)', 
-                borderRadius: 'var(--radius-full)', marginBottom: '2rem',
-                border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow-sm)'
-              }}>
-                <Activity size={16} color="var(--accent-primary)" />
-                <span style={{ fontSize: '0.75rem', fontWeight: 900, letterSpacing: '2px', color: 'var(--text-muted)' }}>OPERATIVE STATUS: ONLINE</span>
-              </div>
-
-              <h1 style={{ 
-                fontSize: 'clamp(2.5rem, 8vw, 4.5rem)', fontWeight: 900, 
-                letterSpacing: '-3px', lineHeight: 0.9, marginBottom: '1.5rem',
-                color: 'var(--text-primary)'
-              }}>
-                Welcome back,<br />
-                <span className="gradient-text">{ghostUser ? ghostUser.username : (session?.user?.username || 'Learner')}</span>
-              </h1>
-              
-              <p style={{ 
-                fontSize: '1.2rem', color: 'var(--text-secondary)', 
-                maxWidth: '600px', margin: '0 auto 3rem', fontWeight: 500,
-                lineHeight: 1.5
-              }}>
-                The simulation grid is calibrated. Continue your progression through the neural hierarchy.
-              </p>
-            </motion.div>
-
-              {/* Stats Row */}
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-                gap: '1.5rem', 
-                width: '100%'
-              }}>
-                {[
-                  { label: 'COMPLETED', val: session?.user?.completedMissions?.length || 0, icon: <Shield size={24} /> },
-                  { label: 'XP RATING', val: userXp?.toLocaleString(), icon: <Zap size={24} /> },
-                  { label: 'NEURAL LVL', val: level, icon: <Target size={24} /> }
-                ].map((stat, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 + (i * 0.1) }}
-                    className="glass-card"
-                    style={{ 
-                      padding: '2.5rem 1.5rem', 
-                      borderRadius: '32px', 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      justifyContent: 'center', 
-                      textAlign: 'center',
-                      background: 'var(--bg-tertiary)',
-                      border: '1px solid var(--glass-border)',
-                      boxShadow: 'var(--shadow-md)',
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}
-                  >
-                    <div style={{ color: 'var(--accent-primary)', marginBottom: '1.25rem', display: 'flex', justifyContent: 'center' }}>{stat.icon}</div>
-                    <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>{stat.val}</div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--text-muted)', letterSpacing: '2px', textTransform: 'uppercase' }}>{stat.label}</div>
-                    
-                    {/* Subtle decorative element */}
-                    <div style={{ 
-                      position: 'absolute', top: '-10%', right: '-10%', 
-                      width: '100px', height: '100px', 
-                      background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)', 
-                      opacity: 0.05, filter: 'blur(20px)' 
-                    }} />
-                  </motion.div>
-                ))}
-              </div>
-          </header>
-
-          <CampaignTracker onSelectScenario={setSelectedScenario} />
-
-          <section style={{ margin: '6rem 0' }}>
-             <DeploymentMap onSelectScenario={setSelectedScenario} />
-          </section>
-
-          <NeuralPass />
-
-          {/* Social & Shop Hub */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-            gap: '2.5rem', 
-            marginTop: '6rem' 
-          }}>
-            <CommunityPoll />
+    <div className="bento-dashboard">
+      {/* --- HERO SECTION --- */}
+      <div className="bento-grid-header">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bento-card hero-card"
+        >
+          <div className="hero-content">
+            <span className="hero-eyebrow">COMMAND CENTER</span>
+            <h1 className="hero-welcome">Welcome back, <span className="gradient-text">{session?.user?.username}</span></h1>
+            <p className="hero-desc">Your neural link is stable. Continue your training through the hierarchy.</p>
             
-            <Link href="/shop" style={{ textDecoration: 'none' }}>
-              <BorderGlow glowColor="140 80 50" borderRadius={32}>
-                <div style={{ 
-                  padding: '3rem', height: '100%', display: 'flex', 
-                  flexDirection: 'column', justifyContent: 'center', 
-                  alignItems: 'center', textAlign: 'center',
-                  background: 'var(--bg-tertiary)', borderRadius: '32px'
-                }}>
-                  <div style={{ 
-                    width: '80px', height: '80px', background: 'var(--bg-primary)', 
-                    borderRadius: '24px', display: 'flex', alignItems: 'center', 
-                    justifyContent: 'center', marginBottom: '2rem',
-                    boxShadow: 'var(--shadow-lg)', border: '1px solid var(--glass-border)'
-                  }}>
-                    <ShoppingBag size={36} color="var(--accent-primary)" />
-                  </div>
-                  <h3 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: '1rem', color: 'var(--text-primary)' }}>Neural Shop</h3>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.6, maxWidth: '300px' }}>
-                    Convert your accumulated XP into premium equipment and sector assets.
-                  </p>
-                </div>
-              </BorderGlow>
-            </Link>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            style={{
-              padding: '3rem', borderRadius: '32px', marginTop: '6rem',
-              background: isDark 
-                ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)'
-                : 'linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(8, 145, 178, 0.05) 100%)',
-              border: '1px solid var(--glass-border)',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              flexWrap: 'wrap', gap: '2rem'
-            }}
-          >
-            <div style={{ flex: 1, minWidth: '300px' }}>
-              <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '1rem' }}>Daily Awareness Challenge</h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '600px', lineHeight: 1.5 }}>
-                Complete the synchronized "Neural Defense" protocol today to receive a temporary 2x XP multiplier.
-              </p>
+            <div className="hero-progress">
+              <div className="progress-info">
+                <span className="level-badge">LVL {level}</span>
+                <span className="xp-text">{userXp} / {((level + 1) * 100)} XP</span>
+              </div>
+              <div className="progress-bar-outer">
+                <motion.div 
+                  className="progress-bar-inner"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${xpInLevel}%` }}
+                />
+              </div>
             </div>
-            <button className="btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1rem', fontWeight: 800 }}>INITIALIZE MISSION</button>
-          </motion.div>
+          </div>
+          <div className="hero-visual">
+            <Shield size={120} className="floating-icon" />
+          </div>
+        </motion.div>
 
-          <section style={{ marginTop: '6rem' }}>
-            <HallOfFame />
-          </section>
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bento-card stats-card"
+        >
+          <div className="stat-item">
+             <div className="stat-icon-box success"><Activity size={20} /></div>
+             <div className="stat-info">
+               <span className="stat-label">DAILY STREAK</span>
+               <span className="stat-val">{session?.user?.streak || 1} DAYS</span>
+             </div>
+          </div>
+          <div className="stat-item">
+             <div className="stat-icon-box warning"><TrendingUp size={20} /></div>
+             <div className="stat-info">
+               <span className="stat-label">RANK</span>
+               <span className="stat-val">{session?.user?.league || 'BRONZE'}</span>
+             </div>
+          </div>
+          <div className="stat-item">
+             <div className="stat-icon-box primary"><Award size={20} /></div>
+             <div className="stat-info">
+               <span className="stat-label">COMPLETED</span>
+               <span className="stat-val">{session?.user?.completedMissions?.length || 0} NODES</span>
+             </div>
+          </div>
+        </motion.div>
       </div>
+
+      {/* --- CAMPAIGN TRACKER --- */}
+      <section className="dashboard-section">
+        <CampaignTracker onSelectScenario={setSelectedScenario} />
+      </section>
+
+      {/* --- NEURAL PASS --- */}
+      <section id="neural-pass" className="dashboard-section">
+        <NeuralPass />
+      </section>
+
+      {/* --- MISSION GRID --- */}
+      <section className="dashboard-section">
+        <div className="section-header">
+           <div className="header-left">
+             <LayoutGrid size={20} color="var(--accent-primary)" />
+             <h2 className="section-title">Simulation Nodes</h2>
+           </div>
+           
+           <div className="header-controls">
+             <div className="search-box">
+               <Search size={16} />
+               <input 
+                 type="text" 
+                 placeholder="Search nodes..." 
+                 value={search}
+                 onChange={(e) => setSearch(e.target.value)}
+               />
+             </div>
+             <div className="filter-chips">
+               {['All', 'Cybersecurity', 'Financial Literacy', 'Life Skills'].map(f => (
+                 <button 
+                    key={f} 
+                    className={`chip ${filter === f ? 'active' : ''}`}
+                    onClick={() => setFilter(f)}
+                 >
+                   {f}
+                 </button>
+               ))}
+             </div>
+           </div>
+        </div>
+
+        {loadingScenarios ? (
+          <div className="loading-grid">
+            <LoadingSpinner message="Scanning neural network..." />
+          </div>
+        ) : (
+          <div className="scenario-grid">
+            {filteredScenarios.map((scenario) => (
+              <ScenarioCard 
+                key={scenario.id} 
+                scenario={scenario} 
+                onClick={() => setSelectedScenario(scenario)} 
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Simulation Overlay */}
       <AnimatePresence>
@@ -283,15 +182,15 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 1000 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 2000 }}
           >
             <SimulationViewer 
               scenario={selectedScenario} 
-              onExit={handleScenarioComplete} 
+              onExit={() => setSelectedScenario(null)} 
             />
           </motion.div>
         )}
       </AnimatePresence>
-    </main>
+    </div>
   );
 }
