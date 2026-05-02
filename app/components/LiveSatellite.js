@@ -13,19 +13,22 @@ export default function LiveSatellite() {
       try {
         setLoading(true);
         setError(false);
-        // Use Vercel Environment Variable or fallback to hardcoded key
         const apiKey = process.env.NEXT_PUBLIC_NASA_API_KEY || 'dlEhGUCsQFBasRtDc6LbzdgNqq8ThcoAVozmeZY8';
+        
+        // Fetching latest natural images metadata
         const res = await fetch(`https://api.nasa.gov/EPIC/api/natural/images?api_key=${apiKey}`);
+        if (!res.ok) throw new Error('API_UNAVAILABLE');
+        
         const data = await res.json();
         
         if (data && data.length > 0) {
+          // NASA images are usually 1-2 days old, we take the absolute latest from their list
           const latest = data[0];
-          const dateParts = latest.date.split(' ')[0].split('-'); // YYYY-MM-DD
-          const year = dateParts[0];
-          const month = dateParts[1];
-          const day = dateParts[2];
+          const date = latest.date.split(' ')[0]; // YYYY-MM-DD
+          const [year, month, day] = date.split('-');
           
-          const imageUrl = `https://epic.gsfc.nasa.gov/archive/natural/${year}/${month}/${day}/png/${latest.image}.png?api_key=${apiKey}`;
+          // Try multiple mirrors for the image
+          const imageUrl = `https://api.nasa.gov/EPIC/archive/natural/${year}/${month}/${day}/png/${latest.image}.png?api_key=${apiKey}`;
           
           setSatelliteData({
             url: imageUrl,
@@ -33,10 +36,10 @@ export default function LiveSatellite() {
             date: latest.date
           });
         } else {
-          setError(true);
+          throw new Error('NO_DATA');
         }
-      } catch (error) {
-        console.error("NASA API Error:", error);
+      } catch (err) {
+        console.error("NASA API Error:", err.message);
         setError(true);
       } finally {
         setLoading(false);
@@ -44,6 +47,8 @@ export default function LiveSatellite() {
     };
 
     fetchNasaData();
+    const interval = setInterval(fetchNasaData, 60000); // Re-sync every minute
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -119,7 +124,15 @@ export default function LiveSatellite() {
                 src={satelliteData.url} 
                 alt="NASA EPIC Earth" 
                 style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'contrast(1.1) brightness(0.8) saturate(1.2)' }}
-                onError={() => setError(true)}
+                onError={(e) => {
+                  // Fallback to secondary mirror if api.nasa.gov fails
+                  const fallbackUrl = satelliteData.url.replace('api.nasa.gov/EPIC', 'epic.gsfc.nasa.gov');
+                  if (e.target.src !== fallbackUrl) {
+                    e.target.src = fallbackUrl;
+                  } else {
+                    setError(true);
+                  }
+                }}
               />
             </motion.div>
             
@@ -152,8 +165,22 @@ export default function LiveSatellite() {
         ) : (
           <div style={{ textAlign: 'center', padding: '2rem' }}>
             <Radio size={32} color="var(--accent-danger)" style={{ marginBottom: '1rem', opacity: 0.5 }} />
-            <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--accent-danger)', letterSpacing: '2px', marginBottom: '4px' }}>SIGNAL LOST</div>
-            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', maxWidth: '200px' }}>ENCRYPTION MISMATCH DETECTED. RE-AUTHENTICATION REQUIRED.</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--accent-danger)', letterSpacing: '2px', marginBottom: '8px' }}>SIGNAL LOST</div>
+            <button 
+              onClick={() => window.location.reload()}
+              style={{ 
+                background: 'rgba(239, 68, 68, 0.2)', 
+                border: '1px solid var(--accent-danger)', 
+                color: 'white', 
+                padding: '4px 12px', 
+                borderRadius: '4px',
+                fontSize: '0.65rem',
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              RE-SYNCHRONIZE
+            </button>
           </div>
         )}
       </div>
