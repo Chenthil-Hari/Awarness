@@ -156,8 +156,15 @@ export default function Home() {
               </p>
             </motion.div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '4rem', maxWidth: '1000px', margin: '0 auto 4rem' }}>
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flex: 1 }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+              gap: '2rem', 
+              marginBottom: '4rem',
+              alignItems: 'stretch'
+            }}>
+              {/* Stats Column */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
                 {[
                   { label: 'COMPLETED', val: session?.user?.completedMissions?.length || 0, icon: <Shield size={18} /> },
                   { label: 'XP RATING', val: userXp?.toLocaleString(), icon: <Zap size={18} /> },
@@ -169,15 +176,26 @@ export default function Home() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 + (i * 0.1) }}
                     className="glass-card"
-                    style={{ padding: '1.25rem', borderRadius: '24px', flex: '1 1 150px', display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'left' }}
+                    style={{ 
+                      padding: '1.5rem', 
+                      borderRadius: '24px', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      justifyContent: 'center', 
+                      textAlign: 'center',
+                      background: 'var(--bg-tertiary)',
+                      border: '1px solid var(--glass-border)'
+                    }}
                   >
-                    <div style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>{stat.icon}</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-primary)' }}>{stat.val}</div>
-                    <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--text-muted)', letterSpacing: '1px' }}>{stat.label}</div>
+                    <div style={{ color: 'var(--accent-primary)', marginBottom: '0.75rem', display: 'flex', justifyContent: 'center' }}>{stat.icon}</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{stat.val}</div>
+                    <div style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--text-muted)', letterSpacing: '1px', textTransform: 'uppercase' }}>{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
-              <div style={{ height: '100%', minHeight: '200px' }}>
+
+              {/* Satellite Feed */}
+              <div style={{ minHeight: '300px' }}>
                 <LiveSatellite />
               </div>
             </div>

@@ -6,7 +6,13 @@ const nextConfig = {
   },
   devIndicators: false,
   images: {
-    domains: ['lh3.googleusercontent.com', 'avatars.githubusercontent.com', 'i.pravatar.cc'],
+    domains: [
+      'lh3.googleusercontent.com', 
+      'avatars.githubusercontent.com', 
+      'i.pravatar.cc',
+      'api.nasa.gov',
+      'epic.gsfc.nasa.gov'
+    ],
   },
 };
 
