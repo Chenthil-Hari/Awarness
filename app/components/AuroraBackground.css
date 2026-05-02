@@ -2,7 +2,8 @@
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: #05070a;
+  background: var(--bg-primary);
+  transition: background 0.5s ease;
   overflow: hidden;
   pointer-events: none;
 }
@@ -13,6 +14,11 @@
   height: 600px;
   border-radius: 50%;
   filter: blur(120px);
+  opacity: 0.05; /* Fainter in light mode */
+  transition: opacity 0.5s ease;
+}
+
+[data-theme='dark'] .blob {
   opacity: 0.15;
 }
 

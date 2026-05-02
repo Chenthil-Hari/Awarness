@@ -31,15 +31,15 @@ export default function MobileBottomNav() {
       zIndex: 1000,
     }}>
       <nav style={{
-        background: 'rgba(15, 15, 20, 0.85)',
-        backdropFilter: 'blur(16px)',
+        background: 'var(--glass-bg)',
+        backdropFilter: 'var(--glass-blur)',
         borderRadius: 'var(--radius-full)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: '1px solid var(--glass-border)',
         padding: '0.5rem',
         display: 'flex',
         justifyContent: 'space-around',
         alignItems: 'center',
-        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)',
+        boxShadow: 'var(--shadow-xl)',
       }}>
         {navItems.map((item) => {
           const isActive = pathname === item.href;

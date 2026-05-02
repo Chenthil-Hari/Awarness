@@ -32,9 +32,14 @@ export default function Sidebar() {
     <aside className={`bento-sidebar ${isOpen ? 'open' : 'closed'}`}>
       <div className="sidebar-brand">
         <div className="brand-icon">
-          <Shield size={24} color="var(--accent-primary)" />
+          <Zap size={24} />
         </div>
-        {isOpen && <span className="brand-name">AWARENESS<span className="accent">PRO</span></span>}
+        {isOpen && (
+          <span className="brand-name">
+            CYBER <span className="accent">BRAIN</span>
+            <div className="brand-sub">AWRNESS</div>
+          </span>
+        )}
       </div>
 
       <nav className="sidebar-nav">

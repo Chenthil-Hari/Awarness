@@ -213,13 +213,13 @@ export default function LandingPage() {
         <footer style={{ padding: '4rem 0', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.8)' }}>
           <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '2rem' }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                <div style={{ width: '32px', height: '32px', background: 'var(--accent-primary)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Shield size={18} color="white" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                <div style={{ width: '32px', height: '32px', background: 'var(--accent-primary)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifySelf: 'center' }}>
+                  <Zap size={18} color="white" />
                 </div>
-                <h2 style={{ fontSize: '1.2rem', margin: 0, color: 'white' }}>Awareness <span style={{ color: 'var(--accent-primary)' }}>Pro</span></h2>
+                <h2 style={{ fontSize: '1.2rem', margin: 0, color: 'white' }}>Cyber Brain <span style={{ color: 'var(--accent-primary)' }}>AWRNESS</span></h2>
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>© 2026 Awareness Pro. All rights reserved.</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>© 2026 Cyber Brain - AWRNESS. All rights reserved.</p>
             </div>
             
             <div style={{ display: 'flex', gap: '3rem' }}>

@@ -182,7 +182,7 @@ export default function MaintenanceGuard({ children }) {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '3rem', opacity: 0.3 }}>
                 <div style={{ width: '30px', height: '1px', background: 'white' }} />
-                <span style={{ fontSize: '0.65rem', fontWeight: 900, letterSpacing: '2px' }}>AWARENESS_PRO COMMAND SYSTEM</span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 900, letterSpacing: '2px' }}>CYBER_BRAIN COMMAND SYSTEM</span>
               </div>
             </motion.div>
 

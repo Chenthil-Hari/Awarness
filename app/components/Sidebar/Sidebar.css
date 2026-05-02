@@ -135,3 +135,11 @@
 @media (max-width: 768px) {
   .bento-sidebar { display: none; }
 }
+
+.brand-sub {
+  font-size: 0.6rem;
+  letter-spacing: 3px;
+  color: var(--accent-primary);
+  margin-top: -4px;
+  font-weight: 900;
+}

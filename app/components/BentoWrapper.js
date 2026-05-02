@@ -41,15 +41,22 @@ export default function BentoWrapper({ children }) {
           transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           padding: 2rem;
           min-width: 0; /* Prevent flex overflow */
+          min-height: 100vh;
         }
         .bento-sidebar.closed + .bento-main {
           margin-left: 80px;
+        }
+        @media (max-width: 1024px) {
+           .bento-main {
+             margin-left: 80px; /* Always collapsed on tablets */
+           }
         }
         @media (max-width: 768px) {
           .bento-main {
             margin-left: 0 !important;
             padding: 1rem;
-            padding-bottom: 5rem; /* For mobile nav */
+            padding-top: 2rem;
+            padding-bottom: 7rem; /* Space for MobileBottomNav */
           }
         }
       `}</style>
