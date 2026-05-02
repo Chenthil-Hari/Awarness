@@ -26,7 +26,7 @@ export default function CampaignTracker({ onSelectScenario }) {
           </div>
         </div>
 
-        {completedMissions.length === campaignMissions.length && (
+        {campaignMissions.every(m => completedMissions.includes(m.id)) && (
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
