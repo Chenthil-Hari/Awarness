@@ -74,6 +74,13 @@ export async function POST(req) {
 
     const result = await generatePDF(templateId, pdfData);
 
+    if (!result || !result.file_url) {
+      return NextResponse.json({ 
+        error: 'PDF service responded but did not provide a URL.',
+        rawResponse: result 
+      }, { status: 500 });
+    }
+
     // Save metadata to user's certificates array
     await db.collection('users').updateOne(
       { _id: session.user.id },
