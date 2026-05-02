@@ -2518,6 +2518,63 @@ function AdminPage() {
             </div>
           )}
 
+          {activeTab === 'compliance' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2.5rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '3rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div style={{ padding: '1rem', background: 'var(--accent-primary)', borderRadius: '16px', color: 'white' }}>
+                      <FileText size={32} />
+                    </div>
+                    <div>
+                      <h2 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>Compliance <span className="gradient-text">Center</span></h2>
+                      <p style={{ color: 'var(--text-muted)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>Audit readiness and legal documentation suite.</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={async () => {
+                      const res = await fetch('/api/pdf/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                          type: 'ADMIN_COMPLIANCE_REPORT',
+                          metadata: { 
+                            orgName: 'GDI Global',
+                            totalUsers: users.length,
+                            timestamp: new Date().toISOString()
+                          }
+                        })
+                      });
+                      const data = await res.json();
+                      if (data.pdfUrl) window.open(data.pdfUrl, '_blank');
+                    }}
+                    className="btn-primary" 
+                    style={{ padding: '1rem 2rem', gap: '0.75rem', fontSize: '1rem', boxShadow: '0 0 20px rgba(124, 58, 237, 0.3)' }}
+                  >
+                    <Download size={20} /> GENERATE ORGANIZATION REPORT
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                   <div style={{ padding: '2rem', background: 'rgba(16, 185, 129, 0.03)', borderRadius: '24px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                      <ShieldCheck size={28} color="#10b981" style={{ marginBottom: '1rem' }} />
+                      <h4 style={{ margin: 0, fontWeight: 900 }}>Audit Integrity</h4>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginTop: '0.5rem' }}>
+                        All reports are generated with cryptographic timestamps and are accepted by major insurance providers for cyber-liability verification.
+                      </p>
+                   </div>
+                   <div style={{ padding: '2rem', background: 'rgba(139, 92, 246, 0.03)', borderRadius: '24px', border: '1px solid rgba(139, 92, 246, 0.1)' }}>
+                      <Users size={28} color="var(--accent-primary)" style={{ marginBottom: '1rem' }} />
+                      <h4 style={{ margin: 0, fontWeight: 900 }}>Citizen Coverage</h4>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginTop: '0.5rem' }}>
+                        Track progress of all {users.length} citizens. Ensure every department meets the 95% awareness threshold for HIPAA/SOC2 compliance.
+                      </p>
+                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'analytics' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
