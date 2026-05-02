@@ -25,29 +25,41 @@ export async function POST(req) {
       case 'CAMPAIGN_CERTIFICATE':
         templateId = process.env.CAMPAIGN_CERT_TEMPLATE_ID;
         pdfData = {
-          userName: session.user.name,
-          rank: session.user.league || 'Bronze',
+          title: 'CERTIFICATE OF COMPLETION',
+          recipient: session.user.name,
+          desc: `For successfully neutralizing "The Void" threat in the GDI campaign. Final Rank: ${session.user.league || 'Bronze'}.`,
           date: new Date().toLocaleDateString(),
-          platform: 'AWARENESS GDI'
+          signature: 'Sentinel-Alpha',
+          signer_name: 'GLOBAL DEFENSE INITIATIVE'
         };
         break;
 
       case 'LEAGUE_PROMOTION':
         templateId = process.env.PROMOTION_TEMPLATE_ID;
         pdfData = {
-          userName: session.user.name,
-          newLeague: metadata.newLeague,
-          date: new Date().toLocaleDateString()
+          company_name: 'GLOBAL DEFENSE INITIATIVE',
+          client_name: session.user.name,
+          contract_date: new Date().toLocaleDateString(),
+          service_description: `Promotion to ${metadata.newLeague} rank within the GDI hierarchy. This operative is now granted Level ${calculateLevel(session.user.xp || 0)} clearance and access to higher-tier sector nodes.`
         };
         break;
 
       case 'ADMIN_COMPLIANCE_REPORT':
         templateId = process.env.COMPLIANCE_REPORT_TEMPLATE_ID;
+        const allUsers = await db.collection('users').find({}).sort({ xp: -1 }).toArray();
+        
         pdfData = {
           organization: metadata.orgName || 'GDI Global',
-          totalUsers: metadata.totalUsers,
+          totalUsers: allUsers.length,
           date: new Date().toLocaleDateString(),
-          timestamp: metadata.timestamp
+          timestamp: metadata.timestamp,
+          // Mapping to your "Travel Itinerary" template fields
+          trips: allUsers.map(u => ({
+            dateFrom: u.name,
+            dateTo: u.league || 'Bronze',
+            countryCode: (u.xp || 0).toString(),
+            placeToVisit: 'Operational'
+          }))
         };
         break;
 
