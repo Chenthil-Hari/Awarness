@@ -13,8 +13,8 @@ export default function LiveSatellite() {
       try {
         setLoading(true);
         setError(false);
-        // Using personal NASA API Key
-        const apiKey = 'dlEhGUCsQFBasRtDc6LbzdgNqq8ThcoAVozmeZY8';
+        // Use Vercel Environment Variable or fallback to hardcoded key
+        const apiKey = process.env.NEXT_PUBLIC_NASA_API_KEY || 'dlEhGUCsQFBasRtDc6LbzdgNqq8ThcoAVozmeZY8';
         const res = await fetch(`https://api.nasa.gov/EPIC/api/natural/images?api_key=${apiKey}`);
         const data = await res.json();
         
