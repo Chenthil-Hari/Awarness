@@ -13,6 +13,11 @@ import CampaignTracker from './components/CampaignTracker';
 import NeuralPass from './components/NeuralPass/NeuralPass';
 import LoadingSpinner from './components/LoadingSpinner';
 import ScenarioCard from './components/ScenarioCard';
+import AuroraBackground from './components/AuroraBackground';
+import Lottie from 'lottie-react';
+import fireAnim from '@/images/fire.json';
+import chartAnim from '@/images/line-chart.json';
+import trophyAnim from '@/images/trophy.json';
 import { calculateLevel } from '@/lib/game';
 import './BentoDashboard.css';
 
@@ -55,11 +60,13 @@ export default function Home() {
 
   return (
     <div className="bento-dashboard">
+      <AuroraBackground />
       {/* --- HERO SECTION --- */}
       <div className="bento-grid-header">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          whileHover={{ y: -5, scale: 1.01 }}
           className="bento-card hero-card"
         >
           <div className="hero-content">
@@ -93,21 +100,27 @@ export default function Home() {
           className="bento-card stats-card"
         >
           <div className="stat-item">
-             <div className="stat-icon-box success"><Activity size={20} /></div>
+             <div className="stat-icon-box success">
+               <Lottie animationData={fireAnim} loop={true} style={{ width: 40, height: 40 }} />
+             </div>
              <div className="stat-info">
                <span className="stat-label">DAILY STREAK</span>
                <span className="stat-val">{session?.user?.streak || 1} DAYS</span>
              </div>
           </div>
           <div className="stat-item">
-             <div className="stat-icon-box warning"><TrendingUp size={20} /></div>
+             <div className="stat-icon-box warning">
+               <Lottie animationData={chartAnim} loop={true} style={{ width: 40, height: 40 }} />
+             </div>
              <div className="stat-info">
                <span className="stat-label">RANK</span>
                <span className="stat-val">{session?.user?.league || 'BRONZE'}</span>
              </div>
           </div>
           <div className="stat-item">
-             <div className="stat-icon-box primary"><Award size={20} /></div>
+             <div className="stat-icon-box primary">
+               <Lottie animationData={trophyAnim} loop={true} style={{ width: 40, height: 40 }} />
+             </div>
              <div className="stat-info">
                <span className="stat-label">COMPLETED</span>
                <span className="stat-val">{session?.user?.completedMissions?.length || 0} NODES</span>

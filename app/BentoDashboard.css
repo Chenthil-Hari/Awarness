@@ -15,12 +15,31 @@
 }
 
 .bento-card {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--glass-border);
+  background: rgba(10, 10, 15, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 32px;
   padding: 2.5rem;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.hero-card::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+  background-size: 200% 100%;
+  animation: border-beam 4s linear infinite;
+  border-radius: 32px;
+  z-index: -1;
+  opacity: 0.3;
+}
+
+@keyframes border-beam {
+  0% { background-position: 200% 0%; }
+  100% { background-position: -200% 0%; }
 }
 
 /* --- HERO CARD --- */
