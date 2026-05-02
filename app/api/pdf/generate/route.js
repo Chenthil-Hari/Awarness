@@ -73,8 +73,9 @@ export async function POST(req) {
     }
 
     const result = await generatePDF(templateId, pdfData);
+    const pdfUrl = result?.file_url || result?.file;
 
-    if (!result || !result.file_url) {
+    if (!pdfUrl) {
       return NextResponse.json({ 
         error: 'PDF service responded but did not provide a URL.',
         rawResponse: result 
@@ -88,14 +89,14 @@ export async function POST(req) {
         $push: { 
           certificates: {
             type,
-            url: result.file_url,
+            url: pdfUrl,
             createdAt: new Date()
           } 
         }
       }
     );
 
-    return NextResponse.json({ pdfUrl: result.file_url });
+    return NextResponse.json({ pdfUrl });
 
   } catch (error) {
     console.error('PDF Route Error:', error);
