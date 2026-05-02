@@ -5,12 +5,14 @@ import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trophy, Search, Zap, Crown, Medal, Shield, 
-  Sparkles, ChevronRight, Binary, Award, Crosshair
+  Sparkles, ChevronRight, Binary, Award, Crosshair,
+  Target, Activity, TrendingUp
 } from 'lucide-react';
 import { calculateLevel } from '@/lib/game';
 import BentoWrapper from '../components/BentoWrapper';
 import AuroraBackground from '../components/AuroraBackground';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ScrambleText from '../components/ScrambleText';
 import './Leaderboard.css';
 
 const LEAGUES = [
@@ -20,108 +22,64 @@ const LEAGUES = [
   { id: 'Hacker-Tier', name: 'CYBER', color: '#8b5cf6', accent: '#c084fc' }
 ];
 
-// --- 3D Podium Component ---
-const Podium = ({ top3 }) => {
-  return (
-    <div className="podium-container">
-      {/* 2nd Place */}
-      {top3[1] && (
-        <motion.div 
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="podium-item second"
-        >
-          <div className="podium-avatar silver">
-            <span className="avatar-letter">{top3[1].name?.charAt(0)}</span>
-          </div>
-          <div className="podium-info">
-            <Medal size={20} className="rank-icon silver" />
-            <span className="user-name">{top3[1].name}</span>
-            <span className="user-xp">{top3[1].xp?.toLocaleString()} XP</span>
-          </div>
-          <div className="podium-base silver-base">
-            <span className="rank-num">2</span>
-          </div>
-        </motion.div>
-      )}
-
-      {/* 1st Place */}
-      {top3[0] && (
-        <motion.div 
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="podium-item first"
-        >
-          <div className="podium-avatar gold">
-             <Crown size={32} className="crown-icon" />
-             <span className="avatar-letter">{top3[0].name?.charAt(0)}</span>
-          </div>
-          <div className="podium-info">
-            <Sparkles size={20} className="rank-icon gold" />
-            <span className="user-name">{top3[0].name}</span>
-            <span className="user-xp">{top3[0].xp?.toLocaleString()} XP</span>
-          </div>
-          <div className="podium-base gold-base">
-            <span className="rank-num">1</span>
-          </div>
-        </motion.div>
-      )}
-
-      {/* 3rd Place */}
-      {top3[2] && (
-        <motion.div 
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="podium-item third"
-        >
-          <div className="podium-avatar bronze">
-            <span className="avatar-letter">{top3[2].name?.charAt(0)}</span>
-          </div>
-          <div className="podium-info">
-            <Medal size={20} className="rank-icon bronze" />
-            <span className="user-name">{top3[2].name}</span>
-            <span className="user-xp">{top3[2].xp?.toLocaleString()} XP</span>
-          </div>
-          <div className="podium-base bronze-base">
-            <span className="rank-num">3</span>
-          </div>
-        </motion.div>
-      )}
-    </div>
-  );
-};
-
-// --- Tactical User Row ---
-const TacticalUserRow = ({ user, rank, isMe, leagueColor }) => {
+const RankNode = ({ user, rank, isMe, leagueColor }) => {
+  const isTop3 = rank <= 3;
+  
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      whileHover={{ scale: 1.01, background: 'rgba(255,255,255,0.03)' }}
-      className={`tactical-row ${isMe ? 'is-me' : ''}`}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{ scale: 1.01, x: 5 }}
+      className={`rank-node ${isMe ? 'is-me' : ''} ${isTop3 ? 'is-top' : ''}`}
     >
-      <div className="row-rank">#{rank}</div>
-      <div className="row-avatar">
-        {user.name?.charAt(0)}
-      </div>
-      <div className="row-info">
-        <div className="user-name-group">
-          <span className="name">{user.name}</span>
-          {isMe && <span className="me-badge">YOU</span>}
+      <div className="node-rank-bg">{rank < 10 ? `0${rank}` : rank}</div>
+      
+      <div className="node-main">
+        <div className="node-rank-badge">
+           {rank === 1 && <Crown size={24} className="gold-text" />}
+           {rank === 2 && <Medal size={24} className="silver-text" />}
+           {rank === 3 && <Medal size={24} className="bronze-text" />}
+           {rank > 3 && <span className="rank-text">{rank}</span>}
         </div>
-        <div className="user-level-bar">
-           <div className="level-label">LVL {calculateLevel(user.xp || 0)}</div>
-           <div className="progress-mini"><div className="fill" style={{ width: `${(user.xp % 100)}%` }} /></div>
+
+        <div className="node-avatar">
+          {user.name?.charAt(0)}
+          {isMe && <div className="me-indicator" />}
+        </div>
+
+        <div className="node-info">
+          <div className="node-name-row">
+            <span className="node-name">{user.name}</span>
+            <span className="node-level">LVL {calculateLevel(user.xp || 0)}</span>
+          </div>
+          <div className="node-progress-container">
+             <div className="node-progress-bar">
+               <motion.div 
+                 initial={{ width: 0 }}
+                 whileInView={{ width: `${(user.xp % 100)}%` }}
+                 className="node-progress-fill"
+                 style={{ background: isTop3 ? leagueColor : 'var(--accent-primary)' }}
+               />
+             </div>
+          </div>
+        </div>
+
+        <div className="node-stats">
+          <div className="stat">
+            <Zap size={14} className="stat-icon" />
+            <span className="stat-val">{user.xp?.toLocaleString()}</span>
+            <span className="stat-label">NEURAL DATA</span>
+          </div>
+        </div>
+
+        <div className="node-action">
+          <ChevronRight size={20} />
         </div>
       </div>
-      <div className="row-stats">
-        <Zap size={14} color={leagueColor} />
-        <span className="xp-val">{user.xp?.toLocaleString()}</span>
-      </div>
-      <ChevronRight size={16} className="row-arrow" />
+      
+      {/* Scanline Effect on Hover */}
+      <div className="node-scanner" />
     </motion.div>
   );
 };
@@ -155,37 +113,34 @@ export default function LeaderboardPage() {
     return users.filter(u => u.name?.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [users, searchTerm]);
 
-  const top3 = useMemo(() => filteredUsers.slice(0, 3), [filteredUsers]);
-  const rest = useMemo(() => filteredUsers.slice(3), [filteredUsers]);
-
   return (
     <BentoWrapper>
       <AuroraBackground />
-      <div className="leaderboard-container">
-        <header className="leaderboard-header">
-          <div className="header-title-group">
-            <div className="eyebrow">
-               <Crosshair size={14} />
-               <span>OPERATIVE RANKINGS</span>
+      <div className="leaderboard-grid-view">
+        <header className="lb-grid-header">
+          <div className="lb-title-box">
+            <div className="lb-eyebrow">
+              <Binary size={14} />
+              <ScrambleText text="NEURAL HIERARCHY ARCHIVES" delay={300} />
             </div>
-            <h1 className="title">{currentLeague.name} <span className="dim">DIVISION</span></h1>
+            <h1 className="lb-title">{currentLeague.name} <span>PROTOCOL</span></h1>
           </div>
 
-          <div className="header-actions">
-            <div className="search-bar">
+          <div className="lb-controls">
+            <div className="lb-search">
               <Search size={18} />
               <input 
                 type="text" 
-                placeholder="Search operative archives..." 
+                placeholder="Search operative ID..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="league-switcher">
+            <div className="lb-leagues">
               {LEAGUES.map(league => (
                 <button
                   key={league.id}
-                  className={`league-btn ${activeLeague === league.id ? 'active' : ''}`}
+                  className={`lb-league-tab ${activeLeague === league.id ? 'active' : ''}`}
                   onClick={() => setActiveLeague(league.id)}
                 >
                   {league.name}
@@ -196,38 +151,27 @@ export default function LeaderboardPage() {
         </header>
 
         {loading ? (
-          <div className="leaderboard-loading">
-            <LoadingSpinner message="SYNCING WITH HIERARCHY SERVERS..." />
+          <div className="lb-loading">
+            <LoadingSpinner message="ACCESSING SECTOR DATA..." />
           </div>
         ) : (
-          <div className="leaderboard-content">
-            {!searchTerm && top3.length > 0 && <Podium top3={top3} />}
-
-            <div className="ranking-list">
-              <div className="list-columns">
-                <span>RANK</span>
-                <span>OPERATIVE</span>
-                <span>NEURAL DATA</span>
+          <div className="lb-nodes-container">
+            {filteredUsers.map((user, i) => (
+              <RankNode 
+                key={user._id} 
+                user={user} 
+                rank={i + 1} 
+                isMe={user.username === session?.user?.username} 
+                leagueColor={currentLeague.color} 
+              />
+            ))}
+            
+            {filteredUsers.length === 0 && (
+              <div className="lb-empty">
+                <Crosshair size={48} />
+                <p>No operatives found in this sector.</p>
               </div>
-              {rest.map((user, i) => (
-                <TacticalUserRow 
-                  key={user._id} 
-                  user={user} 
-                  rank={i + 4} 
-                  isMe={user.username === session?.user?.username} 
-                  leagueColor={currentLeague.color} 
-                />
-              ))}
-              {searchTerm && top3.map((user, i) => (
-                <TacticalUserRow 
-                  key={user._id} 
-                  user={user} 
-                  rank={i + 1} 
-                  isMe={user.username === session?.user?.username} 
-                  leagueColor={currentLeague.color} 
-                />
-              ))}
-            </div>
+            )}
           </div>
         )}
       </div>
