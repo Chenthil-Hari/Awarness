@@ -14,6 +14,7 @@ import NeuralPass from './components/NeuralPass/NeuralPass';
 import LoadingSpinner from './components/LoadingSpinner';
 import ScenarioCard from './components/ScenarioCard';
 import AuroraBackground from './components/AuroraBackground';
+import ScrambleText from './components/ScrambleText';
 import Lottie from 'lottie-react';
 import fireAnim from '@/images/fire.json';
 import chartAnim from '@/images/line-chart.json';
@@ -70,8 +71,12 @@ export default function Home() {
           className="bento-card hero-card"
         >
           <div className="hero-content">
-            <span className="hero-eyebrow">COMMAND CENTER</span>
-            <h1 className="hero-welcome">Welcome back, <span className="gradient-text">{session?.user?.username}</span></h1>
+            <span className="hero-eyebrow">
+              <ScrambleText text="COMMAND CENTER" delay={500} />
+            </span>
+            <h1 className="hero-welcome">
+              Welcome back, <span className="gradient-text">{session?.user?.username}</span>
+            </h1>
             <p className="hero-desc">Your neural link is stable. Continue your training through the hierarchy.</p>
             
             <div className="hero-progress">

@@ -26,6 +26,7 @@ import MobileBottomNav from "./components/MobileBottomNav";
 import RealTimeDuelHandler from "./components/RealTimeDuelHandler";
 import MaintenanceGuard from "./components/MaintenanceGuard";
 import BentoWrapper from "./components/BentoWrapper";
+import NeuralCursor from "./components/NeuralCursor";
 
 export default function RootLayout({ children }) {
   return (
@@ -40,6 +41,8 @@ export default function RootLayout({ children }) {
               sparkCount={8}
               duration={400}
             >
+              <NeuralCursor />
+              <div className="crt-scanlines" />
               <BentoWrapper>
                 <GhostBanner />
                 {children}
