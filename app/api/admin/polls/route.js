@@ -34,7 +34,11 @@ export async function POST(req) {
 
     const result = await db.collection('polls').insertOne({
       ...pollData,
-      options: pollData.options.map((opt, index) => ({ id: index + 1, text: opt, votes: 0 })),
+      options: pollData.options.map((opt, index) => ({ 
+        id: index + 1, 
+        text: typeof opt === 'object' ? opt.text : opt, 
+        votes: typeof opt === 'object' ? (opt.votes || 0) : 0 
+      })),
       active: true,
       createdAt: new Date(),
       status: 'active',

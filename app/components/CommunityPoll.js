@@ -190,7 +190,7 @@ export default function CommunityPoll() {
                     justifyContent: 'space-between'
                   }}
                 >
-                  {option.text}
+                  {typeof option.text === 'object' ? (option.text.text || 'Invalid Option') : option.text}
                   {voting && <div className="spinner-small" />}
                 </motion.button>
               ))}
@@ -217,7 +217,7 @@ export default function CommunityPoll() {
                   <div key={option.id}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 600 }}>
                       <span style={{ color: isCorrect ? '#10b981' : 'var(--text-primary)', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {option.text}
+                        {typeof option.text === 'object' ? (option.text.text || 'Invalid Option') : option.text}
                         {isCorrect && <CheckCircle2 size={14} />}
                         {userChoseThis && !isCorrect && isPublished && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>(Your Choice)</span>}
                       </span>
