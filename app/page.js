@@ -197,7 +197,7 @@ export default function Home() {
                   />
                 ))
               ) : (
-                !dataLoading && (
+                !loadingScenarios && (
                   <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px dashed var(--glass-border)' }}>
                     <p style={{ color: 'var(--text-secondary)' }}>No training modules available in this sector.</p>
                   </div>
