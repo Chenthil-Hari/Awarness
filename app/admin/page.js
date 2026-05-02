@@ -2532,24 +2532,40 @@ function AdminPage() {
                     </div>
                   </div>
                   <button 
-                    onClick={async () => {
-                      const res = await fetch('/api/pdf/generate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                          type: 'ADMIN_COMPLIANCE_REPORT',
-                          metadata: { 
-                            orgName: 'GDI Global',
-                            totalUsers: users.length,
-                            timestamp: new Date().toISOString()
-                          }
-                        })
-                      });
-                      const data = await res.json();
-                      if (data.pdfUrl) window.open(data.pdfUrl, '_blank');
+                    onClick={async (e) => {
+                      const btn = e.currentTarget;
+                      const originalText = btn.innerHTML;
+                      btn.disabled = true;
+                      btn.innerHTML = '<div class="spinner-small" style="margin-right: 8px;"></div> GENERATING...';
+                      
+                      try {
+                        const res = await fetch('/api/pdf/generate', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ 
+                            type: 'ADMIN_COMPLIANCE_REPORT',
+                            metadata: { 
+                              orgName: 'GDI Global',
+                              totalUsers: users.length,
+                              timestamp: new Date().toISOString()
+                            }
+                          })
+                        });
+                        const data = await res.json();
+                        if (data.pdfUrl) {
+                          window.open(data.pdfUrl, '_blank');
+                        } else {
+                          alert('Error: ' + (data.error || 'Failed to generate PDF'));
+                        }
+                      } catch (err) {
+                        alert('Critical Error: Could not connect to PDF service');
+                      } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                      }
                     }}
                     className="btn-primary" 
-                    style={{ padding: '1rem 2rem', gap: '0.75rem', fontSize: '1rem', boxShadow: '0 0 20px rgba(124, 58, 237, 0.3)' }}
+                    style={{ padding: '1rem 2rem', gap: '0.75rem', fontSize: '1rem', boxShadow: '0 0 20px rgba(124, 58, 237, 0.3)', display: 'flex', alignItems: 'center' }}
                   >
                     <Download size={20} /> GENERATE ORGANIZATION REPORT
                   </button>

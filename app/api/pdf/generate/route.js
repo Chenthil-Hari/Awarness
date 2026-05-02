@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { generatePDF } from '@/lib/pdf';
 import clientPromise from '@/lib/mongodb';
+import { calculateLevel } from '@/lib/game';
 
 /**
  * Internal API to trigger PDF generation based on achievement types
