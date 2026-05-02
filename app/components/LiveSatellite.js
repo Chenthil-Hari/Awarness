@@ -13,8 +13,9 @@ export default function LiveSatellite() {
       try {
         setLoading(true);
         setError(false);
-        // Using DEMO_KEY - getting the latest available natural image
-        const res = await fetch('https://api.nasa.gov/EPIC/api/natural/images?api_key=DEMO_KEY');
+        // Using personal NASA API Key
+        const apiKey = 'dlEhGUCsQFBasRtDc6LbzdgNqq8ThcoAVozmeZY8';
+        const res = await fetch(`https://api.nasa.gov/EPIC/api/natural/images?api_key=${apiKey}`);
         const data = await res.json();
         
         if (data && data.length > 0) {
@@ -24,7 +25,7 @@ export default function LiveSatellite() {
           const month = dateParts[1];
           const day = dateParts[2];
           
-          const imageUrl = `https://epic.gsfc.nasa.gov/archive/natural/${year}/${month}/${day}/png/${latest.image}.png`;
+          const imageUrl = `https://epic.gsfc.nasa.gov/archive/natural/${year}/${month}/${day}/png/${latest.image}.png?api_key=${apiKey}`;
           
           setSatelliteData({
             url: imageUrl,
