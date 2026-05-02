@@ -17,6 +17,8 @@ import LoadingSpinner from './components/LoadingSpinner';
 import CampaignTracker from './components/CampaignTracker';
 import HallOfFame from './components/HallOfFame';
 import PromotionModal from './components/PromotionModal';
+import DeploymentMap from './components/DeploymentMap/DeploymentMap';
+import NeuralPass from './components/NeuralPass/NeuralPass';
 import { useTheme } from './context/ThemeContext';
 
 export default function Home() {
@@ -205,37 +207,12 @@ export default function Home() {
 
           <CampaignTracker onSelectScenario={setSelectedScenario} />
 
-          {/* Simulations Section */}
-          <section style={{ marginTop: '6rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                  <LayoutGrid size={20} color="var(--accent-primary)" />
-                  <span style={{ fontWeight: 900, fontSize: '0.75rem', color: 'var(--accent-primary)', letterSpacing: '2px' }}>AVAILABLE NODES</span>
-                </div>
-                <h2 style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>Neural Simulations</h2>
-              </div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>
-                {scenarios.length} active simulations found
-              </div>
-            </div>
-
-            {loadingScenarios ? (
-              <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <LoadingSpinner message="Accessing encrypted training nodes..." />
-              </div>
-            ) : (
-              <div className="grid-container">
-                {scenarios.map((scenario) => (
-                  <ScenarioCard 
-                    key={scenario._id} 
-                    scenario={scenario} 
-                    onClick={() => setSelectedScenario(scenario)} 
-                  />
-                ))}
-              </div>
-            )}
+          {/* 3D Tactical Deployment Section */}
+          <section style={{ marginTop: '4rem' }}>
+             <DeploymentMap onSelectScenario={setSelectedScenario} />
           </section>
+
+          <NeuralPass />
 
           {/* Social & Shop Hub */}
           <div style={{ 

@@ -1,0 +1,167 @@
+.neural-pass-container {
+  margin: 4rem 0;
+  padding: 2.5rem;
+  background: var(--bg-tertiary);
+  border-radius: 32px;
+  border: 1px solid var(--glass-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.pass-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+.pass-title {
+  font-size: 2rem;
+  font-weight: 900;
+  margin: 0;
+  letter-spacing: -1px;
+}
+
+.pass-subtitle {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+}
+
+.pass-track-wrapper {
+  overflow-x: auto;
+  padding: 1rem 0;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+}
+
+.pass-track-wrapper::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome/Safari */
+}
+
+.pass-track {
+  display: flex;
+  gap: 1.5rem;
+  min-width: max-content;
+}
+
+.pass-tier-card {
+  width: 220px;
+  padding: 1.5rem;
+  background: var(--bg-primary);
+  border-radius: 24px;
+  border: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.pass-tier-card.unlocked {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
+}
+
+.pass-tier-card.locked {
+  opacity: 0.6;
+}
+
+.pass-tier-card.claimed {
+  border-color: var(--accent-success);
+}
+
+.tier-number {
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  margin-bottom: 1.25rem;
+}
+
+.tier-reward-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--bg-tertiary);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+  margin-bottom: 1.25rem;
+  position: relative;
+  border: 1px solid var(--glass-border);
+}
+
+.unlocked .tier-reward-icon {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--accent-primary);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+}
+
+.lock-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.tier-reward-name {
+  display: block;
+  font-weight: 800;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.tier-requirement {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.claim-btn {
+  width: 100%;
+  padding: 0.6rem;
+  background: var(--accent-primary);
+  color: #fff;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+}
+
+.claimed-badge {
+  width: 100%;
+  padding: 0.6rem;
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--accent-success);
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 0.7rem;
+  border: 1px solid var(--accent-success);
+}
+
+.progress-needed {
+  width: 100%;
+}
+
+.progress-bar-small {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill-small {
+  height: 100%;
+  background: var(--accent-primary);
+}

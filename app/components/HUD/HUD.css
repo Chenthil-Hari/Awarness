@@ -1,0 +1,322 @@
+.hud-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+  font-family: var(--font-main);
+  color: #fff;
+}
+
+.hud-container * {
+  pointer-events: auto;
+}
+
+/* --- HEADER --- */
+.hud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 80px;
+}
+
+.hud-top-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hud-profile-frame {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-left: 4px solid var(--accent-primary);
+  clip-path: polygon(0% 0%, 90% 0%, 100% 30%, 100% 100%, 0% 100%);
+}
+
+.hud-avatar {
+  width: 40px;
+  height: 40px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-username {
+  font-weight: 900;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  color: #fff;
+}
+
+.hud-rank {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--accent-primary);
+  letter-spacing: 2px;
+}
+
+.hud-level-badge {
+  width: 50px;
+  height: 50px;
+  background: var(--accent-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+}
+
+.hud-level-val {
+  font-weight: 900;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.hud-level-label {
+  font-size: 0.5rem;
+  font-weight: 800;
+}
+
+/* --- XP BAR --- */
+.hud-top-center {
+  flex: 1;
+  max-width: 500px;
+  padding: 0 2rem;
+}
+
+.hud-xp-container {
+  width: 100%;
+}
+
+.hud-xp-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.hud-xp-label {
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--accent-primary);
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+}
+
+.hud-xp-val {
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.hud-xp-bar-outer {
+  height: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.hud-xp-bar-inner {
+  height: 100%;
+  background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+  box-shadow: 0 0 15px var(--accent-primary);
+}
+
+.hud-xp-bar-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+  background-size: 10% 100%;
+}
+
+/* --- STAT BOXES --- */
+.hud-top-right {
+  display: flex;
+  gap: 1rem;
+}
+
+.hud-stat-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  clip-path: polygon(10% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 30%);
+}
+
+.hud-stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-stat-val {
+  font-weight: 900;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.hud-stat-label {
+  font-size: 0.5rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+/* --- FOOTER --- */
+.hud-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.hud-comms-relay {
+  width: 300px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  transition: all 0.3s ease;
+}
+
+.hud-comms-header {
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(139, 92, 246, 0.1);
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+}
+
+.hud-comms-content {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.hud-notification {
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hud-notif-text {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.hud-notif-time {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+}
+
+/* --- NAV --- */
+.hud-nav {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+}
+
+.hud-nav-item {
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.hud-nav-item:hover {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.hud-nav-item.active {
+  color: var(--accent-primary);
+}
+
+.hud-nav-icon {
+  transition: transform 0.2s ease;
+}
+
+.hud-nav-item:hover .hud-nav-icon {
+  transform: scale(1.1);
+}
+
+.hud-nav-label {
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.hud-nav-active-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: var(--accent-primary);
+  box-shadow: 0 0 10px var(--accent-primary);
+}
+
+/* --- DECORATIONS --- */
+.hud-vignette {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle, transparent 60%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.hud-scanlines {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.1) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.02),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.02)
+  );
+  background-size: 100% 4px, 3px 100%;
+  pointer-events: none;
+  z-index: 1001;
+  opacity: 0.3;
+}
+
+@media (max-width: 768px) {
+  .hud-top-center { display: none; }
+  .hud-stat-box.streak { display: none; }
+  .hud-comms-relay { display: none; }
+  .hud-nav-item { padding: 0.5rem 1rem; min-width: 60px; }
+  .hud-nav-label { display: none; }
+}

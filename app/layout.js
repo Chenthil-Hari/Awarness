@@ -25,6 +25,7 @@ import ClickSpark from "./components/ClickSpark/ClickSpark";
 import MobileBottomNav from "./components/MobileBottomNav";
 import RealTimeDuelHandler from "./components/RealTimeDuelHandler";
 import MaintenanceGuard from "./components/MaintenanceGuard";
+import HUDWrapper from "./components/HUDWrapper";
 
 export default function RootLayout({ children }) {
   return (
@@ -39,8 +40,10 @@ export default function RootLayout({ children }) {
               sparkCount={8}
               duration={400}
             >
-              <GhostBanner />
-              {children}
+              <HUDWrapper>
+                <GhostBanner />
+                {children}
+              </HUDWrapper>
               <ChatBot />
               <MobileBottomNav />
               <RealTimeDuelHandler />

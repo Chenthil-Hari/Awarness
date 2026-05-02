@@ -1,0 +1,243 @@
+.deployment-map-container {
+  position: relative;
+  width: 100%;
+  height: 600px;
+  background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #05070a 100%);
+  border-radius: 32px;
+  overflow: hidden;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  margin: 2rem 0;
+  box-shadow: 0 0 50px rgba(0,0,0,0.5);
+}
+
+.map-loader {
+  width: 100%;
+  height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #05070a;
+  border-radius: 32px;
+}
+
+.map-ui-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.map-ui-overlay * {
+  pointer-events: auto;
+}
+
+.map-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--accent-primary);
+}
+
+.map-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.map-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin: 0;
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+}
+
+.map-subtitle {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+/* Mission Info Panel */
+.mission-info-panel {
+  position: absolute;
+  top: 100px;
+  left: 2rem;
+  width: 320px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  padding: 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: var(--accent-primary);
+  letter-spacing: 2px;
+  margin-bottom: 1rem;
+}
+
+.panel-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  margin-bottom: 0.75rem;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.panel-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.panel-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.p-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.p-label {
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.p-val {
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.p-val.beginner { color: var(--accent-success); }
+.p-val.intermediate { color: var(--accent-warning); }
+.p-val.advanced { color: var(--accent-danger); }
+
+.deploy-btn {
+  width: 100%;
+  background: var(--accent-primary);
+  color: #fff;
+  padding: 0.8rem;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+.deploy-btn:hover {
+  transform: translateY(-2px);
+  background: #9333ea;
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
+}
+
+/* Globe Labels */
+.globe-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  transform: translate(-50%, -50%);
+}
+
+.globe-label:hover {
+  background: var(--accent-primary);
+  transform: translate(-50%, -60%);
+  z-index: 100;
+}
+
+.label-dot {
+  width: 6px;
+  height: 6px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 5px #fff;
+}
+
+.label-text {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.map-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--accent-success);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-success);
+  animation: pulse 2s infinite;
+}
+
+.coordinates-display {
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+.map-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.6) 100%);
+}
+
+@keyframes pulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+@media (max-width: 768px) {
+  .mission-info-panel {
+    width: calc(100% - 4rem);
+    left: 2rem;
+    top: auto;
+    bottom: 4rem;
+  }
+}
