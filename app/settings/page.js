@@ -23,7 +23,6 @@ export default function SettingsPage() {
 
   return (
     <main className="container">
-      <Navbar score={1200} level={4} />
       
       <div className="flex-center" style={{ marginTop: '2rem' }}>
         <motion.div 

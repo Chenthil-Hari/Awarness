@@ -28,7 +28,6 @@ export default function InboxPage() {
 
   return (
     <main className="container">
-      <Navbar score={totalXp} level={level} />
       
       <div style={{ marginTop: '3rem', paddingBottom: '5rem' }}>
         {/* Page Header */}

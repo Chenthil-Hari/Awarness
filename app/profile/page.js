@@ -224,7 +224,6 @@ export default function ProfilePage() {
 
   return (
     <main className="container" style={{ position: 'relative', zIndex: 1, minHeight: '100vh', paddingBottom: '6rem' }}>
-      <Navbar score={userXp} level={level} />
 
       <div style={{ marginTop: '3rem' }}>
         
