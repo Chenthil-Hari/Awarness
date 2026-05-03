@@ -403,6 +403,49 @@ export default function ProfilePage() {
           </motion.div>
         </div>
 
+        </div>
+
+        {/* --- REDACTED DOSSIER (NARRATIVE) --- */}
+        <div style={{ marginTop: '4rem' }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '2.5rem', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, right: 0, padding: '1rem', background: 'var(--accent-danger)', color: 'white', fontWeight: 900, fontSize: '0.7rem', letterSpacing: '2px', transform: 'rotate(45deg) translate(25px, -15px)', width: '150px', textAlign: 'center' }}>CLASSIFIED</div>
+            
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <FileText size={22} color="var(--accent-danger)" /> Personal Dossier: Case #{(user.username || 'AGENT').toUpperCase()}
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontFamily: 'monospace', fontSize: '1rem', lineHeight: 1.8 }}>
+              <div>
+                <span style={{ color: 'var(--accent-primary)', fontWeight: 800 }}>[ORIGIN]:</span> 
+                <span style={{ marginLeft: '1rem' }}>
+                  The subject was recruited after the {level >= 5 ? 'Global Data Breach of 2024' : '██████ ████ ██████ ██ ████'} where they showed exceptional neural resilience.
+                </span>
+              </div>
+              
+              <div>
+                <span style={{ color: 'var(--accent-primary)', fontWeight: 800 }}>[CLEARANCE]:</span> 
+                <span style={{ marginLeft: '1rem' }}>
+                  {level >= 10 ? 'Level 2 - Tactical Operative' : '██████ ████ - █████████ █████████'}
+                </span>
+              </div>
+
+              <div>
+                <span style={{ color: 'var(--accent-primary)', fontWeight: 800 }}>[MISSION]:</span> 
+                <span style={{ marginLeft: '1rem' }}>
+                  Maintain system integrity across all sectors and neutralize the {level >= 20 ? 'Void Entity' : '████ ██████'}. 
+                  {level < 20 && <span style={{ color: 'var(--accent-danger)', fontSize: '0.7rem', fontWeight: 900, marginLeft: '1rem' }}>[REDACTED: LEVEL 20 REQUIRED]</span>}
+                </span>
+              </div>
+
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem', marginTop: '1rem' }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                  "Every simulation completed is another layer of truth unmasked." — The Architect
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
         {/* NETWORK & SOCIAL SECTION */}
         <div style={{ marginTop: '4rem' }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card" style={{ padding: '2rem' }}>

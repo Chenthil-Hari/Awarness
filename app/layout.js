@@ -27,6 +27,7 @@ import RealTimeDuelHandler from "./components/RealTimeDuelHandler";
 import MaintenanceGuard from "./components/MaintenanceGuard";
 import BentoWrapper from "./components/BentoWrapper";
 import NeuralCursor from "./components/NeuralCursor";
+import NeuralTransition from "./components/NeuralTransition";
 
 export default function RootLayout({ children }) {
   return (
@@ -45,7 +46,9 @@ export default function RootLayout({ children }) {
               <div className="crt-scanlines" />
               <BentoWrapper>
                 <GhostBanner />
-                {children}
+                <NeuralTransition>
+                  {children}
+                </NeuralTransition>
               </BentoWrapper>
               <ChatBot />
               <MobileBottomNav />

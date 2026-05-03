@@ -8,6 +8,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { Lock, Star, Terminal, ShieldCheck, Trophy, Sparkles } from 'lucide-react';
 import Lottie from 'lottie-react';
 import { badges } from '../data/badges';
+import { Award, FileText, Download, CheckCircle } from 'lucide-react';
 
 // Import all lotties explicitly to ensure they are bundled
 import verifiedUserLottie from '../../images/verified-user.json';
@@ -33,6 +34,32 @@ const lucideMap = {
 export default function AchievementsPage() {
   const { data: session, status } = useSession();
   const [selectedBadge, setSelectedBadge] = useState(null);
+  const [claiming, setClaiming] = useState(null);
+
+  const domains = [
+    { id: 'Cybersecurity', title: 'Cybersecurity Specialist', color: '#8b5cf6' },
+    { id: 'Financial Literacy', title: 'Financial Strategist', color: '#10b981' },
+    { id: 'Life Skills', title: 'Life Skills Master', color: '#f59e0b' }
+  ];
+
+  const handleClaim = async (domain) => {
+    setClaiming(domain.id);
+    try {
+      const res = await fetch('/api/certificates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: domain.id })
+      });
+      const data = await res.json();
+      if (data.download_url) {
+        window.open(data.download_url, '_blank');
+      }
+    } catch (err) {
+      console.error("Claiming failed");
+    } finally {
+      setClaiming(null);
+    }
+  };
 
   if (status === 'loading') {
     return (
@@ -176,6 +203,93 @@ export default function AchievementsPage() {
               </motion.div>
             );
           })}
+        </div>
+
+        {/* --- CERTIFICATIONS SECTION --- */}
+        <div style={{ marginTop: '6rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>
+              Neural <span className="gradient-text">Certifications</span>
+            </h2>
+            <p style={{ color: 'var(--text-secondary)' }}>Claim your professional credentials for completed domains.</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+            {domains.map((domain) => {
+              const isCompleted = session?.user?.completedMissions?.filter(m => m.domain === domain.id).length >= 5 || true; // Mocked for demo
+              
+              return (
+                <motion.div
+                  key={domain.id}
+                  whileHover={{ y: -10 }}
+                  style={{
+                    background: 'var(--glass-bg)',
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: '24px',
+                    padding: '2rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1.5rem',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ 
+                      width: '50px', height: '50px', background: `${domain.color}15`, 
+                      borderRadius: '12px', display: 'flex', alignItems: 'center', 
+                      justifyContent: 'center', color: domain.color 
+                    }}>
+                      <Award size={28} />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontWeight: 800, fontSize: '1.1rem' }}>{domain.title}</h4>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 700 }}>NEURAL LEVEL 10 REQUIRED</span>
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Domain Progress</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 900, color: domain.color }}>100%</span>
+                    </div>
+                    <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ width: '100%', height: '100%', background: domain.color }} />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleClaim(domain)}
+                    disabled={claiming === domain.id}
+                    style={{
+                      width: '100%',
+                      padding: '1rem',
+                      borderRadius: '14px',
+                      background: isCompleted ? domain.color : 'rgba(255,255,255,0.05)',
+                      color: isCompleted ? 'white' : 'rgba(255,255,255,0.2)',
+                      border: 'none',
+                      fontWeight: 800,
+                      cursor: isCompleted ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      transition: 'all 0.3s ease',
+                      boxShadow: isCompleted ? `0 10px 20px ${domain.color}30` : 'none'
+                    }}
+                  >
+                    {claiming === domain.id ? (
+                      'GENERATING...'
+                    ) : isCompleted ? (
+                      <><Download size={18} /> CLAIM CERTIFICATE</>
+                    ) : (
+                      <><Lock size={18} /> LOCKED</>
+                    )}
+                  </button>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

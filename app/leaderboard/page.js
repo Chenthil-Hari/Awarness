@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
-import { Search, Zap, Trophy, ChevronRight, User } from 'lucide-react';
+import { Search, Zap, Trophy, ChevronRight, User, Swords } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { calculateLevel } from '@/lib/game';
 import BentoWrapper from '../components/BentoWrapper';
 import AuroraBackground from '../components/AuroraBackground';
@@ -19,10 +20,15 @@ const LEAGUES = [
 
 export default function LeaderboardPage() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeLeague, setActiveLeague] = useState('Bronze');
   const [searchTerm, setSearchTerm] = useState('');
+
+  const handleChallenge = (user) => {
+    router.push(`/duels?opponentId=${user._id}&opponentName=${encodeURIComponent(user.name)}`);
+  };
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -123,6 +129,32 @@ export default function LeaderboardPage() {
                   <div className="xp-col">
                     <Zap size={14} />
                     <span>{user.xp?.toLocaleString()}</span>
+                  </div>
+
+                  <div className="action-col" style={{ display: 'flex', justifyContent: 'flex-end', flex: 1 }}>
+                    {!isMe && (
+                      <motion.button 
+                        whileHover={{ scale: 1.1, background: 'var(--accent-primary)' }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => handleChallenge(user)}
+                        className="challenge-btn-mini"
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: '8px',
+                          padding: '6px 12px',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '0.7rem',
+                          fontWeight: 800,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <Swords size={14} /> CHALLENGE
+                      </motion.button>
+                    )}
                   </div>
                 </motion.div>
               );

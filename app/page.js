@@ -19,6 +19,8 @@ import Lottie from 'lottie-react';
 import fireAnim from '@/images/fire.json';
 import chartAnim from '@/images/line-chart.json';
 import trophyAnim from '@/images/trophy.json';
+import DailyFlash from './components/DailyFlash';
+import ArchitectBriefing from './components/ArchitectBriefing';
 import { calculateLevel } from '@/lib/game';
 import './BentoDashboard.css';
 
@@ -134,6 +136,11 @@ export default function Home() {
         </motion.div>
       </div>
 
+      {/* --- DAILY FLASH --- */}
+      <section className="dashboard-section" style={{ marginTop: '1rem' }}>
+        <DailyFlash />
+      </section>
+
       {/* --- CAMPAIGN TRACKER --- */}
       <section className="dashboard-section">
         <CampaignTracker onSelectScenario={setSelectedScenario} />
@@ -209,6 +216,8 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ArchitectBriefing user={session?.user} />
     </div>
   );
 }
