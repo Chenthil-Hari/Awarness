@@ -11,7 +11,7 @@ import StreakIcon from '../components/StreakIcon';
 import { 
   Trophy, Target, Zap, Clock, TrendingUp, Shield, 
   BarChart3, Calendar, ChevronRight, Edit2, Save, X, 
-  Mail, LogOut, Settings, Award, Check, AlertCircle, Camera, User, MessageSquare, Send, Bell, Users
+  Mail, LogOut, Settings, Award, Check, AlertCircle, Camera, User, MessageSquare, Send, Bell, Users, FileText
 } from 'lucide-react';
 import { calculateLevel } from '@/lib/game';
 
@@ -401,8 +401,6 @@ export default function ProfilePage() {
             </div>
             <p style={{ marginTop: '2rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, maxWidth: '200px' }}>Based on {totalAttempts} total decisions.</p>
           </motion.div>
-        </div>
-
         </div>
 
         {/* --- REDACTED DOSSIER (NARRATIVE) --- */}

@@ -5,10 +5,9 @@ import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { Lock, Star, Terminal, ShieldCheck, Trophy, Sparkles } from 'lucide-react';
+import { Lock, Star, Terminal, ShieldCheck, Trophy, Sparkles, Award, FileText, Download, CheckCircle } from 'lucide-react';
 import Lottie from 'lottie-react';
 import { badges } from '../data/badges';
-import { Award, FileText, Download, CheckCircle } from 'lucide-react';
 
 // Import all lotties explicitly to ensure they are bundled
 import verifiedUserLottie from '../../images/verified-user.json';
