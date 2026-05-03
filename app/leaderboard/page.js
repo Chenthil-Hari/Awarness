@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { Search, Zap, Trophy, ChevronRight, User, Swords } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { calculateLevel } from '@/lib/game';
-import BentoWrapper from '../components/BentoWrapper';
 import AuroraBackground from '../components/AuroraBackground';
 import LoadingSpinner from '../components/LoadingSpinner';
 import './SimpleLeaderboard.css';
@@ -51,7 +50,7 @@ export default function LeaderboardPage() {
   }, [users, searchTerm]);
 
   return (
-    <BentoWrapper>
+    <>
       <AuroraBackground />
       <div className="simple-lb-container">
         <header className="lb-header-simple">
@@ -163,6 +162,6 @@ export default function LeaderboardPage() {
           </div>
         )}
       </div>
-    </BentoWrapper>
+    </>
   );
 }
