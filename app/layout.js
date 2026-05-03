@@ -45,14 +45,12 @@ export default function RootLayout({ children }) {
             >
               <NeuralCursor />
               <div className="crt-scanlines" />
-              <HUDWrapper>
-                <BentoWrapper>
-                  <GhostBanner />
-                  <NeuralTransition>
-                    {children}
-                  </NeuralTransition>
-                </BentoWrapper>
-              </HUDWrapper>
+              <BentoWrapper>
+                <GhostBanner />
+                <NeuralTransition>
+                  {children}
+                </NeuralTransition>
+              </BentoWrapper>
               <ChatBot />
               <MobileBottomNav />
               <RealTimeDuelHandler />

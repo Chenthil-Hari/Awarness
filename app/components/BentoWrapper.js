@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import Navbar from './Navbar';
-import CommandPill from './CommandPill/CommandPill';
+import TopNav from './TopNav/TopNav';
 import { usePathname } from 'next/navigation';
 
 export default function BentoWrapper({ children }) {
@@ -22,34 +22,32 @@ export default function BentoWrapper({ children }) {
   }
 
   return (
-    <div className="luxury-workspace">
-      <main className="luxury-content">
+    <div className="app-layout">
+      <TopNav />
+      <main className="app-main">
         {children}
       </main>
-      <CommandPill />
 
       <style jsx global>{`
-        .luxury-workspace {
-          position: relative;
+        .app-layout {
           min-height: 100vh;
           background: var(--bg-primary);
-          overflow-x: hidden;
         }
-        .luxury-content {
-          width: 100%;
+        .app-main {
+          padding-top: 64px; /* height of TopNav */
           min-height: 100vh;
-          padding: 5.5rem 3rem 8rem 3rem;
+          width: 100%;
           max-width: 1400px;
           margin: 0 auto;
-        }
-        @media (max-width: 1024px) {
-          .luxury-content {
-            padding: 5rem 2rem 7rem 2rem;
-          }
+          padding-left: 2rem;
+          padding-right: 2rem;
+          padding-bottom: 3rem;
         }
         @media (max-width: 768px) {
-          .luxury-content {
-            padding: 4.5rem 1.25rem 7rem 1.25rem;
+          .app-main {
+            padding-left: 1rem;
+            padding-right: 1rem;
+            padding-top: 64px;
           }
         }
       `}</style>
