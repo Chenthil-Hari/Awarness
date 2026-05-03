@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Swords, Timer, Zap, Trophy, XCircle, Shield } from 'lucide-react';
-import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import { useMultiplayer } from '@/hooks/useMultiplayer';
 import { survivalScenarios } from '../data/survivalScenarios';
@@ -238,9 +237,7 @@ function DuelContent() {
 
   return (
     <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem' }}>
-      <Navbar />
-
-      <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+            <div style={{ marginTop: '2rem', textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
           <Swords size={32} className="gradient-text" />
           <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0 }}>SPEED-BREACH <span className="gradient-text">DUEL</span></h1>

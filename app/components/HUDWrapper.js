@@ -2,7 +2,6 @@
 
 import { useSession } from 'next-auth/react';
 import HUD from './HUD/HUD';
-import Navbar from './Navbar';
 import { usePathname } from 'next/navigation';
 
 export default function HUDWrapper({ children }) {
@@ -17,7 +16,7 @@ export default function HUDWrapper({ children }) {
   if (!session || isAuthPage) {
     return (
       <>
-        {!isAuthPage && <Navbar />}
+        {!isAuthPage && }
         {children}
       </>
     );

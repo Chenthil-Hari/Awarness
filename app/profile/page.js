@@ -5,7 +5,6 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StreakIcon from '../components/StreakIcon';
 import { 
@@ -146,8 +145,7 @@ export default function ProfilePage() {
   if (!session) {
     return (
       <main className="container" style={{ textAlign: 'center', marginTop: '10rem' }}>
-        <Navbar />
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 900 }}>Access Denied</h1>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 900 }}>Access Denied</h1>
         <p style={{ color: 'var(--text-secondary)' }}>Please sign in to view your analytics.</p>
       </main>
     );

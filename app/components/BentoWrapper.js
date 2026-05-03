@@ -15,7 +15,7 @@ export default function BentoWrapper({ children }) {
   if (!session || isAuthPage) {
     return (
       <>
-        {!isAuthPage && <Navbar />}
+        {!isAuthPage && <TopNav />}
         {children}
       </>
     );

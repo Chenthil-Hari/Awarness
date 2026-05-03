@@ -9,7 +9,6 @@ import {
   AlertTriangle, CheckCircle2, Terminal, Shield,
   Settings, Info, Zap
 } from 'lucide-react';
-import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
 
@@ -42,8 +41,7 @@ export default function ArchitectPage() {
   if (!session) {
     return (
       <main className="container" style={{ textAlign: 'center', marginTop: '10rem' }}>
-        <Navbar />
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 900 }}>Access Denied</h1>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 900 }}>Access Denied</h1>
         <p style={{ color: 'var(--text-secondary)' }}>Operative credentials required.</p>
       </main>
     );
@@ -52,8 +50,7 @@ export default function ArchitectPage() {
   if (!isHackerTier) {
     return (
       <main className="container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <Navbar />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2rem' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2rem' }}>
           <div style={{ position: 'relative', marginBottom: '3rem' }}>
             <motion.div 
               animate={{ rotate: 360 }} 
@@ -153,9 +150,7 @@ export default function ArchitectPage() {
 
   return (
     <main className="container" style={{ minHeight: '100vh', paddingBottom: '6rem' }}>
-      <Navbar />
-
-      <div style={{ marginTop: '3rem', marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
+            <div style={{ marginTop: '3rem', marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <Hammer size={20} color="var(--accent-warning)" />

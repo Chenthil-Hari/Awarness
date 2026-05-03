@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SimulationLottie from '../components/SimulationLottie';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -608,8 +607,7 @@ function WikiContent() {
 export default function WikiPage() {
   return (
     <main className="container">
-      <Navbar />
-      <Suspense fallback={<LoadingSpinner />}>
+            <Suspense fallback={<LoadingSpinner />}>
         <WikiContent />
       </Suspense>
     </main>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, ShieldCheck, AlertCircle, Zap, Search, Brain, Trophy } from 'lucide-react';
@@ -65,9 +64,7 @@ export default function DeepfakeDetectivePage() {
 
   return (
     <main style={{ minHeight: '100vh', paddingBottom: '6rem' }}>
-      <Navbar />
-      
-      <div className="container" style={{ marginTop: '3rem' }}>
+            <div className="container" style={{ marginTop: '3rem' }}>
         <header style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '1rem' }}>

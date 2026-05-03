@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { Users, Skull, Trophy, Timer, AlertTriangle, ShieldCheck, ArrowRight, Zap, Heart, Loader2, Link as LinkIcon, UserPlus, Check, X } from 'lucide-react';
-import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
 import { useMultiplayer } from '@/hooks/useMultiplayer';
@@ -231,9 +230,7 @@ function SurvivalContent() {
       zIndex: 1,
       overflow: 'hidden'
     }}>
-      <Navbar />
-      
-      {/* Premium HUD (Heads-Up Display) */}
+            {/* Premium HUD (Heads-Up Display) */}
       <div style={{ 
         position: 'sticky',
         top: '1.5rem',

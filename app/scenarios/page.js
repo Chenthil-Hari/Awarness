@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import Navbar from '../components/Navbar';
 import ScenarioCard from '../components/ScenarioCard';
 import SimulationViewer from '../components/SimulationViewer';
 import { scenarios } from '../data/scenarios';
@@ -24,9 +23,7 @@ export default function ScenariosPage() {
 
   return (
     <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem' }}>
-      <Navbar />
-      
-      <div style={{ marginTop: '3rem', marginBottom: '3rem' }}>
+            <div style={{ marginTop: '3rem', marginBottom: '3rem' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem', fontWeight: 600 }}>
           <ArrowLeft size={16} /> Back to Dashboard
         </Link>

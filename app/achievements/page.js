@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Lock, Star, Terminal, ShieldCheck, Trophy, Sparkles, Award, FileText, Download, CheckCircle } from 'lucide-react';
 import Lottie from 'lottie-react';
@@ -76,9 +75,7 @@ export default function AchievementsPage() {
 
   return (
     <main className="container" style={{ position: 'relative', zIndex: 1, minHeight: '100vh', paddingBottom: '4rem' }}>
-      <Navbar />
-
-      <div style={{ marginTop: '3rem', marginBottom: '4rem' }}>
+            <div style={{ marginTop: '3rem', marginBottom: '4rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
           <motion.div
             initial={{ y: -20, opacity: 0 }}

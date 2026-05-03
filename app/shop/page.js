@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Zap, Shield, Sparkles, Check, Lock, Star, Palette, Ghost, Heart } from 'lucide-react';
@@ -112,9 +111,7 @@ export default function ShopPage() {
 
   return (
     <main style={{ minHeight: '100vh', paddingBottom: '6rem' }}>
-      <Navbar />
-      
-      <div className="container" style={{ marginTop: '4rem' }}>
+            <div className="container" style={{ marginTop: '4rem' }}>
         <header style={{ textAlign: 'center', marginBottom: '4rem' }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}

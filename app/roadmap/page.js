@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Lock, CheckCircle2, ChevronRight, Zap, Target, BookOpen, Star, Users, Skull, TrendingUp } from 'lucide-react';
@@ -132,9 +131,7 @@ export default function RoadmapPage() {
 
   return (
     <main style={{ minHeight: '100vh', paddingBottom: '6rem', background: 'var(--bg-main)' }}>
-      <Navbar />
-      
-      <div className="container" style={{ marginTop: '4rem' }}>
+            <div className="container" style={{ marginTop: '4rem' }}>
         <header style={{ textAlign: 'center', marginBottom: '5rem' }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="hero-title" style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1rem' }}>OPERATIONAL <span className="gradient-text">PATHWAY</span></h1>

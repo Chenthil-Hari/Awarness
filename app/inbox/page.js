@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
-import Navbar from '../components/Navbar';
 import InboxClient from '../components/InboxClient';
 import LoadingSpinner from '../components/LoadingSpinner';
 import DrillLottie from '../components/DrillLottie';

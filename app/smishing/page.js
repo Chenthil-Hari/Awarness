@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SmishingMessage from '../components/SmishingMessage';
 import IncomingCall from '../components/IncomingCall';
@@ -83,9 +82,7 @@ export default function SmishingPage() {
 
   return (
     <main style={{ minHeight: '100vh', paddingBottom: '3rem' }}>
-      <Navbar />
-
-      {/* Page Header */}
+            {/* Page Header */}
       <div className="container" style={{ padding: '0 1rem' }}>
         <div style={{ textAlign: 'center', padding: '2rem 0 3rem' }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

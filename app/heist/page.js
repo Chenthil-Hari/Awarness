@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Shield, Cpu, Binary, Radio, AlertCircle, CheckCircle2, XCircle, ArrowRight, Timer, Terminal, Users, Play, Lock, Link as LinkIcon, UserPlus, X, Zap } from 'lucide-react';
-import Navbar from '../components/Navbar';
 import BorderGlow from '../components/BorderGlow/BorderGlow';
 import TextPressure from '../components/TextPressure/TextPressure';
 import { useMultiplayer } from '@/hooks/useMultiplayer';
@@ -281,9 +280,7 @@ function HeistContent() {
 
   return (
     <main className="container" style={{ minHeight: '100vh', paddingBottom: '5rem' }}>
-      <Navbar />
-
-      <div style={{ marginTop: '3rem', marginBottom: '3rem', textAlign: 'center' }}>
+            <div style={{ marginTop: '3rem', marginBottom: '3rem', textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
           <div style={{ padding: '0.5rem', background: 'var(--accent-primary)', borderRadius: '8px', color: 'white' }}>
             <Shield size={24} />
