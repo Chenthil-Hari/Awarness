@@ -11,6 +11,8 @@ import {
   Zap, LogOut, ChevronDown, Flame, ShoppingBag, Mail, Award
 } from 'lucide-react';
 import { calculateLevel } from '@/lib/game';
+import Lottie from 'lottie-react';
+import fireAnim from '@/images/fire.json';
 import './TopNav.css';
 
 const NAV_LINKS = [
@@ -93,7 +95,9 @@ export default function TopNav() {
 
           {/* Streak */}
           <div className="streak-badge">
-            <Flame size={14} color="#f97316" />
+            <div className="streak-lottie">
+              <Lottie animationData={fireAnim} loop={true} />
+            </div>
             <span>{session.user.streak || 0}</span>
           </div>
 
