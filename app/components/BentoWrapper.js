@@ -1,7 +1,6 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import Navbar from './Navbar';
 import TopNav from './TopNav/TopNav';
 import { usePathname } from 'next/navigation';
 

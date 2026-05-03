@@ -16,7 +16,6 @@ export default function HUDWrapper({ children }) {
   if (!session || isAuthPage) {
     return (
       <>
-        {!isAuthPage && }
         {children}
       </>
     );
