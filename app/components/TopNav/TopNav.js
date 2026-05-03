@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutGrid, Trophy, Shield, Map as MapIcon,
   User, Settings, BookOpen, Sword, Menu, X,
-  Zap, LogOut, ChevronDown, Flame
+  Zap, LogOut, ChevronDown, Flame, ShoppingBag, Mail, Award
 } from 'lucide-react';
 import { calculateLevel } from '@/lib/game';
 import './TopNav.css';
@@ -19,7 +19,7 @@ const NAV_LINKS = [
   { label: 'Heist', href: '/heist', icon: <MapIcon size={16} /> },
   { label: 'Leaderboard', href: '/leaderboard', icon: <Trophy size={16} /> },
   { label: 'Wiki', href: '/wiki', icon: <BookOpen size={16} /> },
-  { label: 'Profile', href: '/profile', icon: <User size={16} /> },
+  { label: 'Shop', href: '/shop', icon: <ShoppingBag size={16} /> },
 ];
 
 export default function TopNav() {
@@ -123,6 +123,12 @@ export default function TopNav() {
                 >
                   <Link href="/profile" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
                     <User size={15} /> Profile
+                  </Link>
+                  <Link href="/inbox" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                    <Mail size={15} /> Live Drills
+                  </Link>
+                  <Link href="/achievements" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                    <Award size={15} /> Achievements
                   </Link>
                   <Link href="/settings" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
                     <Settings size={15} /> Settings

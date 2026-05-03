@@ -21,6 +21,7 @@ import chartAnim from '@/images/line-chart.json';
 import trophyAnim from '@/images/trophy.json';
 import DailyFlash from './components/DailyFlash';
 import ArchitectBriefing from './components/ArchitectBriefing';
+import IntelTicker from './components/IntelTicker/IntelTicker';
 import { calculateLevel } from '@/lib/game';
 import './BentoDashboard.css';
 
@@ -64,7 +65,10 @@ export default function Home() {
   return (
     <div className="bento-dashboard">
       <AuroraBackground />
-      {/* --- HERO SECTION --- */}
+
+      {/* --- INTEL TICKER --- */}
+      <IntelTicker />
+
       {/* --- HERO BANNER --- */}
       <div className="friendly-hero">
         <div className="hero-content">
@@ -125,6 +129,31 @@ export default function Home() {
             <div className="stat-pill">Tier {Math.floor((session?.user?.xp || 0) / 500) + 1}</div>
           </div>
         </div>
+      </div>
+      {/* --- QUICK LINKS --- */}
+      <div className="quick-links">
+        {[
+          { label: 'Live Drills', href: '/inbox', emoji: '📧', desc: 'Spot the phish' },
+          { label: 'Smishing Lab', href: '/smishing', emoji: '📱', desc: 'SMS threats' },
+          { label: 'Deepfake Lab', href: '/deepfake-detective', emoji: '🎭', desc: 'Detect fakes' },
+          { label: 'Survival Mode', href: '/survival', emoji: '⚡', desc: 'Endless rounds' },
+          { label: 'Achievements', href: '/achievements', emoji: '🏅', desc: 'Your badges' },
+          { label: 'Roadmap', href: '/roadmap', emoji: '🗺️', desc: 'Your path' },
+        ].map((link, i) => (
+          <motion.a
+            key={link.href}
+            href={link.href}
+            className="quick-link-card"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+            whileHover={{ y: -3 }}
+          >
+            <span className="quick-link-emoji">{link.emoji}</span>
+            <span className="quick-link-label">{link.label}</span>
+            <span className="quick-link-desc">{link.desc}</span>
+          </motion.a>
+        ))}
       </div>
 
       {/* --- CAMPAIGN TRACKER --- */}
