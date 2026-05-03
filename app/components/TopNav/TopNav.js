@@ -15,8 +15,8 @@ import './TopNav.css';
 
 const NAV_LINKS = [
   { label: 'Dashboard', href: '/', icon: <LayoutGrid size={16} /> },
-  { label: 'Missions', href: '/armory', icon: <MapIcon size={16} /> },
-  { label: 'Neural Pass', href: '/neural-pass', icon: <Shield size={16} /> },
+  { label: 'Duels', href: '/duels', icon: <Sword size={16} /> },
+  { label: 'Heist', href: '/heist', icon: <MapIcon size={16} /> },
   { label: 'Leaderboard', href: '/leaderboard', icon: <Trophy size={16} /> },
   { label: 'Wiki', href: '/wiki', icon: <BookOpen size={16} /> },
   { label: 'Profile', href: '/profile', icon: <User size={16} /> },

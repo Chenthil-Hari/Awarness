@@ -65,90 +65,71 @@ export default function Home() {
     <div className="bento-dashboard">
       <AuroraBackground />
       {/* --- HERO SECTION --- */}
-      <div className="bento-grid-header">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          whileHover={{ y: -5, scale: 1.01 }}
-          className="bento-card hero-card"
-        >
-          <div className="hero-content">
-            <span className="hero-eyebrow">
-              <ScrambleText text="COMMAND CENTER" delay={500} />
-            </span>
-            <h1 className="hero-welcome">
-              Welcome back, <span className="gradient-text">{session?.user?.username}</span>
-            </h1>
-            <p className="hero-desc">Your neural link is stable. Continue your training through the hierarchy.</p>
-            
-            <div className="hero-progress">
-              <div className="progress-info">
-                <span className="level-badge">LVL {level}</span>
-                <span className="xp-text">{userXp} / {((level + 1) * 100)} XP</span>
-              </div>
-              <div className="progress-bar-outer">
-                <motion.div 
-                  className="progress-bar-inner"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${xpInLevel}%` }}
-                />
-              </div>
+      {/* --- HERO BANNER --- */}
+      <div className="friendly-hero">
+        <div className="hero-content">
+          <h1 className="hero-welcome">
+            Welcome back, <span className="gradient-text">{session?.user?.username}</span>
+          </h1>
+          <p className="hero-desc">Your neural link is stable. Ready for today's training?</p>
+          
+          <div className="hero-progress">
+            <div className="progress-info">
+              <span className="level-badge">Level {level}</span>
+              <span className="xp-text">{userXp} / {((level + 1) * 100)} XP to next level</span>
+            </div>
+            <div className="progress-bar-outer">
+              <motion.div 
+                className="progress-bar-inner"
+                initial={{ width: 0 }}
+                animate={{ width: `${xpInLevel}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+              />
             </div>
           </div>
-          <div className="hero-visual">
-            <Shield size={120} className="floating-icon" />
-          </div>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bento-card stats-card"
-        >
-          <div className="stat-item">
-             <div className="stat-icon-box success">
-               <Lottie animationData={fireAnim} loop={true} style={{ width: 40, height: 40 }} />
-             </div>
-             <div className="stat-info">
-               <span className="stat-label">DAILY STREAK</span>
-               <span className="stat-val">{session?.user?.streak || 1} DAYS</span>
-             </div>
-          </div>
-          <div className="stat-item">
-             <div className="stat-icon-box warning">
-               <Lottie animationData={chartAnim} loop={true} style={{ width: 40, height: 40 }} />
-             </div>
-             <div className="stat-info">
-               <span className="stat-label">RANK</span>
-               <span className="stat-val">{session?.user?.league || 'BRONZE'}</span>
-             </div>
-          </div>
-          <div className="stat-item">
-             <div className="stat-icon-box primary">
-               <Lottie animationData={trophyAnim} loop={true} style={{ width: 40, height: 40 }} />
-             </div>
-             <div className="stat-info">
-               <span className="stat-label">COMPLETED</span>
-               <span className="stat-val">{session?.user?.completedMissions?.length || 0} NODES</span>
-             </div>
-          </div>
-        </motion.div>
+        </div>
+        <div className="hero-visual">
+          <Lottie animationData={fireAnim} loop={true} style={{ width: 150, height: 150, opacity: 0.8 }} />
+        </div>
       </div>
 
-      {/* --- DAILY FLASH --- */}
-      <section className="dashboard-section" style={{ marginTop: '1rem' }}>
-        <DailyFlash />
-      </section>
+      {/* --- 3-COLUMN ACTION GRID --- */}
+      <div className="action-grid">
+        <div className="action-card">
+          <div className="action-icon-box" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+            <Zap size={28} />
+          </div>
+          <h3>Daily Challenge</h3>
+          <p>Complete today's flash scenario for bonus XP.</p>
+          <DailyFlash inline={true} />
+        </div>
+
+        <div className="action-card">
+          <div className="action-icon-box" style={{ background: 'rgba(249, 115, 22, 0.1)', color: '#f97316' }}>
+            <TrendingUp size={28} />
+          </div>
+          <h3>Active Streak</h3>
+          <p>You're on a {session?.user?.streak || 1} day streak. Don't lose your momentum!</p>
+          <div className="action-stats">
+            <div className="stat-pill">{session?.user?.streak || 1} Days</div>
+          </div>
+        </div>
+
+        <div className="action-card">
+          <div className="action-icon-box" style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' }}>
+            <Shield size={28} />
+          </div>
+          <h3>Neural Pass</h3>
+          <p>Unlock premium rewards by completing missions.</p>
+          <div className="action-stats">
+            <div className="stat-pill">Tier {Math.floor((session?.user?.xp || 0) / 500) + 1}</div>
+          </div>
+        </div>
+      </div>
 
       {/* --- CAMPAIGN TRACKER --- */}
-      <section className="dashboard-section">
+      <section className="dashboard-section" style={{ marginTop: '2rem' }}>
         <CampaignTracker onSelectScenario={setSelectedScenario} />
-      </section>
-
-      {/* --- NEURAL PASS --- */}
-      <section id="neural-pass" className="dashboard-section">
-        <NeuralPass />
       </section>
 
       {/* --- MISSION GRID --- */}
