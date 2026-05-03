@@ -95,6 +95,7 @@ export default function LeaderboardPage() {
               <span>Operative</span>
               <span>Level</span>
               <span>Neural Data</span>
+              <span style={{ textAlign: 'right' }}>Action</span>
             </div>
             
             {filteredUsers.map((user, i) => {

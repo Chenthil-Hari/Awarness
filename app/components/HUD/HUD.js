@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, Zap, Target, Activity, MessageSquare, 
   Map as MapIcon, ShoppingBag, User, Settings, 
-  Bell, ChevronUp, ChevronDown 
+  Bell, ChevronUp, ChevronDown, Crown 
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -62,7 +62,10 @@ export default function HUD() {
               <User size={24} color="var(--accent-primary)" />
             </div>
             <div className="hud-user-info">
-              <span className="hud-username">{session.user.username || 'RECRUIT'}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="hud-username">{session.user.username || 'RECRUIT'}</span>
+                {session.user.isPro && <Crown size={14} color="#fbbf24" style={{ filter: 'drop-shadow(0 0 5px rgba(251, 191, 36, 0.5))' }} />}
+              </div>
               <span className="hud-rank">RANK: {session.user.league || 'BRONZE'}</span>
             </div>
           </div>

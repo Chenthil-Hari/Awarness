@@ -111,6 +111,7 @@ export const authOptions = {
         token.role = user.role || 'user';
         token.completedMissions = user.completedMissions || [];
         token.league = user.league || 'Bronze';
+        token.isPro = user.isPro || false;
       }
       
       if (trigger === "update" && session?.user?.username) {
@@ -136,6 +137,7 @@ export const authOptions = {
           session.user.badges = dbUser.badges || [];
           session.user.performance = dbUser.performance || {};
           session.user.history = dbUser.history || [];
+          session.user.isPro = dbUser.isPro || false;
 
           let calculatedLeague = 'Bronze';
           if (session.user.xp >= 3000) calculatedLeague = 'Hacker-Tier';

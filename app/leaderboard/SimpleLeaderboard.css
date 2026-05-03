@@ -87,7 +87,7 @@
 
 .lb-list-head {
   display: grid;
-  grid-template-columns: 60px 1fr 120px 150px;
+  grid-template-columns: 60px 1fr 120px 150px 160px;
   padding: 1.25rem 2rem;
   border-bottom: 1px solid var(--glass-border);
   font-size: 0.7rem;
@@ -99,7 +99,7 @@
 
 .lb-row-simple {
   display: grid;
-  grid-template-columns: 60px 1fr 120px 150px;
+  grid-template-columns: 60px 1fr 120px 150px 160px;
   padding: 1.25rem 2rem;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
