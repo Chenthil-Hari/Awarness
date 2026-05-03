@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, X, Send, Trash, ChevronRight, Inbox, Star, AlertCircle } from 'lucide-react';
-import { INITIAL_MAILS } from '../data/neuralMail';
+import { INITIAL_MAILS } from '@/app/data/neuralMail';
 
 export default function NeuralMail({ isOpen, onClose }) {
   const [mails, setMails] = useState(INITIAL_MAILS);

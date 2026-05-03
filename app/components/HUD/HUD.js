@@ -8,8 +8,8 @@ import {
   Map as MapIcon, ShoppingBag, User, Settings, 
   Bell, ChevronUp, ChevronDown, WiFi, Battery, Volume2, Mail as MailIcon 
 } from 'lucide-react';
-import NeuralMail from '../NeuralMail';
-import { INITIAL_MAILS } from '../data/neuralMail';
+import NeuralMail from '@/app/components/NeuralMail';
+import { INITIAL_MAILS } from '@/app/data/neuralMail';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { calculateLevel } from '@/lib/game';
