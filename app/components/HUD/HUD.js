@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, Zap, Target, Activity, MessageSquare, 
   Map as MapIcon, ShoppingBag, User, Settings, 
-  Bell, ChevronUp, ChevronDown 
+  Bell, ChevronUp, ChevronDown, WiFi, Battery, Volume2, Mail as MailIcon 
 } from 'lucide-react';
+import NeuralMail from '../NeuralMail';
+import { INITIAL_MAILS } from '../data/neuralMail';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { calculateLevel } from '@/lib/game';
@@ -19,6 +21,8 @@ export default function HUD() {
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
   const [isCommsOpen, setIsCommsOpen] = useState(false);
+  const [isMailOpen, setIsMailOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(INITIAL_MAILS.filter(m => !m.isRead).length);
   const [notifications, setNotifications] = useState([
     { id: 1, text: "GDI Command: Welcome back, Operative.", time: "Just now" },
     { id: 2, text: "System: Tactical map updated.", time: "2m ago" }
@@ -105,6 +109,29 @@ export default function HUD() {
                <span className="hud-stat-label">STABILITY</span>
             </div>
           </div>
+
+          {/* --- SYSTEM TRAY --- */}
+          <div className="hud-system-tray">
+            <div className="tray-icon sync-active">
+              <WiFi size={14} />
+              <span className="tray-tooltip">NEURAL SYNC: STABLE</span>
+            </div>
+            <div className="tray-icon battery-optimal">
+              <Battery size={14} />
+              <span className="tray-tooltip">ENERGY: 100%</span>
+            </div>
+            <div className="tray-icon" onClick={() => setIsMailOpen(true)}>
+              <MailIcon size={14} />
+              {unreadCount > 0 && <div className="tray-badge">{unreadCount}</div>}
+              <span className="tray-tooltip">NEURAL MAIL</span>
+            </div>
+            <div className="tray-icon">
+              <Volume2 size={14} />
+            </div>
+            <div className="tray-clock">
+              {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+            </div>
+          </div>
         </div>
       </header>
 
@@ -149,6 +176,11 @@ export default function HUD() {
       {/* Decorative Glitch Elements */}
       <div className="hud-vignette" />
       <div className="hud-scanlines" />
+
+      <NeuralMail 
+        isOpen={isMailOpen} 
+        onClose={() => setIsMailOpen(false)} 
+      />
     </div>
   );
 }
