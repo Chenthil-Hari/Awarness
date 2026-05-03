@@ -28,6 +28,7 @@ import MaintenanceGuard from "./components/MaintenanceGuard";
 import BentoWrapper from "./components/BentoWrapper";
 import NeuralCursor from "./components/NeuralCursor";
 import NeuralTransition from "./components/NeuralTransition";
+import HUDWrapper from "./components/HUDWrapper";
 
 export default function RootLayout({ children }) {
   return (
@@ -44,12 +45,14 @@ export default function RootLayout({ children }) {
             >
               <NeuralCursor />
               <div className="crt-scanlines" />
-              <BentoWrapper>
-                <GhostBanner />
-                <NeuralTransition>
-                  {children}
-                </NeuralTransition>
-              </BentoWrapper>
+              <HUDWrapper>
+                <BentoWrapper>
+                  <GhostBanner />
+                  <NeuralTransition>
+                    {children}
+                  </NeuralTransition>
+                </BentoWrapper>
+              </HUDWrapper>
               <ChatBot />
               <MobileBottomNav />
               <RealTimeDuelHandler />
