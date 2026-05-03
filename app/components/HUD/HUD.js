@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, Zap, Target, Activity, MessageSquare, 
   Map as MapIcon, ShoppingBag, User, Settings, 
-  Bell, ChevronUp, ChevronDown, WiFi, Battery, Volume2, Mail as MailIcon 
+  Bell, ChevronUp, ChevronDown, Wifi, Battery, Volume2, Mail as MailIcon 
 } from 'lucide-react';
 import NeuralMail from '@/app/components/NeuralMail';
 import { INITIAL_MAILS } from '@/app/data/neuralMail';
@@ -113,7 +113,7 @@ export default function HUD() {
           {/* --- SYSTEM TRAY --- */}
           <div className="hud-system-tray">
             <div className="tray-icon sync-active">
-              <WiFi size={14} />
+              <Wifi size={14} />
               <span className="tray-tooltip">NEURAL SYNC: STABLE</span>
             </div>
             <div className="tray-icon battery-optimal">
