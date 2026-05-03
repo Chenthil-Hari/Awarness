@@ -47,12 +47,7 @@ export default function HUD() {
   const xpInCurrentLevel = xp % 100; // Assuming 100 XP per level for simple visual
   const xpPercentage = xpInCurrentLevel; 
 
-  const navItems = [
-    { icon: <MapIcon size={20} />, label: 'DEPLOY', href: '/' },
-    { icon: <ShoppingBag size={20} />, label: 'ARMORY', href: '/shop' },
-    { icon: <User size={20} />, label: 'DOSSIER', href: '/profile' },
-    { icon: <Settings size={20} />, label: 'SYSTEM', href: '/settings' },
-  ];
+
 
   if (!session) return null;
 
@@ -162,15 +157,6 @@ export default function HUD() {
           </AnimatePresence>
         </div>
 
-        <nav className="hud-nav">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className={`hud-nav-item ${pathname === item.href ? 'active' : ''}`}>
-              <div className="hud-nav-icon">{item.icon}</div>
-              <span className="hud-nav-label">{item.label}</span>
-              {pathname === item.href && <motion.div layoutId="hud-nav-active" className="hud-nav-active-indicator" />}
-            </Link>
-          ))}
-        </nav>
       </footer>
 
       {/* Decorative Glitch Elements */}

@@ -15,134 +15,95 @@
   pointer-events: auto;
 }
 
-/* --- HEADER --- */
+/* --- STATUS BAR (HEADER) --- */
 .hud-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   width: 100%;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
 }
 
 .hud-top-left {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
 }
 
 .hud-profile-frame {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 1rem;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  border-left: 4px solid var(--accent-primary);
-  clip-path: polygon(0% 0%, 90% 0%, 100% 30%, 100% 100%, 0% 100%);
+  gap: 0.5rem;
+  padding: 0 0.5rem;
+  background: transparent;
+  border: none;
+  clip-path: none;
 }
 
 .hud-avatar {
-  width: 40px;
-  height: 40px;
-  background: rgba(139, 92, 246, 0.1);
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.hud-user-info {
-  display: flex;
-  flex-direction: column;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.2);
 }
 
 .hud-username {
-  font-weight: 900;
-  font-size: 0.9rem;
-  letter-spacing: 1px;
-  color: #fff;
+  font-weight: 800;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .hud-rank {
-  font-size: 0.6rem;
-  font-weight: 800;
-  color: var(--accent-primary);
-  letter-spacing: 2px;
+  display: none; /* Hide in status bar mode */
 }
 
 .hud-level-badge {
-  width: 50px;
-  height: 50px;
+  width: 32px;
+  height: 32px;
   background: var(--accent-primary);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+  clip-path: circle(50%);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
 }
 
 .hud-level-val {
-  font-weight: 900;
-  font-size: 1.2rem;
-  line-height: 1;
+  font-size: 0.9rem;
 }
 
 .hud-level-label {
-  font-size: 0.5rem;
-  font-weight: 800;
+  display: none;
 }
 
-/* --- XP BAR --- */
+/* --- XP BAR (CENTERED IN STATUS BAR) --- */
 .hud-top-center {
-  flex: 1;
-  max-width: 500px;
-  padding: 0 2rem;
-}
-
-.hud-xp-container {
-  width: 100%;
+  flex: 0 1 300px;
+  padding: 0;
 }
 
 .hud-xp-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-.hud-xp-label {
-  font-size: 0.6rem;
-  font-weight: 900;
-  letter-spacing: 2px;
-  color: var(--accent-primary);
-  text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
-}
-
-.hud-xp-val {
-  font-size: 0.7rem;
-  font-weight: 900;
-  color: #fff;
+  display: none;
 }
 
 .hud-xp-bar-outer {
-  height: 12px;
+  height: 4px;
+  border-radius: 2px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  position: relative;
-  overflow: hidden;
+  border: none;
 }
 
 .hud-xp-bar-inner {
-  height: 100%;
-  background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
-  box-shadow: 0 0 15px var(--accent-primary);
+  box-shadow: 0 0 10px var(--accent-primary);
 }
 
 .hud-xp-bar-grid {
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
-  background-size: 10% 100%;
+  display: none;
 }
 
 /* --- STAT BOXES --- */
@@ -152,14 +113,7 @@
 }
 
 .hud-stat-box {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 1.25rem;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  clip-path: polygon(10% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 30%);
+  display: none; /* Hide stats in top status bar */
 }
 
 .hud-stat-content {
@@ -184,14 +138,14 @@
 .hud-system-tray {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  padding: 0.5rem 1.5rem;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 0 0 0 20px;
-  margin-top: -1.5rem;
-  margin-right: -2rem;
+  gap: 1rem;
+  padding: 0;
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  border-radius: 0;
+  margin-top: 0;
+  margin-right: 0;
 }
 
 .tray-icon {

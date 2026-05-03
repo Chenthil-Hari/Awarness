@@ -1,8 +1,8 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import Sidebar from './Sidebar/Sidebar';
 import Navbar from './Navbar';
+import BottomDock from './BottomDock/BottomDock';
 import { usePathname } from 'next/navigation';
 
 export default function BentoWrapper({ children }) {
@@ -23,40 +23,28 @@ export default function BentoWrapper({ children }) {
   }
 
   return (
-    <div className="bento-layout">
-      <Sidebar />
-      <main className="bento-main">
+    <div className="glass-os-layout">
+      <main className="glass-os-main">
         {children}
       </main>
+      <BottomDock />
       
       <style jsx global>{`
-        .bento-layout {
-          display: flex;
+        .glass-os-layout {
+          position: relative;
           min-height: 100vh;
           background: var(--bg-primary);
+          overflow-x: hidden;
         }
-        .bento-main {
-          flex: 1;
-          margin-left: 260px; /* Default open width */
-          transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          padding: 2rem;
-          min-width: 0; /* Prevent flex overflow */
+        .glass-os-main {
+          width: 100%;
           min-height: 100vh;
-        }
-        .bento-sidebar.closed + .bento-main {
-          margin-left: 80px;
-        }
-        @media (max-width: 1024px) {
-           .bento-main {
-             margin-left: 80px; /* Always collapsed on tablets */
-           }
+          padding: 6rem 2rem 8rem 2rem;
+          transition: all 0.5s ease;
         }
         @media (max-width: 768px) {
-          .bento-main {
-            margin-left: 0 !important;
-            padding: 1rem;
-            padding-top: 2rem;
-            padding-bottom: 7rem; /* Space for MobileBottomNav */
+          .glass-os-main {
+            padding: 5rem 1rem 7rem 1rem;
           }
         }
       `}</style>
