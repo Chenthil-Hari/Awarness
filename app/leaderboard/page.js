@@ -3,35 +3,42 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
-import { Search, Swords } from 'lucide-react';
+import { Search, Swords, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { calculateLevel } from '@/lib/game';
 import LoadingSpinner from '../components/LoadingSpinner';
 import './Leaderboard.css';
 
+/* ── League config ── */
 const LEAGUES = [
-  { id: 'Bronze',      label: 'LEAGUE' },
-  { id: 'Silver',      label: 'SILVER' },
-  { id: 'Gold',        label: 'GLOBAL' },
-  { id: 'Hacker-Tier', label: 'REGION' },
+  { id: 'Bronze',      label: '⚔ RECRUIT',   icon: '🥉', minXp: 0    },
+  { id: 'Silver',      label: '🛡 SENTINEL',  icon: '🥈', minXp: 500  },
+  { id: 'Gold',        label: '🌟 ELITE',     icon: '🥇', minXp: 1500 },
+  { id: 'Hacker-Tier', label: '💀 PHANTOM',  icon: '💀', minXp: 3000 },
 ];
 
-/* ── helpers ── */
+function getUserLeague(xp = 0) {
+  if (xp >= 3000) return 'Hacker-Tier';
+  if (xp >= 1500) return 'Gold';
+  if (xp >= 500)  return 'Silver';
+  return 'Bronze';
+}
+
+const LEAGUE_ORDER = ['Bronze', 'Silver', 'Gold', 'Hacker-Tier'];
+
 function initials(name = '') {
   return name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase() || '??';
 }
 
-function PodiumPerson({ user, rank, xp }) {
-  const cls = `pod-${rank}`;
-  const heights = { 1: 90, 2: 68, 3: 54 };
-  const avatarColors = {
+function PodiumPerson({ user, rank }) {
+  const heights    = { 1: 90, 2: 68, 3: 54 };
+  const avatarCfg  = {
     1: { bg: '#e09a10', border: '#ffd700' },
     2: { bg: '#6a8aaa', border: '#c0d0e0' },
     3: { bg: '#9a7a5a', border: '#d0a878' },
   };
-
   if (!user) return null;
-  const ac = avatarColors[rank];
+  const ac = avatarCfg[rank];
 
   return (
     <div className={`pod-wrap pod-${rank}-wrap`} style={{ paddingBottom: 0 }}>
@@ -71,10 +78,19 @@ export default function LeaderboardPage() {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const [users, setUsers]           = useState([]);
-  const [loading, setLoading]       = useState(true);
+  const [users, setUsers]               = useState([]);
+  const [loading, setLoading]           = useState(true);
   const [activeLeague, setActiveLeague] = useState('Bronze');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm]     = useState('');
+
+  const userXp     = session?.user?.xp || 0;
+  const userLeague = getUserLeague(userXp);
+  const userLeagueIdx = LEAGUE_ORDER.indexOf(userLeague);
+
+  // On session load, default to the user's own league
+  useEffect(() => {
+    if (session?.user) setActiveLeague(userLeague);
+  }, [session, userLeague]);
 
   const handleChallenge = (user) => {
     router.push(`/duels?opponentId=${user._id}&opponentName=${encodeURIComponent(user.name)}`);
@@ -116,16 +132,34 @@ export default function LeaderboardPage() {
             LEADERBOARD
           </div>
 
+          {/* League Tabs */}
           <div className="lb-tabs">
-            {LEAGUES.map(l => (
-              <button
-                key={l.id}
-                className={`lb-tab ${activeLeague === l.id ? 'active' : ''}`}
-                onClick={() => setActiveLeague(l.id)}
-              >
-                {l.label}
-              </button>
-            ))}
+            {LEAGUES.map((l, idx) => {
+              const isUnlocked = idx <= userLeagueIdx;
+              const isActive   = activeLeague === l.id;
+              const isNext     = idx === userLeagueIdx + 1; // the very next locked league
+
+              return (
+                <button
+                  key={l.id}
+                  className={`lb-tab ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`}
+                  onClick={() => isUnlocked && setActiveLeague(l.id)}
+                  title={
+                    isUnlocked
+                      ? l.label
+                      : `Reach ${l.minXp.toLocaleString()} XP to unlock ${l.label}`
+                  }
+                >
+                  {!isUnlocked && <Lock size={10} style={{ marginRight: 3 }} />}
+                  {l.label}
+                  {isNext && (
+                    <span className="lb-tab-xp-hint">
+                      {l.minXp.toLocaleString()} XP
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <div className="lb-season">
@@ -136,6 +170,17 @@ export default function LeaderboardPage() {
             {filtered.length}
           </div>
         </div>
+
+        {/* ── LOCKED TIER BANNER ── */}
+        {LEAGUE_ORDER.indexOf(activeLeague) > userLeagueIdx && (
+          <div className="lb-locked-banner">
+            <Lock size={18} />
+            <span>
+              Reach <strong>{LEAGUES[LEAGUE_ORDER.indexOf(activeLeague)].minXp.toLocaleString()} XP</strong> to unlock the <strong>{LEAGUES[LEAGUE_ORDER.indexOf(activeLeague)].label}</strong> tier.
+              You currently have <strong>{userXp.toLocaleString()} XP</strong>.
+            </span>
+          </div>
+        )}
 
         {/* ── SEARCH ── */}
         <div className="lb-search-bar">
@@ -159,7 +204,6 @@ export default function LeaderboardPage() {
               <ellipse cx="560" cy="25" rx="65" ry="15" fill="white"/>
               <ellipse cx="600" cy="18" rx="48" ry="12" fill="white"/>
             </svg>
-
             <div className="lb-podium-area">
               <PodiumPerson user={top2} rank={2} />
               <PodiumPerson user={top1} rank={1} />
@@ -176,7 +220,6 @@ export default function LeaderboardPage() {
             <div className="lb-empty">No operatives found.</div>
           ) : (
             <>
-              {/* header row */}
               <div className="lb-list-head">
                 <span>#</span>
                 <span>Operative</span>
@@ -198,20 +241,16 @@ export default function LeaderboardPage() {
                     transition={{ delay: Math.min(i * 0.025, 0.4) }}
                     className={`lb-row ${isMe ? 'me' : ''}`}
                   >
-                    {/* rank */}
                     <span className="lb-rank">{rank}</span>
 
-                    {/* name */}
                     <div className={`lb-name ${isMe ? 'is-me-name' : ''}`}>
                       <div className="lb-avatar-mini">{initials(user.name)}</div>
                       <span>{user.name}</span>
                       {isMe && <span className="you-badge">YOU</span>}
                     </div>
 
-                    {/* level */}
                     <span className="lb-stat stat-lvl">LV {lvl}</span>
 
-                    {/* xp */}
                     <span className="lb-stat stat-xp">
                       <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
                         <polygon points="7,1 9,5.5 14,6 10.5,9.5 11.5,14 7,11.5 2.5,14 3.5,9.5 0,6 5,5.5" fill="#5dca8a"/>
@@ -219,13 +258,9 @@ export default function LeaderboardPage() {
                       {(user.xp || 0).toLocaleString()}
                     </span>
 
-                    {/* action */}
                     <div className="lb-action">
                       {!isMe && (
-                        <button
-                          className="challenge-btn"
-                          onClick={() => handleChallenge(user)}
-                        >
+                        <button className="challenge-btn" onClick={() => handleChallenge(user)}>
                           <Swords size={12} /> DUEL
                         </button>
                       )}
