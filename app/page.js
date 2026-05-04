@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { AnimatePresence } from 'framer-motion';
 import LoadingSpinner from './components/LoadingSpinner';
 import ScenarioCard from './components/ScenarioCard';
@@ -94,6 +95,16 @@ export default function Home() {
             <div className="live-dot"></div>
             Live Feed
           </div>
+          <div className="auth-links">
+            {status === 'unauthenticated' ? (
+              <>
+                <Link href="/auth/login" className="auth-link-vs">Login</Link>
+                <Link href="/auth/signup" className="auth-btn-vs">Sign Up</Link>
+              </>
+            ) : (
+              <Link href="/profile" className="auth-link-vs">Profile</Link>
+            )}
+          </div>
         </div>
 
         <div className="hero-content">
@@ -101,10 +112,23 @@ export default function Home() {
           <h1 className="hero-title">The Threats Are <span>Real.</span><br/>Your Training Should Be Too.</h1>
           <p className="hero-sub">Welcome back, {session?.user?.username || 'Operative'}. Immersive, scenario-based security training that mirrors the tactics of today's most sophisticated attackers. Learn to detect. React. Neutralize.</p>
           <div className="hero-ctas">
-            <button className="btn-primary-vs" onClick={() => {
-              if (scenarios.length > 0) setActiveTransmission(scenarios[0]);
-            }}>▶ Begin Training</button>
-            <button className="btn-secondary-vs">View Threat Map</button>
+            {status === 'authenticated' ? (
+              <>
+                <button className="btn-primary-vs" onClick={() => {
+                  if (scenarios.length > 0) setActiveTransmission(scenarios[0]);
+                }}>▶ Begin Training</button>
+                <button className="btn-secondary-vs">View Threat Map</button>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/signup">
+                  <button className="btn-primary-vs">Join the Resistance</button>
+                </Link>
+                <Link href="/auth/login">
+                  <button className="btn-secondary-vs">Secure Login</button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
 

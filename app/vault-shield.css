@@ -142,6 +142,39 @@
 }
 @keyframes pulse-red{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.6}}
 
+/* auth links */
+.auth-links{
+  display:flex;
+  align-items:center;
+  gap:20px;
+}
+.auth-link-vs{
+  font-size:0.65rem;
+  letter-spacing:0.18em;
+  color:rgba(200,216,232,0.5);
+  text-transform:uppercase;
+  text-decoration:none;
+  transition:color 0.2s;
+}
+.auth-link-vs:hover{
+  color:var(--cyan);
+}
+.auth-btn-vs{
+  font-size:0.6rem;
+  letter-spacing:0.18em;
+  color:var(--cyan);
+  text-transform:uppercase;
+  text-decoration:none;
+  padding:6px 14px;
+  border:1px solid rgba(0,229,255,0.3);
+  border-radius:2px;
+  transition:background 0.2s, color 0.2s;
+}
+.auth-btn-vs:hover{
+  background:rgba(0,229,255,0.1);
+  color:#fff;
+}
+
 /* hero content */
 .hero-content{
   position:relative;
