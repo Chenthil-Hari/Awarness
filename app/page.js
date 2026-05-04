@@ -58,7 +58,7 @@ export default function Home() {
     }, 2000);
     return () => {
       clearInterval(tickIv);
-      clearInterval(flickIv);
+      clearInterval(flickerIv);
     };
   }, []);
 
