@@ -7,7 +7,7 @@ import { Search, Swords } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { calculateLevel } from '@/lib/game';
 import LoadingSpinner from '../components/LoadingSpinner';
-import './leaderboard.css';
+import './Leaderboard.css';
 
 const LEAGUES = [
   { id: 'Bronze',      label: 'LEAGUE' },
