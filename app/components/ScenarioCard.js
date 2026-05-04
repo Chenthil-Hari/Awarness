@@ -3,6 +3,7 @@
 import { ShieldAlert, Wallet, Heart, Zap, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
 import BorderGlow from './BorderGlow/BorderGlow';
+import '../vault-shield.css';
 
 const iconMap = {
   ShieldAlert: <ShieldAlert size={24} />,
@@ -11,84 +12,31 @@ const iconMap = {
   Zap: <Zap size={24} />
 };
 
-export default function ScenarioCard({ scenario, onSelect }) {
+export default function ScenarioCard({ scenario, onClick }) {
+  const dots = Array.from({length:5}, (_,d) => (
+    <div key={d} className={`diff-dot ${d < (scenario.difficulty === 'Beginner' ? 1 : scenario.difficulty === 'Intermediate' ? 3 : 5) ? 'on' : ''}`}></div>
+  ));
+
   return (
-    <BorderGlow
-      edgeSensitivity={30}
-      glowColor={scenario.domain === 'Cybersecurity' ? "260 80 80" : "190 80 80"}
-      backgroundColor="var(--bg-secondary)"
-      borderRadius={24}
-      glowRadius={40}
-      glowIntensity={1.0}
-      coneSpread={25}
-      animated={false}
-      colors={scenario.domain === 'Cybersecurity' ? ['#8b5cf6', '#a78bfa', '#c4b5fd'] : ['#06b6d4', '#22d3ee', '#67e8f9']}
-    >
-      <div 
-        style={{
-          padding: '1.5rem',
-          cursor: 'pointer',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.75rem',
-          height: '100%'
-        }}
-        onClick={() => onSelect(scenario)}
-      >
-        <div style={{
-          width: '50px',
-          height: '50px',
-          borderRadius: 'var(--radius-md)',
-          background: scenario.domain === 'Cybersecurity' ? 'rgba(139, 92, 246, 0.15)' : 'rgba(6, 182, 212, 0.15)',
-          color: scenario.domain === 'Cybersecurity' ? 'var(--accent-primary)' : 'var(--accent-secondary)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          {iconMap[scenario.icon] || <Zap size={24} />}
-        </div>
-
+    <div className="scenario-card-vs" onClick={onClick}>
+      <div className="card-threat">{scenario.domain || 'Threat Intelligence'}</div>
+      <div className="card-title">{scenario.title}</div>
+      <div className="card-desc">{scenario.description}</div>
+      
+      <div className="card-meta">
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ 
-              fontSize: '0.7rem', 
-              textTransform: 'uppercase', 
-              letterSpacing: '1px', 
-              color: 'var(--text-secondary)',
-              fontWeight: 700 
-            }}>{scenario.domain}</span>
-            <span style={{ 
-              fontSize: '0.7rem', 
-              padding: '2px 8px', 
-              background: 'var(--bg-tertiary)', 
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--glass-border)',
-              color: 'var(--text-muted)'
-            }}>{scenario.difficulty}</span>
-          </div>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>{scenario.title}</h3>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-            {scenario.description}
-          </p>
+          <div style={{ fontSize: '.48rem', letterSpacing: '.15em', marginBottom: '5px', color: 'rgba(200,216,232,.3)', textTransform: 'uppercase' }}>Difficulty</div>
+          <div className="card-difficulty">{dots}</div>
         </div>
-
-        <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            {[1, 2, 3].map((i) => (
-              <div key={i} style={{ 
-                width: '12px', 
-                height: '4px', 
-                borderRadius: '2px', 
-                background: i <= (scenario.difficulty === 'Beginner' ? 1 : 2) ? 'var(--accent-primary)' : 'var(--bg-tertiary)' 
-              }} />
-            ))}
-          </div>
-          <button className="btn-primary" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Play size={16} fill="white" />
-            Start
-          </button>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '.48rem', letterSpacing: '.15em', marginBottom: '5px', color: 'rgba(200,216,232,.3)', textTransform: 'uppercase' }}>Duration</div>
+          <div style={{ color: 'var(--amber)', fontSize: '.62rem' }}>{scenario.duration || '12 MIN'}</div>
         </div>
+        <button className="launch-btn">
+          <div className="launch-icon">▶</div>
+          Launch
+        </button>
       </div>
-    </BorderGlow>
+    </div>
   );
 }

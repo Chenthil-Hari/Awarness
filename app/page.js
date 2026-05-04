@@ -2,36 +2,36 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Zap, Shield, Target, Activity, 
-  ChevronRight, LayoutGrid, Search, 
-  Filter, Star, TrendingUp, Award
-} from 'lucide-react';
-import SimulationViewer from './components/SimulationViewer';
-import CampaignTracker from './components/CampaignTracker';
-import NeuralPass from './components/NeuralPass/NeuralPass';
+import { AnimatePresence } from 'framer-motion';
 import LoadingSpinner from './components/LoadingSpinner';
 import ScenarioCard from './components/ScenarioCard';
-import AuroraBackground from './components/AuroraBackground';
-import ScrambleText from './components/ScrambleText';
-import Lottie from 'lottie-react';
-import fireAnim from '@/images/fire.json';
-import chartAnim from '@/images/line-chart.json';
-import trophyAnim from '@/images/trophy.json';
-import DailyFlash from './components/DailyFlash';
-import ArchitectBriefing from './components/ArchitectBriefing';
-import IntelTicker from './components/IntelTicker/IntelTicker';
-import { calculateLevel } from '@/lib/game';
-import './BentoDashboard.css';
+import SimulationViewer from './components/SimulationViewer';
+import ThreatMapCanvas from './components/ThreatMapCanvas';
+import TransmissionModal from './components/TransmissionModal';
+import './vault-shield.css';
+
+const tickerItems = [
+  "ALERT: Phishing campaign detected — 3,200 targets identified across APAC",
+  "WARN: Brute-force attack on /admin — 47k attempts in 6 min — IP blocked",
+  "INFO: CVE-2024-8811 — Remote code execution — CVSS 9.8 — Patch available",
+  "ALERT: Credential stuffing wave — 1.2M login attempts — 99% blocked",
+  "WARN: DarkReaper ransomware group — new payload variant observed",
+  "INFO: Smishing campaign targeting financial sector employees — 14 countries",
+  "ALERT: Supply chain compromise detected in npm package 'auth-helper@2.1.0'",
+];
+const doubledTicker = [...tickerItems, ...tickerItems];
 
 export default function Home() {
   const { data: session, status } = useSession();
   const [selectedScenario, setSelectedScenario] = useState(null);
+  const [activeTransmission, setActiveTransmission] = useState(null);
   const [scenarios, setScenarios] = useState([]);
   const [loadingScenarios, setLoadingScenarios] = useState(true);
-  const [filter, setFilter] = useState('All');
-  const [search, setSearch] = useState('');
+
+  // Counters
+  const [liveCount, setLiveCount] = useState(1284701);
+  const [attackCount, setAttackCount] = useState(2847);
+  const [threatCount, setThreatCount] = useState(143);
 
   useEffect(() => {
     const fetchScenarios = async () => {
@@ -48,186 +48,122 @@ export default function Home() {
     if (status === 'authenticated') fetchScenarios();
   }, [status]);
 
-  const filteredScenarios = useMemo(() => {
-    return scenarios.filter(s => {
-      const matchesFilter = filter === 'All' || s.domain === filter;
-      const matchesSearch = s.title.toLowerCase().includes(search.toLowerCase());
-      return matchesFilter && matchesSearch;
-    });
-  }, [scenarios, filter, search]);
+  useEffect(() => {
+    const tickIv = setInterval(() => {
+      setLiveCount(prev => prev + Math.floor(Math.random() * 3) + 1);
+    }, 600);
+    const flickerIv = setInterval(() => {
+      setAttackCount(2800 + Math.floor(Math.random() * 200));
+      setThreatCount(130 + Math.floor(Math.random() * 30));
+    }, 2000);
+    return () => {
+      clearInterval(tickIv);
+      clearInterval(flickIv);
+    };
+  }, []);
 
-  if (status === 'loading') return <div className="loader-page"><LoadingSpinner /></div>;
-
-  const userXp = session?.user?.xp || 0;
-  const level = calculateLevel(userXp);
-  const xpInLevel = userXp % 100;
+  if (status === 'loading') return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#03040a' }}><LoadingSpinner /></div>;
 
   return (
-    <div className="bento-dashboard">
-      <AuroraBackground />
+    <div className="vault-shield-theme">
+      {/* HERO SECTION — THREAT MAP */}
+      <section className="hero">
+        <div className="hero-bg"></div>
+        <div className="grid-overlay"></div>
+        <div className="scanline"></div>
+        <ThreatMapCanvas />
+        <div className="vignette"></div>
 
-      {/* --- INTEL TICKER --- */}
-      <IntelTicker />
+        <div className="top-bar">
+          <div className="brand">⬡ VAULTSHIELD</div>
+          <div className="top-stats">
+            <div className="stat">
+              <div className="stat-val">{attackCount.toLocaleString()}</div>
+              <div className="stat-label">Attacks / hr</div>
+            </div>
+            <div className="stat">
+              <div className="stat-val" style={{ color: 'var(--amber)', textShadow: '0 0 10px var(--amber-glow)' }}>{threatCount}</div>
+              <div className="stat-label">Active Threats</div>
+            </div>
+            <div className="stat">
+              <div className="stat-val" style={{ color: 'var(--green)', textShadow: '0 0 10px rgba(0,255,136,0.5)' }}>99.2%</div>
+              <div className="stat-label">Blocked</div>
+            </div>
+          </div>
+          <div className="live-badge">
+            <div className="live-dot"></div>
+            Live Feed
+          </div>
+        </div>
 
-      {/* --- HERO BANNER --- */}
-      <div className="friendly-hero">
         <div className="hero-content">
-          <h1 className="hero-welcome">
-            Welcome back, <span className="gradient-text">{session?.user?.username}</span>
-          </h1>
-          <p className="hero-desc">Your neural link is stable. Ready for today's training?</p>
-          
-          <div className="hero-progress">
-            <div className="progress-info">
-              <span className="level-badge">Level {level}</span>
-              <span className="xp-text">{userXp} / {((level + 1) * 100)} XP to next level</span>
-            </div>
-            <div className="progress-bar-outer">
-              <motion.div 
-                className="progress-bar-inner"
-                initial={{ width: 0 }}
-                animate={{ width: `${xpInLevel}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="hero-visual">
-          <Lottie animationData={fireAnim} loop={true} style={{ width: 150, height: 150, opacity: 0.8 }} />
-        </div>
-      </div>
-
-      {/* --- 3-COLUMN ACTION GRID --- */}
-      <div className="action-grid">
-        <div className="action-card">
-          <div className="action-icon-box" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-            <Zap size={28} />
-          </div>
-          <h3>Daily Challenge</h3>
-          <p>Complete today's flash scenario for bonus XP.</p>
-          <DailyFlash inline={true} />
-        </div>
-
-        <div className="action-card">
-          <div className="action-icon-box" style={{ background: 'rgba(249, 115, 22, 0.1)', color: '#f97316' }}>
-            <TrendingUp size={28} />
-          </div>
-          <h3>Active Streak</h3>
-          <p>You're on a {session?.user?.streak || 1} day streak. Don't lose your momentum!</p>
-          <div className="action-stats">
-            <div className="stat-pill">{session?.user?.streak || 1} Days</div>
+          <div className="hero-eyebrow">Cyber Threat Intelligence Platform</div>
+          <h1 className="hero-title">The Threats Are <span>Real.</span><br/>Your Training Should Be Too.</h1>
+          <p className="hero-sub">Welcome back, {session?.user?.username || 'Operative'}. Immersive, scenario-based security training that mirrors the tactics of today's most sophisticated attackers. Learn to detect. React. Neutralize.</p>
+          <div className="hero-ctas">
+            <button className="btn-primary-vs" onClick={() => {
+              if (scenarios.length > 0) setActiveTransmission(scenarios[0]);
+            }}>▶ Begin Training</button>
+            <button className="btn-secondary-vs">View Threat Map</button>
           </div>
         </div>
 
-        <div className="action-card">
-          <div className="action-icon-box" style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' }}>
-            <Shield size={28} />
-          </div>
-          <h3>Neural Pass</h3>
-          <p>Unlock premium rewards by completing missions.</p>
-          <div className="action-stats">
-            <div className="stat-pill">Tier {Math.floor((session?.user?.xp || 0) / 500) + 1}</div>
+        <div className="attack-counter-wrap">
+          <div className="attack-counter-val">{liveCount.toLocaleString()}</div>
+          <div className="attack-counter-label">Attacks intercepted today</div>
+        </div>
+
+        <div className="ticker">
+          <div className="ticker-label">⚠ Threat Feed</div>
+          <div className="ticker-track">
+            {doubledTicker.map((t, i) => (
+              <span key={i} style={{ paddingRight: '60px' }}>● {t}</span>
+            ))}
           </div>
         </div>
-      </div>
-      {/* --- QUICK LINKS --- */}
-      <div className="quick-links">
-        {[
-          { label: 'Live Drills', href: '/inbox', emoji: '📧', desc: 'Spot the phish' },
-          { label: 'Smishing Lab', href: '/smishing', emoji: '📱', desc: 'SMS threats' },
-          { label: 'Deepfake Lab', href: '/deepfake-detective', emoji: '🎭', desc: 'Detect fakes' },
-          { label: 'Survival Mode', href: '/survival', emoji: '⚡', desc: 'Endless rounds' },
-          { label: 'Achievements', href: '/achievements', emoji: '🏅', desc: 'Your badges' },
-          { label: 'Roadmap', href: '/roadmap', emoji: '🗺️', desc: 'Your path' },
-        ].map((link, i) => (
-          <motion.a
-            key={link.href}
-            href={link.href}
-            className="quick-link-card"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            whileHover={{ y: -3 }}
-          >
-            <span className="quick-link-emoji">{link.emoji}</span>
-            <span className="quick-link-label">{link.label}</span>
-            <span className="quick-link-desc">{link.desc}</span>
-          </motion.a>
-        ))}
-      </div>
-
-      {/* --- CAMPAIGN TRACKER --- */}
-      <section className="dashboard-section" style={{ marginTop: '2rem' }}>
-        <CampaignTracker onSelectScenario={setSelectedScenario} />
       </section>
 
-      {/* --- MISSION GRID --- */}
-      <section className="dashboard-section">
+      {/* SCENARIO CARDS */}
+      <section className="scenarios-section" id="scenarios">
         <div className="section-header">
-           <div className="header-left">
-             <LayoutGrid size={20} color="var(--accent-primary)" />
-             <h2 className="section-title">Simulation Nodes</h2>
-           </div>
-           
-           <div className="header-controls">
-             <div className="search-box">
-               <Search size={16} />
-               <input 
-                 type="text" 
-                 placeholder="Search nodes..." 
-                 value={search}
-                 onChange={(e) => setSearch(e.target.value)}
-               />
-             </div>
-             <div className="filter-chips">
-               {['All', 'Cybersecurity', 'Financial Literacy', 'Life Skills'].map(f => (
-                 <button 
-                    key={f} 
-                    className={`chip ${filter === f ? 'active' : ''}`}
-                    onClick={() => setFilter(f)}
-                 >
-                   {f}
-                 </button>
-               ))}
-             </div>
-           </div>
+          <div className="section-eyebrow">// Active Training Modules</div>
+          <div className="section-title">Select Your Mission</div>
         </div>
-
+        
         {loadingScenarios ? (
-          <div className="loading-grid">
-            <LoadingSpinner message="Scanning neural network..." />
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+            <LoadingSpinner message="Decrypting nodes..." />
           </div>
         ) : (
-          <div className="scenario-grid">
-            {filteredScenarios.map((scenario) => (
-              <ScenarioCard 
-                key={scenario.id} 
-                scenario={scenario} 
-                onClick={() => setSelectedScenario(scenario)} 
-              />
+          <div className="scenarios-grid">
+            {scenarios.map(s => (
+              <ScenarioCard key={s.id} scenario={s} onClick={() => setActiveTransmission(s)} />
             ))}
           </div>
         )}
       </section>
 
-      {/* Simulation Overlay */}
+      {/* MODALS */}
+      <TransmissionModal 
+        scenario={activeTransmission}
+        isOpen={!!activeTransmission}
+        onClose={() => setActiveTransmission(null)}
+        onAccept={(s) => {
+          setActiveTransmission(null);
+          setSelectedScenario(s);
+        }}
+      />
+
       <AnimatePresence>
         {selectedScenario && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 2000 }}
-          >
+          <div style={{ position: 'fixed', inset: 0, zIndex: 3000, background: '#03040a' }}>
             <SimulationViewer 
               scenario={selectedScenario} 
               onExit={() => setSelectedScenario(null)} 
             />
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
-
-      <ArchitectBriefing user={session?.user} />
     </div>
   );
 }
