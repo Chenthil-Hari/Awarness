@@ -28,6 +28,7 @@ export default function Home() {
   const [activeTransmission, setActiveTransmission] = useState(null);
   const [scenarios, setScenarios] = useState([]);
   const [loadingScenarios, setLoadingScenarios] = useState(true);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'table'
 
   // Counters
   const [liveCount, setLiveCount] = useState(1284701);
@@ -149,20 +150,74 @@ export default function Home() {
 
       {/* SCENARIO CARDS */}
       <section className="scenarios-section" id="scenarios">
-        <div className="section-header">
-          <div className="section-eyebrow">// Active Training Modules</div>
-          <div className="section-title">Select Your Mission</div>
+        <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <div className="section-eyebrow">// Active Training Modules</div>
+            <div className="section-title">Select Your Mission</div>
+          </div>
+          <div className="view-toggle-vs">
+            <button 
+              className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+              onClick={() => setViewMode('grid')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Grid
+            </button>
+            <button 
+              className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
+              onClick={() => setViewMode('table')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              Tactical List
+            </button>
+          </div>
         </div>
         
         {loadingScenarios ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
             <LoadingSpinner message="Decrypting nodes..." />
           </div>
-        ) : (
+        ) : viewMode === 'grid' ? (
           <div className="scenarios-grid">
             {scenarios.map(s => (
               <ScenarioCard key={s.id} scenario={s} onClick={() => setActiveTransmission(s)} />
             ))}
+          </div>
+        ) : (
+          <div className="scenarios-table-wrap">
+            <table className="scenarios-table">
+              <thead>
+                <tr>
+                  <th>CODE</th>
+                  <th>MISSION NAME</th>
+                  <th>DOMAIN</th>
+                  <th>DIFFICULTY</th>
+                  <th style={{ textAlign: 'right' }}>ACTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map(s => (
+                  <tr key={s.id} onClick={() => setActiveTransmission(s)}>
+                    <td className="sc-id">#{s.id.split('-').pop().toUpperCase()}</td>
+                    <td className="sc-title">
+                      <div className="sc-title-cell">
+                        <span className="sc-bullet"></span>
+                        {s.title}
+                      </div>
+                    </td>
+                    <td className="sc-domain">{s.domain}</td>
+                    <td className="sc-diff">
+                      <span className={`diff-tag ${s.difficulty.toLowerCase()}`}>
+                        {s.difficulty}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button className="sc-deploy-btn">DEPLOY</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>
