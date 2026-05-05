@@ -113,8 +113,9 @@ export const authOptions = {
         token.league = user.league || 'Bronze';
       }
       
-      if (trigger === "update" && session?.user?.username) {
-        token.username = session.user.username;
+      if (trigger === "update") {
+        if (session?.user?.username) token.username = session.user.username;
+        if (session?.user?.image) token.picture = session.user.image;
       }
       
       return token;
@@ -135,6 +136,7 @@ export const authOptions = {
           session.user.completedMissions = dbUser.completedMissions || [];
           session.user.badges = dbUser.badges || [];
           session.user.performance = dbUser.performance || {};
+          session.user.image = dbUser.image;
           session.user.history = dbUser.history || [];
 
           let calculatedLeague = 'Bronze';

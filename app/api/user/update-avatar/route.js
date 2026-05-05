@@ -17,8 +17,8 @@ export async function POST(req) {
       return NextResponse.json({ error: "Avatar URL is required" }, { status: 400 });
     }
 
-    // Security: Only allow internal avatars from our predefined set
-    if (!avatarUrl.startsWith('/avatars/')) {
+    // Allow internal avatars or custom uploaded base64 images
+    if (!avatarUrl.startsWith('/avatars/') && !avatarUrl.startsWith('data:image/')) {
       return NextResponse.json({ error: "Invalid avatar selection" }, { status: 400 });
     }
 

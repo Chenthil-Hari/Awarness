@@ -213,9 +213,13 @@ export default function ProfilePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
+      // IMPORTANT: Update session with the NEW image URL/Base64
       await update({
         ...session,
-        user: { ...session.user, image: data.image }
+        user: { 
+          ...session.user, 
+          image: data.image || avatarUrl 
+        }
       });
 
       setIsAvatarModalOpen(false);
@@ -225,6 +229,22 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 2 * 1024 * 1024) {
+      alert("File is too large. Maximum size is 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      handleAvatarUpdate(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -608,6 +628,35 @@ export default function ProfilePage() {
               <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.9rem' }}>Choose your visual representation in the network.</p>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => document.getElementById('avatar-upload').click()}
+                  style={{ 
+                    cursor: 'pointer', 
+                    borderRadius: '16px', 
+                    overflow: 'hidden', 
+                    border: '2px dashed var(--glass-border)',
+                    aspectRatio: '1/1',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    background: 'rgba(255,255,255,0.02)',
+                    position: 'relative'
+                  }}
+                >
+                  <Camera size={24} color="var(--accent-primary)" />
+                  <span style={{ fontSize: '0.6rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Upload Custom</span>
+                  <input 
+                    type="file" 
+                    id="avatar-upload" 
+                    hidden 
+                    accept="image/*" 
+                    onChange={handleFileUpload} 
+                  />
+                </motion.div>
                 {AVATARS.map(avatar => (
                   <motion.div
                     key={avatar.id}
