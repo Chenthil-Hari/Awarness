@@ -137,7 +137,13 @@ export default function Home() {
           <div className="attack-counter-val">{liveCount.toLocaleString()}</div>
           <div className="attack-counter-label">Attacks intercepted today</div>
         </div>
-
+        <div className="ticker">
+          <div className="ticker-label">⚠ Threat Feed</div>
+          <div className="ticker-track">
+            {doubledTicker.map((t, i) => (
+              <span key={i} style={{ paddingRight: '60px' }}>● {t}</span>
+            ))}
+          </div>
         </div>
       </section>
       
