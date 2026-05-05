@@ -58,7 +58,11 @@ export default function HUD() {
         <div className="hud-top-left">
           <div className="hud-profile-frame">
             <div className="hud-avatar">
-              <User size={24} color="var(--accent-primary)" />
+              {session.user.image ? (
+                <img src={session.user.image} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              ) : (
+                <User size={24} color="var(--accent-primary)" />
+              )}
             </div>
             <div className="hud-user-info">
               <span className="hud-username">{session.user.username || 'RECRUIT'}</span>

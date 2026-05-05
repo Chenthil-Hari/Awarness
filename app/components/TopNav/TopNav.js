@@ -108,7 +108,11 @@ export default function TopNav() {
               onClick={() => setUserMenuOpen(!userMenuOpen)}
             >
               <div className="avatar-circle">
-                {(session.user.username || 'O')[0].toUpperCase()}
+                {session.user.image ? (
+                  <img src={session.user.image} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  (session.user.username || 'O')[0].toUpperCase()
+                )}
               </div>
               <span className="avatar-name">{session.user.username || 'Operative'}</span>
               <motion.span animate={{ rotate: userMenuOpen ? 180 : 0 }}>
