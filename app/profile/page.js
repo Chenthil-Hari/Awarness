@@ -32,10 +32,15 @@ const timeAgo = (date) => {
 const CATEGORIES = ['phishing', 'smishing', 'finance', 'security'];
 
 const AVATARS = [
-  { id: 'neon_hacker', url: '/avatars/neon_hacker.png', name: 'Neon Hacker' },
-  { id: 'cyber_ninja', url: '/avatars/cyber_ninja.png', name: 'Cyber Ninja' },
-  { id: 'digital_ghost', url: '/avatars/digital_ghost.png', name: 'Digital Ghost' },
-  { id: 'tech_operative', url: '/avatars/tech_operative.png', name: 'Tech Operative' },
+  { id: 'identity_0', url: '/avatars/identity_0.jpg', name: 'Phantom Operative' },
+  { id: 'identity_1', url: '/avatars/identity_1.jpg', name: 'Shadow Infiltrator' },
+  { id: 'identity_2', url: '/avatars/identity_2.jpg', name: 'Neural Nomad' },
+  { id: 'identity_3', url: '/avatars/identity_3.jpg', name: 'Void Specialist' },
+  { id: 'identity_4', url: '/avatars/identity_4.jpg', name: 'Glitch Master' },
+  { id: 'neo_1', url: '/avatars/neo_1.jpg', name: 'Cyber Centurion' },
+  { id: 'neo_2', url: '/avatars/neo_2.jpg', name: 'Vector Vanguard' },
+  { id: 'neo_3', url: '/avatars/neo_3.jpg', name: 'Binary Blade' },
+  { id: 'neo_4', url: '/avatars/neo_4.jpg', name: 'Zenith Zero' },
 ];
 
 export default function ProfilePage() {
