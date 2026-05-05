@@ -71,7 +71,7 @@ export default function SimulationViewer({ scenario, onExit }) {
   };
 
   return (
-    <div className="flex-center" style={{
+    <div style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -79,7 +79,11 @@ export default function SimulationViewer({ scenario, onExit }) {
       height: '100%',
       background: 'rgba(5, 7, 10, 0.98)',
       zIndex: 1000,
-      padding: '0.5rem'
+      padding: '2rem 0.5rem',
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'center',
+      overflowY: 'auto'
     }}>
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
@@ -94,7 +98,8 @@ export default function SimulationViewer({ scenario, onExit }) {
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          position: 'relative'
+          position: 'relative',
+          margin: 'auto 0'
         }}
       >
         {/* Header */}
