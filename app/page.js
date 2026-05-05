@@ -138,13 +138,42 @@ export default function Home() {
           <div className="attack-counter-label">Attacks intercepted today</div>
         </div>
 
-        <div className="ticker">
-          <div className="ticker-label">⚠ Threat Feed</div>
-          <div className="ticker-track">
-            {doubledTicker.map((t, i) => (
-              <span key={i} style={{ paddingRight: '60px' }}>● {t}</span>
-            ))}
-          </div>
+        </div>
+      </section>
+      
+      {/* NEURAL MODES */}
+      <section className="modes-section">
+        <div className="section-header">
+          <div className="section-eyebrow">// Integrated Combat Systems</div>
+          <div className="section-title">Tactical Operations</div>
+        </div>
+        
+        <div className="modes-grid">
+          <Link href="/duels" className="mode-card arena">
+            <div className="mode-icon-wrap">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline><line x1="13" y1="19" x2="19" y2="13"></line><line x1="16" y1="16" x2="20" y2="20"></line><line x1="19" y1="21" x2="21" y2="19"></line><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"></polyline><line x1="5" y1="14" x2="9" y2="18"></line><line x1="3" y1="19" x2="5" y2="21"></line><line x1="3" y1="21" x2="3" y2="19"></line></svg>
+            </div>
+            <div className="mode-content">
+              <div className="mode-badge">MULTIPLAYER ARENA</div>
+              <h3 className="mode-name">Speed-Breach Duel</h3>
+              <p className="mode-desc">Face off against other operatives in real-time phishing duels. Wager XP and prove your tactical superiority.</p>
+              <div className="mode-action">ENTER ARENA <span className="arrow">→</span></div>
+            </div>
+            <div className="mode-bg-effect"></div>
+          </Link>
+
+          <Link href="/heist" className="mode-card heist">
+            <div className="mode-icon-wrap">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <div className="mode-content">
+              <div className="mode-badge">CO-OP OPERATION</div>
+              <h3 className="mode-name">The Heist</h3>
+              <p className="mode-desc">Coordinate with your crew to breach high-security data vaults. Every role is critical. Synchronize or fail.</p>
+              <div className="mode-action">START HEIST <span className="arrow">→</span></div>
+            </div>
+            <div className="mode-bg-effect"></div>
+          </Link>
         </div>
       </section>
 
