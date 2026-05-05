@@ -14,7 +14,7 @@ export default function NeuralTransition({ children }) {
     },
     animate: { 
       opacity: 1, 
-      filter: 'blur(0px) brightness(1) contrast(1)',
+      filter: 'none',
       scale: 1,
       transition: {
         duration: 0.8,

@@ -622,7 +622,7 @@ export default function ProfilePage() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAvatarModalOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(5, 7, 10, 0.9)', backdropFilter: 'blur(10px)', zIndex: -1 }} />
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} 
-              className="glass-card" style={{ position: 'relative', width: '100%', maxWidth: '600px', padding: '3rem 2.5rem', zIndex: 1001, margin: 'auto 0' }}
+              className="glass-card" style={{ position: 'relative', width: '100%', maxWidth: '600px', padding: '3rem 2.5rem', zIndex: 1001, margin: 'auto' }}
             >
               <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.5rem' }}>Select Identity</h2>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.9rem' }}>Choose your visual representation in the network.</p>
@@ -694,9 +694,9 @@ export default function ProfilePage() {
       {/* EDIT USERNAME MODAL */}
       <AnimatePresence>
         {isEditing && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '2rem 1rem', overflowY: 'auto' }}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'grid', placeItems: 'center', padding: '2rem 1rem', overflowY: 'auto' }}>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditing(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(5, 7, 10, 0.9)', backdropFilter: 'blur(10px)', zIndex: -1 }} />
-            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="glass-card" style={{ position: 'relative', width: '100%', maxWidth: '450px', padding: '3rem 2.5rem', zIndex: 1001, margin: 'auto 0' }}>
+            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="glass-card" style={{ position: 'relative', width: '100%', maxWidth: '450px', padding: '3rem 2.5rem', zIndex: 1001, margin: 'auto' }}>
               <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.5rem' }}>Update Handle</h2>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.9rem' }}>Choose a unique identifier.</p>
               <form onSubmit={handleUsernameUpdate}>
