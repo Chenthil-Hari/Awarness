@@ -59,7 +59,11 @@ function PodiumPerson({ user, rank }) {
           borderWidth: 3,
         }}
       >
-        {initials(user.name)}
+        {user.image ? (
+          <img src={user.image} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+        ) : (
+          initials(user.name)
+        )}
       </div>
       <div className="pod-name" style={rank === 1 ? { color: '#ffd700', fontSize: 14 } : {}}>
         {user.name?.split(' ')[0]}
@@ -244,7 +248,13 @@ export default function LeaderboardPage() {
                     <span className="lb-rank">{rank}</span>
 
                     <div className={`lb-name ${isMe ? 'is-me-name' : ''}`}>
-                      <div className="lb-avatar-mini">{initials(user.name)}</div>
+                      <div className="lb-avatar-mini">
+                        {user.image ? (
+                          <img src={user.image} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                        ) : (
+                          initials(user.name)
+                        )}
+                      </div>
                       <span>{user.name}</span>
                       {isMe && <span className="you-badge">YOU</span>}
                     </div>

@@ -81,7 +81,11 @@ export default function Navbar({ score = null, level = null }) {
             <SettingsIcon size={18} />
           </Link>
           <Link href="/profile" style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)', overflow: 'hidden', flexShrink: 0 }}>
-            <ProfileIcon size={24} />
+            {session.user.image ? (
+              <img src={session.user.image} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <ProfileIcon size={24} />
+            )}
           </Link>
         </div>
       ) : (

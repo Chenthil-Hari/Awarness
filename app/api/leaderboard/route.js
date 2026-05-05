@@ -52,7 +52,7 @@ export async function GET(request) {
       .find(query)
       .sort({ xp: -1 })
       .limit(50)
-      .project({ name: 1, username: 1, xp: 1, badges: 1, league: 1 })
+      .project({ name: 1, username: 1, xp: 1, badges: 1, league: 1, image: 1 })
       .toArray();
 
     return NextResponse.json(topUsers);
