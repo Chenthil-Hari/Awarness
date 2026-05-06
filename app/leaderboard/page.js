@@ -1,9 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { motion } from 'framer-motion';
-import { Search, Swords, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { calculateLevel } from '@/lib/game';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -11,10 +9,10 @@ import './Leaderboard.css';
 
 /* ── League config ── */
 const LEAGUES = [
-  { id: 'Bronze',      label: '⚔ RECRUIT',   icon: '🥉', minXp: 0    },
-  { id: 'Silver',      label: '🛡 SENTINEL',  icon: '🥈', minXp: 500  },
-  { id: 'Gold',        label: '🌟 ELITE',     icon: '🥇', minXp: 1500 },
-  { id: 'Hacker-Tier', label: '💀 PHANTOM',  icon: '💀', minXp: 3000 },
+  { id: 'Bronze',      label: 'RECRUIT',   icon: '🥉', minXp: 0    },
+  { id: 'Silver',      label: 'SENTINEL',  icon: '🥈', minXp: 500  },
+  { id: 'Gold',        label: 'ELITE',     icon: '🥇', minXp: 1500 },
+  { id: 'Hacker-Tier', label: 'PHANTOM',   icon: '💀', minXp: 3000 },
 ];
 
 function getUserLeague(xp = 0) {
@@ -30,54 +28,6 @@ function initials(name = '') {
   return name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase() || '??';
 }
 
-function PodiumPerson({ user, rank }) {
-  const heights    = { 1: 90, 2: 68, 3: 54 };
-  const avatarCfg  = {
-    1: { bg: '#e09a10', border: '#ffd700' },
-    2: { bg: '#6a8aaa', border: '#c0d0e0' },
-    3: { bg: '#9a7a5a', border: '#d0a878' },
-  };
-  if (!user) return null;
-  const ac = avatarCfg[rank];
-
-  return (
-    <div className={`pod-wrap pod-${rank}-wrap`} style={{ paddingBottom: 0 }}>
-      {rank === 1 && (
-        <svg className="pod-crown" viewBox="0 0 22 16" fill="none">
-          <path d="M1 14L4 5L8 10L11 2L14 10L18 5L21 14H1Z" fill="#f5c842" stroke="#c8960a" strokeWidth="1"/>
-          <rect x="1" y="13" width="20" height="2.5" rx="1" fill="#c8960a"/>
-        </svg>
-      )}
-      <div
-        className={`pod-avatar pod-${rank}-avatar`}
-        style={{
-          background: ac.bg,
-          borderColor: ac.border,
-          width: rank === 1 ? 58 : 52,
-          height: rank === 1 ? 58 : 52,
-          fontSize: rank === 1 ? 17 : 15,
-          borderWidth: 3,
-        }}
-      >
-        {user.image ? (
-          <img src={user.image} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-        ) : (
-          initials(user.name)
-        )}
-      </div>
-      <div className="pod-name" style={rank === 1 ? { color: '#ffd700', fontSize: 14 } : {}}>
-        {user.name?.split(' ')[0]}
-      </div>
-      <div
-        className={`pod-block pod-${rank}-block pod-${rank}-wrap`}
-        style={{ height: heights[rank] }}
-      >
-        {rank}
-      </div>
-    </div>
-  );
-}
-
 export default function LeaderboardPage() {
   const { data: session } = useSession();
   const router = useRouter();
@@ -91,14 +41,68 @@ export default function LeaderboardPage() {
   const userLeague = getUserLeague(userXp);
   const userLeagueIdx = LEAGUE_ORDER.indexOf(userLeague);
 
+  // Background Animation
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    let particles = [];
+    let animationFrameId;
+
+    const resize = () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    for(let i=0; i<80; i++) particles.push({
+      x: Math.random()*w, y: Math.random()*h,
+      vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5,
+      s: Math.random()*2
+    });
+
+    const animate = () => {
+      ctx.clearRect(0,0,w,h);
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if(p.x<0||p.x>w) p.vx*=-1;
+        if(p.y<0||p.y>h) p.vy*=-1;
+        ctx.fillStyle = 'rgba(0,243,255,0.3)';
+        ctx.fillRect(p.x,p.y,p.s,p.s);
+      });
+      // Connections
+      for(let i=0;i<particles.length;i++) {
+        for(let j=i+1;j<particles.length;j++) {
+          let dx = particles[i].x-particles[j].x, dy = particles[i].y-particles[j].y;
+          let dist = Math.sqrt(dx*dx+dy*dy);
+          if(dist<120) {
+            ctx.strokeStyle = `rgba(0,243,255,${0.08*(1-dist/120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x,particles[i].y);
+            ctx.lineTo(particles[j].x,particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
   // On session load, default to the user's own league
   useEffect(() => {
     if (session?.user) setActiveLeague(userLeague);
   }, [session, userLeague]);
-
-  const handleChallenge = (user) => {
-    router.push(`/duels?opponentId=${user._id}&opponentName=${encodeURIComponent(user.name)}`);
-  };
 
   useEffect(() => {
     const fetch_ = async () => {
@@ -116,172 +120,248 @@ export default function LeaderboardPage() {
     fetch_();
   }, [activeLeague]);
 
+  const handleChallenge = (user) => {
+    router.push(`/duels?opponentId=${user._id}&opponentName=${encodeURIComponent(user.name)}`);
+  };
+
   const filtered = useMemo(
     () => users.filter(u => u.name?.toLowerCase().includes(searchTerm.toLowerCase())),
     [users, searchTerm],
   );
 
-  const [top1, top2, top3, ...rest] = filtered;
+  const top1 = filtered[0];
+  const top2 = filtered[1];
+  const top3 = filtered[2];
+  const rest = filtered.slice(3);
 
   return (
-    <div className="lb-page">
-      <div className="lb-wrap">
+    <div className="lb-page-container relative">
+      <canvas ref={canvasRef} className="bg-canvas"></canvas>
+      <div className="scanlines"></div>
 
-        {/* ── TOP BAR ── */}
-        <div className="lb-top-bar">
-          <div className="lb-logo">
-            <svg viewBox="0 0 22 22" fill="none" width="22" height="22">
-              <path d="M11 2L13.5 8H20L14.5 12L16.5 18.5L11 14.5L5.5 18.5L7.5 12L2 8H8.5Z" fill="#f5c842" stroke="#c8960a" strokeWidth="1"/>
-            </svg>
-            LEADERBOARD
+      {/* Header */}
+      <header className="relative z-10 pt-12 pb-8 px-4">
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="inline-block mb-4 border border-cyan-500/30 px-4 py-1 rounded-full bg-cyan-900/20 text-cyan-400 font-mono text-xs tracking-[0.3em]">
+            <i className="fas fa-satellite-dish mr-2 animate-pulse"></i>LIVE DATA FEED // GLOBAL_RANKINGS
           </div>
-
-          {/* League Tabs */}
-          <div className="lb-tabs">
-            {LEAGUES.map((l, idx) => {
-              const isUnlocked = idx <= userLeagueIdx;
-              const isActive   = activeLeague === l.id;
-              const isNext     = idx === userLeagueIdx + 1; // the very next locked league
-
-              return (
-                <button
-                  key={l.id}
-                  className={`lb-tab ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`}
-                  onClick={() => isUnlocked && setActiveLeague(l.id)}
-                  title={
-                    isUnlocked
-                      ? l.label
-                      : `Reach ${l.minXp.toLocaleString()} XP to unlock ${l.label}`
-                  }
-                >
-                  {!isUnlocked && <Lock size={10} style={{ marginRight: 3 }} />}
-                  {l.label}
-                  {isNext && (
-                    <span className="lb-tab-xp-hint">
-                      {l.minXp.toLocaleString()} XP
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="lb-season">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M4 4h10v6a5 5 0 01-10 0V4z" fill="#f5c842" opacity=".3" stroke="#f5c842" strokeWidth="1.5"/>
-              <path d="M1 4h2M15 4h2" stroke="#f5c842" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            {filtered.length}
-          </div>
+          <h1 className="glitch-title text-4xl md:text-6xl mb-2" data-text="LEADERBOARD">LEADERBOARD</h1>
+          <p className="text-gray-400 max-w-xl mx-auto mt-4 text-lg">Top operatives ranked by XP, accuracy, and mission success rate.</p>
         </div>
+      </header>
 
-        {/* ── LOCKED TIER BANNER ── */}
-        {LEAGUE_ORDER.indexOf(activeLeague) > userLeagueIdx && (
-          <div className="lb-locked-banner">
-            <Lock size={18} />
-            <span>
-              Reach <strong>{LEAGUES[LEAGUE_ORDER.indexOf(activeLeague)].minXp.toLocaleString()} XP</strong> to unlock the <strong>{LEAGUES[LEAGUE_ORDER.indexOf(activeLeague)].label}</strong> tier.
-              You currently have <strong>{userXp.toLocaleString()} XP</strong>.
-            </span>
-          </div>
-        )}
+      {/* Filters */}
+      <section className="relative z-10 px-4 mb-8">
+        <div className="max-w-6xl mx-auto flex flex-wrap justify-center gap-3">
+          {LEAGUES.map((l, idx) => {
+            const isUnlocked = idx <= userLeagueIdx;
+            const isActive   = activeLeague === l.id;
 
-        {/* ── SEARCH ── */}
-        <div className="lb-search-bar">
-          <Search size={16} />
-          <input
-            type="text"
-            placeholder="Find operative..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-          />
+            return (
+              <button
+                key={l.id}
+                className={`cyber-tab ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`}
+                onClick={() => isUnlocked && setActiveLeague(l.id)}
+                title={isUnlocked ? l.label : `Reach ${l.minXp.toLocaleString()} XP to unlock ${l.label}`}
+              >
+                {!isUnlocked && <i className="fas fa-lock mr-2 text-xs"></i>}
+                {l.label}
+              </button>
+            );
+          })}
         </div>
+      </section>
 
-        {/* ── SKY / PODIUM ── */}
-        {!loading && filtered.length >= 1 && (
-          <div className="lb-sky">
-            <svg className="lb-sky-clouds" viewBox="0 0 680 40" preserveAspectRatio="none">
-              <ellipse cx="80"  cy="25" rx="60" ry="15" fill="white"/>
-              <ellipse cx="120" cy="20" rx="45" ry="12" fill="white"/>
-              <ellipse cx="300" cy="28" rx="70" ry="14" fill="white"/>
-              <ellipse cx="340" cy="22" rx="50" ry="12" fill="white"/>
-              <ellipse cx="560" cy="25" rx="65" ry="15" fill="white"/>
-              <ellipse cx="600" cy="18" rx="48" ry="12" fill="white"/>
-            </svg>
-            <div className="lb-podium-area">
-              <PodiumPerson user={top2} rank={2} />
-              <PodiumPerson user={top1} rank={1} />
-              <PodiumPerson user={top3} rank={3} />
-            </div>
+      {/* LOCKED TIER BANNER */}
+      {LEAGUE_ORDER.indexOf(activeLeague) > userLeagueIdx && (
+        <section className="relative z-10 px-4 mb-8">
+          <div className="max-w-6xl mx-auto glass p-4 text-center text-yellow-500 font-mono text-sm border-l-4 border-yellow-500">
+            <i className="fas fa-lock mr-2"></i>
+            Reach <strong className="text-yellow-400">{LEAGUES[LEAGUE_ORDER.indexOf(activeLeague)].minXp.toLocaleString()} XP</strong> to unlock the <strong className="text-yellow-400">{LEAGUES[LEAGUE_ORDER.indexOf(activeLeague)].label}</strong> tier. You currently have <strong className="text-yellow-400">{userXp.toLocaleString()} XP</strong>.
           </div>
-        )}
+        </section>
+      )}
 
-        {/* ── ROW LIST ── */}
-        <div className="lb-body">
-          {loading ? (
-            <div className="lb-loader"><LoadingSpinner message="Retrieving data..." /></div>
-          ) : filtered.length === 0 ? (
-            <div className="lb-empty">No operatives found.</div>
-          ) : (
-            <>
-              <div className="lb-list-head">
-                <span>#</span>
-                <span>Operative</span>
-                <span style={{ textAlign: 'center' }}>Level</span>
-                <span style={{ textAlign: 'right' }}>XP</span>
-                <span style={{ textAlign: 'right' }}>Action</span>
-              </div>
+      {/* SEARCH */}
+      <section className="relative z-10 px-4 mb-12">
+         <div className="max-w-md mx-auto glass flex items-center px-4 py-2 rounded-full border-cyan-500/30">
+            <i className="fas fa-search text-cyan-500 mr-3"></i>
+            <input
+              type="text"
+              placeholder="Find operative..."
+              className="bg-transparent border-none outline-none text-white font-mono w-full text-sm placeholder-gray-500"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+         </div>
+      </section>
 
-              {filtered.map((user, i) => {
-                const rank = i + 1;
-                const isMe = user.username === session?.user?.username;
-                const lvl  = calculateLevel(user.xp || 0);
-
-                return (
-                  <motion.div
-                    key={user._id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: Math.min(i * 0.025, 0.4) }}
-                    className={`lb-row ${isMe ? 'me' : ''}`}
-                  >
-                    <span className="lb-rank">{rank}</span>
-
-                    <div className={`lb-name ${isMe ? 'is-me-name' : ''}`}>
-                      <div className="lb-avatar-mini">
-                        {user.image ? (
-                          <img src={user.image} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                        ) : (
-                          initials(user.name)
-                        )}
-                      </div>
-                      <span>{user.name}</span>
-                      {isMe && <span className="you-badge">YOU</span>}
-                    </div>
-
-                    <span className="lb-stat stat-lvl">LV {lvl}</span>
-
-                    <span className="lb-stat stat-xp">
-                      <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                        <polygon points="7,1 9,5.5 14,6 10.5,9.5 11.5,14 7,11.5 2.5,14 3.5,9.5 0,6 5,5.5" fill="#5dca8a"/>
-                      </svg>
-                      {(user.xp || 0).toLocaleString()}
-                    </span>
-
-                    <div className="lb-action">
-                      {!isMe && (
-                        <button className="challenge-btn" onClick={() => handleChallenge(user)}>
-                          <Swords size={12} /> DUEL
-                        </button>
+      {loading ? (
+         <div className="relative z-10 flex justify-center py-20">
+            <LoadingSpinner message="Retrieving data..." />
+         </div>
+      ) : filtered.length === 0 ? (
+         <div className="relative z-10 flex justify-center py-20 font-mono text-gray-500">
+            No operatives found in this sector.
+         </div>
+      ) : (
+        <>
+          {/* Podium / Top 3 */}
+          <section className="relative z-10 px-4 mb-12">
+            <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+              
+              {/* 2nd Place */}
+              {top2 && (
+                <div className="glass podium-card silver p-6 text-center transform scale-95" style={{ order: 1 }}>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gray-500 to-transparent"></div>
+                  <div className="text-gray-400 font-mono text-xs tracking-widest mb-3">02 // RUNNER UP</div>
+                  <div className="relative inline-block mb-4">
+                    <div className="w-24 h-24 mx-auto rounded-full bg-gray-800 border-2 border-gray-400 flex items-center justify-center relative z-10 overflow-hidden">
+                      {top2.image ? (
+                        <img src={top2.image} alt="2nd" className="w-full h-full object-cover opacity-90" />
+                      ) : (
+                         <div className="text-gray-400 font-orbitron text-2xl">{initials(top2.name)}</div>
                       )}
                     </div>
-                  </motion.div>
-                );
-              })}
-            </>
+                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center border border-gray-400 z-20">
+                      <span className="text-white font-bold text-sm font-mono">2</span>
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white font-orbitron mb-1">{top2.name?.split(' ')[0]}</h3>
+                  <p className="text-gray-400 text-sm mb-2 font-mono">@{top2.username || top2.name?.toLowerCase().replace(/\s+/g, '_')}</p>
+                  <div className="text-3xl font-bold text-gray-300 font-orbitron mb-2">{(top2.xp || 0).toLocaleString()}</div>
+                  <div className="flex justify-center gap-4 text-xs font-mono text-gray-400">
+                    <span><i className="fas fa-bolt text-yellow-500 mr-1"></i>Lvl {calculateLevel(top2.xp || 0)}</span>
+                    <button className="text-cyan-400 hover:text-cyan-300 transition" onClick={() => handleChallenge(top2)}>
+                        <i className="fas fa-crosshairs mr-1"></i>DUEL
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 1st Place */}
+              {top1 && (
+                <div className="glass podium-card gold p-8 text-center transform scale-105 relative" style={{ order: 2 }}>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent shadow-[0_0_15px_rgba(255,215,0,0.5)]"></div>
+                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-yellow-400 text-4xl animate-pulse">
+                    <i className="fas fa-crown"></i>
+                  </div>
+                  <div className="text-yellow-400 font-mono text-xs tracking-widest mb-3 mt-6">01 // CHAMPION</div>
+                  <div className="relative inline-block mb-4">
+                    <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-yellow-600 to-yellow-900 p-1">
+                      <div className="w-full h-full rounded-full bg-black overflow-hidden border-2 border-yellow-400 flex items-center justify-center">
+                        {top1.image ? (
+                          <img src={top1.image} alt="1st" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="text-yellow-400 font-orbitron text-3xl">{initials(top1.name)}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-yellow-300 z-20 shadow-[0_0_20px_rgba(255,215,0,0.6)]">
+                      <span className="text-black font-bold text-lg font-mono">1</span>
+                    </div>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white font-orbitron mb-1">{top1.name?.split(' ')[0]}</h3>
+                  <p className="text-yellow-500/80 text-sm mb-2 font-mono">@{top1.username || top1.name?.toLowerCase().replace(/\s+/g, '_')}</p>
+                  <div className="text-4xl font-bold text-yellow-400 font-orbitron mb-2 drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]">{(top1.xp || 0).toLocaleString()}</div>
+                  <div className="flex justify-center gap-4 text-xs font-mono text-gray-300">
+                    <span><i className="fas fa-bolt text-yellow-400 mr-1"></i>Lvl {calculateLevel(top1.xp || 0)}</span>
+                    <button className="text-green-400 hover:text-green-300 transition" onClick={() => handleChallenge(top1)}>
+                        <i className="fas fa-crosshairs mr-1"></i>DUEL
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 3rd Place */}
+              {top3 && (
+                <div className="glass podium-card bronze p-6 text-center transform scale-95" style={{ order: 3 }}>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-600 to-transparent"></div>
+                  <div className="text-orange-400 font-mono text-xs tracking-widest mb-3">03 // THIRD</div>
+                  <div className="relative inline-block mb-4">
+                    <div className="w-24 h-24 mx-auto rounded-full bg-orange-900/30 border-2 border-orange-600 flex items-center justify-center overflow-hidden">
+                      {top3.image ? (
+                        <img src={top3.image} alt="3rd" className="w-full h-full object-cover opacity-90" />
+                      ) : (
+                         <div className="text-orange-400 font-orbitron text-2xl">{initials(top3.name)}</div>
+                      )}
+                    </div>
+                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-orange-800 rounded-full flex items-center justify-center border border-orange-500 z-20">
+                      <span className="text-white font-bold text-sm font-mono">3</span>
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white font-orbitron mb-1">{top3.name?.split(' ')[0]}</h3>
+                  <p className="text-gray-400 text-sm mb-2 font-mono">@{top3.username || top3.name?.toLowerCase().replace(/\s+/g, '_')}</p>
+                  <div className="text-3xl font-bold text-orange-300 font-orbitron mb-2">{(top3.xp || 0).toLocaleString()}</div>
+                  <div className="flex justify-center gap-4 text-xs font-mono text-gray-400">
+                    <span><i className="fas fa-bolt text-orange-400 mr-1"></i>Lvl {calculateLevel(top3.xp || 0)}</span>
+                    <button className="text-cyan-400 hover:text-cyan-300 transition" onClick={() => handleChallenge(top3)}>
+                        <i className="fas fa-crosshairs mr-1"></i>DUEL
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Rankings Table */}
+          {rest.length > 0 && (
+            <section className="relative z-10 px-4 mb-20">
+              <div className="max-w-6xl mx-auto glass rounded-lg overflow-hidden clip-path-slant">
+                
+                {/* Table Header */}
+                <div className="hidden md:grid grid-cols-12 gap-4 p-4 border-b border-cyan-500/20 bg-black/30 text-xs font-mono text-cyan-400/70 tracking-widest uppercase">
+                  <div className="col-span-1 text-center">Rank</div>
+                  <div className="col-span-4">Operative</div>
+                  <div className="col-span-2 text-center">Level</div>
+                  <div className="col-span-3 text-center">XP</div>
+                  <div className="col-span-2 text-center">Action</div>
+                </div>
+
+                {rest.map((user, idx) => {
+                   const rank = idx + 4;
+                   const isMe = user.username === session?.user?.username;
+                   const lvl = calculateLevel(user.xp || 0);
+
+                   return (
+                      <div key={user._id} className={`leader-row grid grid-cols-12 gap-4 p-4 items-center ${isMe ? 'me' : ''}`}>
+                        <div className="col-span-2 md:col-span-1 flex justify-center">
+                          <div className="rank-badge rank-other text-sm">{rank}</div>
+                        </div>
+                        <div className="col-span-10 md:col-span-4 flex items-center gap-3">
+                          <div className="avatar-frame flex-shrink-0">
+                            {user.image ? (
+                               <img src={user.image} alt="avatar" />
+                            ) : (
+                               <div className="w-full h-full rounded-full bg-gray-800 border border-cyan-500/30 flex items-center justify-center font-orbitron text-xs text-cyan-400">
+                                  {initials(user.name)}
+                               </div>
+                            )}
+                          </div>
+                          <div className="overflow-hidden">
+                            <h4 className="font-bold text-white text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis">
+                               {user.name} {isMe && <span className="ml-2 text-[10px] bg-cyan-500/20 text-cyan-400 px-1 py-0.5 rounded font-mono">YOU</span>}
+                            </h4>
+                            <p className="text-xs text-gray-500 font-mono overflow-hidden text-ellipsis">@{user.username || user.name?.toLowerCase().replace(/\s+/g, '_')}</p>
+                          </div>
+                        </div>
+                        <div className="hidden md:block col-span-2 text-center font-mono text-cyan-400">Lvl {lvl}</div>
+                        <div className="hidden md:block col-span-3 text-center font-orbitron font-bold">{(user.xp || 0).toLocaleString()}</div>
+                        <div className="hidden md:block col-span-2 text-center">
+                           {!isMe && (
+                              <button className="text-cyan-400 hover:text-cyan-300 transition text-xs font-mono uppercase" onClick={() => handleChallenge(user)}>
+                                 <i className="fas fa-crosshairs mr-1"></i>DUEL
+                              </button>
+                           )}
+                        </div>
+                      </div>
+                   );
+                })}
+              </div>
+            </section>
           )}
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
