@@ -1,268 +1,258 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Zap, Shield, Sparkles, Check, Lock, Star, Palette, Ghost, Heart } from 'lucide-react';
-import BorderGlow from '../components/BorderGlow/BorderGlow';
+import './Shop.css';
 
 const SHOP_ITEMS = [
-  {
-    id: 'item_extinguisher',
-    name: 'Class-K Extinguisher',
-    description: 'Essential gear for the "Kitchen Crisis". Prevents critical failure in grease fire scenarios.',
-    price: 450,
-    category: 'Tactical',
-    icon: <Shield size={24} />,
-    color: '#f43f5e'
-  },
-  {
-    id: 'item_yubikey',
-    name: 'Hardware Security Key',
-    description: 'Neural-link protection. Automatically detects 100% of basic phishing links in Live Drills.',
-    price: 800,
-    category: 'Cyber-Gear',
-    icon: <Lock size={24} />,
-    color: '#22d3ee'
-  },
-  {
-    id: 'item_first_aid',
-    name: 'Tactical Med-Kit',
-    description: 'Includes trauma supplies for "Emergency Response" scenarios. Increases success probability.',
-    price: 500,
-    category: 'Life-Skills',
-    icon: <Heart size={24} />,
-    color: '#10b981'
-  },
-  {
-    id: 'item_privacy_filter',
-    name: 'Neural Privacy Screen',
-    description: 'Reduces the visibility of "Social Engineering" threats by 40% during surveillance missions.',
-    price: 600,
-    category: 'Tactical',
-    icon: <Ghost size={24} />,
-    color: '#94a3b8'
-  },
-  {
-    id: 'theme_hacker',
-    name: 'Terminal Zero Theme',
-    description: 'A full-system overhaul with a high-fidelity "Black & Green" matrix aesthetic.',
-    price: 2000,
-    category: 'Interface',
-    icon: <Palette size={24} />,
-    color: '#10b981'
-  },
-  {
-    id: 'xp_boost_elite',
-    name: 'Neural Optimizer (24h)',
-    description: 'Advanced data processing. Grants a 2.5x XP multiplier for all successfully neutralized threats.',
-    price: 1500,
-    category: 'Neural',
-    icon: <Zap size={24} />,
-    color: '#fbbf24'
-  }
+    { id: 'item_extinguisher', name: 'Class-K Extinguisher', category: 'tactical', catLabel: 'Tactical', price: 450, icon: 'fa-fire-extinguisher', desc: 'Essential gear for the "Kitchen Crisis". Prevents critical failure in grease fire scenarios.' },
+    { id: 'item_yubikey', name: 'Hardware Security Key', category: 'cyber-gear', catLabel: 'Cyber-Gear', price: 800, icon: 'fa-usb', desc: 'Neural-link protection. Automatically detects 100% of basic phishing links in Live Drills.' },
+    { id: 'item_first_aid', name: 'Tactical Med-Kit', category: 'life-skills', catLabel: 'Life-Skills', price: 500, icon: 'fa-medkit', desc: 'Includes trauma supplies for "Emergency Response" scenarios. Increases success probability.' },
+    { id: 'item_privacy_filter', name: 'Neural Privacy Screen', category: 'tactical', catLabel: 'Tactical', price: 600, icon: 'fa-user-secret', desc: 'Reduces the visibility of "Social Engineering" threats by 40% during surveillance missions.' },
+    { id: 'theme_hacker', name: 'Terminal Zero Theme', category: 'interface', catLabel: 'Interface', price: 2000, icon: 'fa-terminal', desc: 'A full-system overhaul with a high-fidelity "Black & Green" matrix aesthetic.' },
+    { id: 'xp_boost_elite', name: 'Neural Optimizer (24h)', category: 'neural', catLabel: 'Neural', price: 1500, icon: 'fa-brain', desc: 'Advanced data processing. Grants a 2.5x XP multiplier for all successfully neutralized threats.' }
 ];
 
 export default function ShopPage() {
-  const { data: session, status, update } = useSession();
-  const [loading, setLoading] = useState(false);
-  const [purchaseStatus, setPurchaseStatus] = useState(null);
-  const [inventory, setInventory] = useState([]);
-
-  useEffect(() => {
-    if (session?.user?.inventory) {
-      setInventory(session.user.inventory);
-    }
-  }, [session]);
-
-  const handlePurchase = async (item) => {
-    if (session.user.xp < item.price) return;
+    const { data: session, status, update } = useSession();
+    const [loading, setLoading] = useState(false);
+    const [purchaseStatus, setPurchaseStatus] = useState(null);
+    const [inventory, setInventory] = useState([]);
+    const [activeFilter, setActiveFilter] = useState('all');
     
-    setLoading(item.id);
-    try {
-      const res = await fetch('/api/shop/buy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          itemId: item.id,
-          price: item.price,
-          itemName: item.name
-        })
-      });
+    // XP Animation state
+    const [displayXp, setDisplayXp] = useState(0);
 
-      if (res.ok) {
-        setPurchaseStatus({ id: item.id, message: 'SUCCESSFULLY ACQUIRED' });
-        setInventory(prev => [...prev, item.id]);
-        update(); // Refresh session to reflect XP change
-        setTimeout(() => setPurchaseStatus(null), 3000);
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Transaction failed');
-      }
-    } catch (err) {
-      alert('Network error');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const canvasRef = useRef(null);
 
-  if (status === 'loading') return <LoadingSpinner message="Accessing Vault..." />;
+    useEffect(() => {
+        if (session?.user?.inventory) {
+            setInventory(session.user.inventory);
+        }
+        if (session?.user?.xp) {
+            // Animate XP counter
+            const targetXP = session.user.xp;
+            let currentXP = displayXp;
+            const step = 50;
+            const interval = setInterval(() => {
+                currentXP += Math.ceil((targetXP - currentXP) / 10);
+                if(currentXP >= targetXP) { 
+                    currentXP = targetXP; 
+                    clearInterval(interval); 
+                }
+                setDisplayXp(currentXP);
+            }, step);
+            return () => clearInterval(interval);
+        }
+    }, [session]);
 
-  return (
-    <main style={{ minHeight: '100vh', paddingBottom: '6rem' }}>
-            <div className="container" style={{ marginTop: '4rem' }}>
-        <header style={{ textAlign: 'center', marginBottom: '4rem' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-              <ShoppingBag size={24} color="var(--accent-primary)" />
-              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-primary)', letterSpacing: '3px' }}>NEURAL MARKET</span>
-            </div>
-            <h1 className="hero-title" style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1rem' }}>XP <span className="gradient-text">VAULT</span></h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
-              Exchange your neutralized threat data (XP) for high-tier cosmetic enhancements and operational boosts.
-            </p>
-          </motion.div>
+    // Background animation
+    useEffect(() => {
+        if (!canvasRef.current) return;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let animationFrameId;
+        
+        const resize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', resize);
+        resize();
 
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '1rem', 
-              background: 'var(--bg-tertiary)', 
-              padding: '1rem 2rem', 
-              borderRadius: 'var(--radius-full)', 
-              marginTop: '2.5rem',
-              border: '1px solid var(--glass-border)',
-              boxShadow: '0 0 30px rgba(139, 92, 246, 0.1)'
-            }}
-          >
-            <Zap size={20} color="var(--accent-warning)" />
-            <span style={{ fontSize: '1.2rem', fontWeight: 900 }}>{session?.user?.xp || 0} <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>XP AVAILABLE</span></span>
-          </motion.div>
-        </header>
+        for(let i=0; i<80; i++) particles.push({
+            x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+            vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3,
+            s: Math.random()*1.5
+        });
 
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', 
-          gap: '2rem' 
-        }}>
-          {SHOP_ITEMS.map((item, idx) => {
-            const isOwned = inventory.includes(item.id);
-            const canAfford = session.user.xp >= item.price;
-            const isPurchasing = loading === item.id;
-            const isJustBought = purchaseStatus?.id === item.id;
+        const animate = () => {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            particles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0||p.x>canvas.width) p.vx*=-1;
+                if(p.y<0||p.y>canvas.height) p.vy*=-1;
+                ctx.fillStyle = 'rgba(0,243,255,0.2)';
+                ctx.fillRect(p.x,p.y,p.s,p.s);
+            });
+            for(let i=0;i<particles.length;i++) {
+                for(let j=i+1;j<particles.length;j++){
+                    let dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y;
+                    let dist=Math.sqrt(dx*dx+dy*dy);
+                    if(dist<120){
+                        ctx.strokeStyle=`rgba(0,243,255,${0.05*(1-dist/120)})`;
+                        ctx.lineWidth=0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x,particles[i].y);
+                        ctx.lineTo(particles[j].x,particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            animationFrameId = requestAnimationFrame(animate);
+        };
+        animate();
 
-            return (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-              >
-                <BorderGlow 
-                  glowColor={item.color.replace('#', '')} 
-                  animated={!isOwned} 
-                  borderRadius={24}
-                >
-                  <div style={{ 
-                    padding: '2rem', 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    background: 'var(--bg-secondary)',
-                    opacity: isOwned ? 0.8 : 1
-                  }}>
-                    <div style={{ 
-                      width: '56px', 
-                      height: '56px', 
-                      background: `${item.color}20`, 
-                      borderRadius: '16px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      color: item.color,
-                      marginBottom: '1.5rem',
-                      border: `1px solid ${item.color}40`
-                    }}>
-                      {item.icon}
+        return () => {
+            window.removeEventListener('resize', resize);
+            cancelAnimationFrame(animationFrameId);
+        };
+    }, []);
+
+    const handlePurchase = async (item) => {
+        if (session.user.xp < item.price) return;
+        
+        setLoading(item.id);
+        try {
+            const res = await fetch('/api/shop/buy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    itemId: item.id,
+                    price: item.price,
+                    itemName: item.name
+                })
+            });
+
+            if (res.ok) {
+                setPurchaseStatus({ id: item.id, message: `Successfully acquired: ${item.name}` });
+                setInventory(prev => [...prev, item.id]);
+                update(); // Refresh session to reflect XP change
+                
+                // Show toast
+                const toast = document.getElementById('toast');
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                    setPurchaseStatus(null);
+                }, 3000);
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Transaction failed');
+            }
+        } catch (err) {
+            alert('Network error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (status === 'loading') return <div className="min-h-screen flex items-center justify-center"><LoadingSpinner message="Accessing Vault..." /></div>;
+
+    const filteredItems = activeFilter === 'all' 
+        ? SHOP_ITEMS 
+        : SHOP_ITEMS.filter(i => i.category === activeFilter);
+
+    const userXp = session?.user?.xp || 0;
+
+    return (
+        <div className="min-h-screen relative">
+            <canvas ref={canvasRef} id="bgCanvas"></canvas>
+            <div className="scanlines"></div>
+
+            {/* Main Container */}
+            <div className="relative z-10 max-w-7xl mx-auto px-4 py-12">
+                
+                {/* VAULT HEADER */}
+                <div className="vault-header text-center mb-12 py-12 rounded-2xl border border-cyan-500/10 bg-black/20">
+                    <div className="inline-flex items-center gap-3 border border-cyan-500/30 px-4 py-1 rounded-full bg-cyan-900/20 text-cyan-400 font-mono text-xs tracking-[0.2em] mb-8">
+                        <i className="fas fa-unlock-alt animate-pulse"></i> NEUTRALIZED THREAT DATA CONVERSION
                     </div>
                     
-                    <div style={{ marginBottom: 'auto' }}>
-                      <span style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--text-muted)', letterSpacing: '1px', textTransform: 'uppercase' }}>{item.category}</span>
-                      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0.25rem 0 0.75rem' }}>{item.name}</h3>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.5rem' }}>{item.description}</p>
-                    </div>
+                    <h1 className="font-orbitron text-4xl md:text-6xl font-black text-white uppercase mb-4 tracking-wider drop-shadow-[0_0_15px_rgba(0,243,255,0.5)]">
+                        XP VAULT
+                    </h1>
+                    <p className="text-gray-400 max-w-2xl mx-auto mb-8 text-sm md:text-base leading-relaxed">
+                        Exchange your neutralized threat data (XP) for high-tier cosmetic enhancements and operational boosts.
+                    </p>
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginTop: '1.5rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Zap size={14} color="var(--accent-warning)" />
-                        <span style={{ fontWeight: 900, fontSize: '1.1rem' }}>{item.price}</span>
-                      </div>
-                      
-                      <button
-                        onClick={() => handlePurchase(item)}
-                        disabled={isOwned || !canAfford || isPurchasing}
-                        className={isOwned ? "btn-secondary" : "btn-primary"}
-                        style={{ 
-                          padding: '0.6rem 1.2rem', 
-                          fontSize: '0.8rem', 
-                          fontWeight: 800,
-                          background: isOwned ? 'rgba(16, 185, 129, 0.1)' : undefined,
-                          borderColor: isOwned ? 'var(--accent-success)' : undefined,
-                          color: isOwned ? 'var(--accent-success)' : undefined,
-                          flex: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.5rem'
-                        }}
-                      >
-                        {isOwned ? (
-                          <><Check size={14} /> OWNED</>
-                        ) : isPurchasing ? (
-                          'PROCESSING...'
-                        ) : !canAfford ? (
-                          <><Lock size={14} /> INSUFFICIENT XP</>
-                        ) : (
-                          'ACQUIRE'
-                        )}
-                      </button>
+                    <div className="xp-display inline-block px-10 py-6 rounded-lg">
+                        <div className="text-xs font-mono text-cyan-400/60 tracking-[0.3em] mb-2 uppercase">Available Balance</div>
+                        <div className="flex items-center justify-center gap-3">
+                            <i className="fas fa-database text-cyan-400 text-2xl animate-pulse"></i>
+                            <span id="xpCounter" className="xp-glow text-5xl md:text-6xl font-black">{displayXp.toLocaleString()}</span>
+                            <span className="text-xl text-cyan-400/60 font-mono mt-2">XP</span>
+                        </div>
+                        <div className="w-full h-1 bg-cyan-900/30 mt-4 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-cyan-400 to-pink-500 rounded-full shadow-[0_0_10px_rgba(0,243,255,0.5)]" style={{ width: '75%' }}></div>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-mono text-gray-500 mt-2">
+                            <span>INITIATE</span>
+                            <span>MAX_YIELD</span>
+                        </div>
                     </div>
+                </div>
 
-                    {isJustBought && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        style={{ 
-                          position: 'absolute', 
-                          inset: 0, 
-                          background: 'rgba(0,0,0,0.8)', 
-                          backdropFilter: 'blur(4px)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          zIndex: 10,
-                          borderRadius: '24px'
-                        }}
-                      >
-                        <Sparkles size={40} color="var(--accent-warning)" style={{ marginBottom: '1rem' }} />
-                        <span style={{ fontWeight: 900, color: 'white', letterSpacing: '1px' }}>SUCCESSFULLY ACQUIRED</span>
-                      </motion.div>
-                    )}
-                  </div>
-                </BorderGlow>
-              </motion.div>
-            );
-          })}
+                {/* FILTERS */}
+                <div className="flex flex-wrap justify-center gap-3 mb-12">
+                    <button className={`filter-tab ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => setActiveFilter('all')}>All Gear</button>
+                    <button className={`filter-tab ${activeFilter === 'tactical' ? 'active' : ''}`} onClick={() => setActiveFilter('tactical')}>Tactical</button>
+                    <button className={`filter-tab ${activeFilter === 'cyber-gear' ? 'active' : ''}`} onClick={() => setActiveFilter('cyber-gear')}>Cyber-Gear</button>
+                    <button className={`filter-tab ${activeFilter === 'life-skills' ? 'active' : ''}`} onClick={() => setActiveFilter('life-skills')}>Life-Skills</button>
+                    <button className={`filter-tab ${activeFilter === 'interface' ? 'active' : ''}`} onClick={() => setActiveFilter('interface')}>Interface</button>
+                    <button className={`filter-tab ${activeFilter === 'neural' ? 'active' : ''}`} onClick={() => setActiveFilter('neural')}>Neural</button>
+                </div>
+
+                {/* SHOP GRID */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="shopGrid">
+                    {filteredItems.map((item, idx) => {
+                        const isOwned = inventory.includes(item.id);
+                        const canAfford = userXp >= item.price;
+                        const isPurchasing = loading === item.id;
+
+                        return (
+                            <div key={item.id} className="item-card rounded-lg animate-fade-up" style={{ animationDelay: `${idx * 0.1}s` }}>
+                                <div className="item-icon">
+                                    <i className={`fas ${item.icon}`}></i>
+                                    <div className="absolute top-3 right-3">
+                                        <span className={`tag tag-${item.category}`}>{item.catLabel}</span>
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent"></div>
+                                </div>
+                                <div className="p-6">
+                                    <h3 className="text-lg font-bold text-white font-orbitron mb-2 leading-tight">{item.name}</h3>
+                                    <p className="text-gray-400 text-sm leading-relaxed mb-6 font-light h-16">{item.desc}</p>
+                                    
+                                    <div className="flex items-center justify-between mb-4 pt-4 border-t border-white/5">
+                                        <div className="xp-price">
+                                            <i className="fas fa-coins text-yellow-400"></i>
+                                            <span className="text-2xl font-bold">{item.price}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <button 
+                                        className={`acquire-btn ${isOwned ? 'owned-btn' : ''}`}
+                                        disabled={isOwned || !canAfford || isPurchasing}
+                                        onClick={() => handlePurchase(item)}
+                                    >
+                                        {isOwned ? (
+                                            <><i className="fas fa-check"></i> ACQUIRED</>
+                                        ) : isPurchasing ? (
+                                            <><i className="fas fa-spinner fa-spin"></i> PROCESSING...</>
+                                        ) : !canAfford ? (
+                                            <><i className="fas fa-lock"></i> INSUFFICIENT XP</>
+                                        ) : (
+                                            <><i className="fas fa-download"></i> ACQUIRE</>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+            </div>
+
+            {/* Toast Notification */}
+            <div id="toast" className="fixed bottom-8 right-8 z-[100] translate-y-20 opacity-0 transition-all duration-500 pointer-events-none">
+                <div className="px-6 py-4 rounded-lg border border-cyan-500/30 bg-black/80 backdrop-blur text-cyan-400 font-mono text-sm flex items-center gap-3 shadow-[0_0_20px_rgba(0,243,255,0.2)]">
+                    <i className="fas fa-check-circle text-green-400 text-xl"></i>
+                    <span id="toastMsg">{purchaseStatus?.message || 'Item Acquired'}</span>
+                </div>
+            </div>
+
         </div>
-      </div>
-    </main>
-  );
+    );
 }
