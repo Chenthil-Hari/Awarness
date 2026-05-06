@@ -1,6 +1,7 @@
-/* Global Styles */
+@tailwind components;
+@tailwind utilities;
 
-:root {
+/* Global Styles */:root {
   /* Light Mode (Default) */
   --bg-primary: #ffffff;
   --bg-secondary: #f3f4f6;

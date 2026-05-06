@@ -9,20 +9,11 @@ import './Leaderboard.css';
 
 /* ── League config ── */
 const LEAGUES = [
-  { id: 'Bronze',      label: 'RECRUIT',   icon: '🥉', minXp: 0    },
-  { id: 'Silver',      label: 'SENTINEL',  icon: '🥈', minXp: 500  },
-  { id: 'Gold',        label: 'ELITE',     icon: '🥇', minXp: 1500 },
-  { id: 'Hacker-Tier', label: 'PHANTOM',   icon: '💀', minXp: 3000 },
+  { id: 'Bronze',      label: 'ALL TIME'   },
+  { id: 'Silver',      label: 'WEEKLY'  },
+  { id: 'Gold',        label: 'MONTHLY'     },
+  { id: 'Hacker-Tier', label: 'OPERATIVES'   },
 ];
-
-function getUserLeague(xp = 0) {
-  if (xp >= 3000) return 'Hacker-Tier';
-  if (xp >= 1500) return 'Gold';
-  if (xp >= 500)  return 'Silver';
-  return 'Bronze';
-}
-
-const LEAGUE_ORDER = ['Bronze', 'Silver', 'Gold', 'Hacker-Tier'];
 
 function initials(name = '') {
   return name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase() || '??';
@@ -34,12 +25,7 @@ export default function LeaderboardPage() {
 
   const [users, setUsers]               = useState([]);
   const [loading, setLoading]           = useState(true);
-  const [activeLeague, setActiveLeague] = useState('Bronze');
-  const [searchTerm, setSearchTerm]     = useState('');
-
-  const userXp     = session?.user?.xp || 0;
-  const userLeague = getUserLeague(userXp);
-  const userLeagueIdx = LEAGUE_ORDER.indexOf(userLeague);
+  const [activeTab, setActiveTab]       = useState('Bronze');
 
   // Background Animation
   const canvasRef = useRef(null);
@@ -99,16 +85,11 @@ export default function LeaderboardPage() {
     };
   }, []);
 
-  // On session load, default to the user's own league
-  useEffect(() => {
-    if (session?.user) setActiveLeague(userLeague);
-  }, [session, userLeague]);
-
   useEffect(() => {
     const fetch_ = async () => {
       setLoading(true);
       try {
-        const res  = await fetch(`/api/leaderboard?league=${activeLeague}`);
+        const res  = await fetch(`/api/leaderboard?league=${activeTab}`);
         const data = await res.json();
         setUsers(Array.isArray(data) ? data : []);
       } catch {
@@ -118,25 +99,36 @@ export default function LeaderboardPage() {
       }
     };
     fetch_();
-  }, [activeLeague]);
+  }, [activeTab]);
 
-  const handleChallenge = (user) => {
-    router.push(`/duels?opponentId=${user._id}&opponentName=${encodeURIComponent(user.name)}`);
+  const top1 = users[0];
+  const top2 = users[1];
+  const top3 = users[2];
+  const rest = users.slice(3);
+
+  const getAccuracy = (user) => {
+      if (!user.performance) return '0%';
+      let totalAtt = 0, totalSucc = 0;
+      Object.values(user.performance).forEach(cat => {
+          totalAtt += cat.attempts || 0;
+          totalSucc += cat.successes || 0;
+      });
+      if (totalAtt === 0) return '0%';
+      return Math.round((totalSucc / totalAtt) * 100) + '%';
   };
 
-  const filtered = useMemo(
-    () => users.filter(u => u.name?.toLowerCase().includes(searchTerm.toLowerCase())),
-    [users, searchTerm],
-  );
+  const getAccuracyNumber = (user) => {
+      const acc = getAccuracy(user);
+      return parseInt(acc.replace('%', ''));
+  };
 
-  const top1 = filtered[0];
-  const top2 = filtered[1];
-  const top3 = filtered[2];
-  const rest = filtered.slice(3);
+  const getStreak = (user) => {
+      return user.streak || 0;
+  };
 
   return (
-    <div className="lb-page-container relative">
-      <canvas ref={canvasRef} className="bg-canvas"></canvas>
+    <div className="lb-page-container relative min-h-screen">
+      <canvas ref={canvasRef} className="bg-canvas" id="bgCanvas"></canvas>
       <div className="scanlines"></div>
 
       {/* Header */}
@@ -153,54 +145,23 @@ export default function LeaderboardPage() {
       {/* Filters */}
       <section className="relative z-10 px-4 mb-8">
         <div className="max-w-6xl mx-auto flex flex-wrap justify-center gap-3">
-          {LEAGUES.map((l, idx) => {
-            const isUnlocked = idx <= userLeagueIdx;
-            const isActive   = activeLeague === l.id;
-
-            return (
-              <button
-                key={l.id}
-                className={`cyber-tab ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`}
-                onClick={() => isUnlocked && setActiveLeague(l.id)}
-                title={isUnlocked ? l.label : `Reach ${l.minXp.toLocaleString()} XP to unlock ${l.label}`}
-              >
-                {!isUnlocked && <i className="fas fa-lock mr-2 text-xs"></i>}
-                {l.label}
-              </button>
-            );
-          })}
+          {LEAGUES.map((l) => (
+            <button
+              key={l.id}
+              className={`cyber-tab ${activeTab === l.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(l.id)}
+            >
+              {l.label}
+            </button>
+          ))}
         </div>
-      </section>
-
-      {/* LOCKED TIER BANNER */}
-      {LEAGUE_ORDER.indexOf(activeLeague) > userLeagueIdx && (
-        <section className="relative z-10 px-4 mb-8">
-          <div className="max-w-6xl mx-auto glass p-4 text-center text-yellow-500 font-mono text-sm border-l-4 border-yellow-500">
-            <i className="fas fa-lock mr-2"></i>
-            Reach <strong className="text-yellow-400">{LEAGUES[LEAGUE_ORDER.indexOf(activeLeague)].minXp.toLocaleString()} XP</strong> to unlock the <strong className="text-yellow-400">{LEAGUES[LEAGUE_ORDER.indexOf(activeLeague)].label}</strong> tier. You currently have <strong className="text-yellow-400">{userXp.toLocaleString()} XP</strong>.
-          </div>
-        </section>
-      )}
-
-      {/* SEARCH */}
-      <section className="relative z-10 px-4 mb-12">
-         <div className="max-w-md mx-auto glass flex items-center px-4 py-2 rounded-full border-cyan-500/30">
-            <i className="fas fa-search text-cyan-500 mr-3"></i>
-            <input
-              type="text"
-              placeholder="Find operative..."
-              className="bg-transparent border-none outline-none text-white font-mono w-full text-sm placeholder-gray-500"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-         </div>
       </section>
 
       {loading ? (
          <div className="relative z-10 flex justify-center py-20">
             <LoadingSpinner message="Retrieving data..." />
          </div>
-      ) : filtered.length === 0 ? (
+      ) : users.length === 0 ? (
          <div className="relative z-10 flex justify-center py-20 font-mono text-gray-500">
             No operatives found in this sector.
          </div>
@@ -216,11 +177,11 @@ export default function LeaderboardPage() {
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gray-500 to-transparent"></div>
                   <div className="text-gray-400 font-mono text-xs tracking-widest mb-3">02 // RUNNER UP</div>
                   <div className="relative inline-block mb-4">
-                    <div className="w-24 h-24 mx-auto rounded-full bg-gray-800 border-2 border-gray-400 flex items-center justify-center relative z-10 overflow-hidden">
+                    <div className="w-24 h-24 mx-auto rounded-full bg-gray-800 border-2 border-gray-400 flex items-center justify-center relative z-10">
                       {top2.image ? (
-                        <img src={top2.image} alt="2nd" className="w-full h-full object-cover opacity-90" />
+                        <img src={top2.image} alt="2nd" className="w-full h-full rounded-full object-cover opacity-90" />
                       ) : (
-                         <div className="text-gray-400 font-orbitron text-2xl">{initials(top2.name)}</div>
+                        <div className="text-gray-400 font-orbitron text-2xl">{initials(top2.name)}</div>
                       )}
                     </div>
                     <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center border border-gray-400 z-20">
@@ -232,9 +193,7 @@ export default function LeaderboardPage() {
                   <div className="text-3xl font-bold text-gray-300 font-orbitron mb-2">{(top2.xp || 0).toLocaleString()}</div>
                   <div className="flex justify-center gap-4 text-xs font-mono text-gray-400">
                     <span><i className="fas fa-bolt text-yellow-500 mr-1"></i>Lvl {calculateLevel(top2.xp || 0)}</span>
-                    <button className="text-cyan-400 hover:text-cyan-300 transition" onClick={() => handleChallenge(top2)}>
-                        <i className="fas fa-crosshairs mr-1"></i>DUEL
-                    </button>
+                    <span><i className="fas fa-crosshairs text-cyan-400 mr-1"></i>{getAccuracy(top2)}</span>
                   </div>
                 </div>
               )}
@@ -266,9 +225,7 @@ export default function LeaderboardPage() {
                   <div className="text-4xl font-bold text-yellow-400 font-orbitron mb-2 drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]">{(top1.xp || 0).toLocaleString()}</div>
                   <div className="flex justify-center gap-4 text-xs font-mono text-gray-300">
                     <span><i className="fas fa-bolt text-yellow-400 mr-1"></i>Lvl {calculateLevel(top1.xp || 0)}</span>
-                    <button className="text-green-400 hover:text-green-300 transition" onClick={() => handleChallenge(top1)}>
-                        <i className="fas fa-crosshairs mr-1"></i>DUEL
-                    </button>
+                    <span><i className="fas fa-crosshairs text-green-400 mr-1"></i>{getAccuracy(top1)}</span>
                   </div>
                 </div>
               )}
@@ -281,9 +238,9 @@ export default function LeaderboardPage() {
                   <div className="relative inline-block mb-4">
                     <div className="w-24 h-24 mx-auto rounded-full bg-orange-900/30 border-2 border-orange-600 flex items-center justify-center overflow-hidden">
                       {top3.image ? (
-                        <img src={top3.image} alt="3rd" className="w-full h-full object-cover opacity-90" />
+                        <img src={top3.image} alt="3rd" className="w-full h-full rounded-full object-cover opacity-90" />
                       ) : (
-                         <div className="text-orange-400 font-orbitron text-2xl">{initials(top3.name)}</div>
+                        <div className="text-orange-400 font-orbitron text-2xl">{initials(top3.name)}</div>
                       )}
                     </div>
                     <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-orange-800 rounded-full flex items-center justify-center border border-orange-500 z-20">
@@ -295,9 +252,7 @@ export default function LeaderboardPage() {
                   <div className="text-3xl font-bold text-orange-300 font-orbitron mb-2">{(top3.xp || 0).toLocaleString()}</div>
                   <div className="flex justify-center gap-4 text-xs font-mono text-gray-400">
                     <span><i className="fas fa-bolt text-orange-400 mr-1"></i>Lvl {calculateLevel(top3.xp || 0)}</span>
-                    <button className="text-cyan-400 hover:text-cyan-300 transition" onClick={() => handleChallenge(top3)}>
-                        <i className="fas fa-crosshairs mr-1"></i>DUEL
-                    </button>
+                    <span><i className="fas fa-crosshairs text-cyan-400 mr-1"></i>{getAccuracy(top3)}</span>
                   </div>
                 </div>
               )}
@@ -307,15 +262,16 @@ export default function LeaderboardPage() {
           {/* Rankings Table */}
           {rest.length > 0 && (
             <section className="relative z-10 px-4 mb-20">
-              <div className="max-w-6xl mx-auto glass rounded-lg overflow-hidden clip-path-slant">
+              <div className="max-w-6xl mx-auto glass rounded-lg overflow-hidden" style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%)' }}>
                 
                 {/* Table Header */}
                 <div className="hidden md:grid grid-cols-12 gap-4 p-4 border-b border-cyan-500/20 bg-black/30 text-xs font-mono text-cyan-400/70 tracking-widest uppercase">
                   <div className="col-span-1 text-center">Rank</div>
                   <div className="col-span-4">Operative</div>
                   <div className="col-span-2 text-center">Level</div>
-                  <div className="col-span-3 text-center">XP</div>
-                  <div className="col-span-2 text-center">Action</div>
+                  <div className="col-span-2 text-center">XP</div>
+                  <div className="col-span-2 text-center">Accuracy</div>
+                  <div className="col-span-1 text-center">Streak</div>
                 </div>
 
                 {rest.map((user, idx) => {
@@ -346,13 +302,13 @@ export default function LeaderboardPage() {
                           </div>
                         </div>
                         <div className="hidden md:block col-span-2 text-center font-mono text-cyan-400">Lvl {lvl}</div>
-                        <div className="hidden md:block col-span-3 text-center font-orbitron font-bold">{(user.xp || 0).toLocaleString()}</div>
-                        <div className="hidden md:block col-span-2 text-center">
-                           {!isMe && (
-                              <button className="text-cyan-400 hover:text-cyan-300 transition text-xs font-mono uppercase" onClick={() => handleChallenge(user)}>
-                                 <i className="fas fa-crosshairs mr-1"></i>DUEL
-                              </button>
-                           )}
+                        <div className="hidden md:block col-span-2 text-center font-orbitron font-bold">{(user.xp || 0).toLocaleString()}</div>
+                        <div className="hidden md:block col-span-2">
+                           <div className="text-right text-xs font-mono mb-1 text-gray-400">{getAccuracy(user)}</div>
+                           <div className="xp-bar"><div className="xp-fill" style={{ width: `${getAccuracyNumber(user)}%` }}></div></div>
+                        </div>
+                        <div className="hidden md:block col-span-1 text-center">
+                           <span className="text-orange-400 font-mono text-sm"><i className="fas fa-fire mr-1"></i>{getStreak(user)}</span>
                         </div>
                       </div>
                    );
@@ -360,6 +316,19 @@ export default function LeaderboardPage() {
               </div>
             </section>
           )}
+
+          {/* Pagination */}
+          <section className="relative z-10 px-4 pb-20">
+              <div className="max-w-6xl mx-auto flex justify-center items-center gap-4">
+                  <button className="px-6 py-2 glass text-cyan-400 font-mono text-xs hover:border-cyan-400 transition clip-path-slant" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 70%, 90% 100%, 0 100%)' }}>
+                      <i className="fas fa-chevron-left mr-2"></i>PREV
+                  </button>
+                  <span className="text-gray-400 font-mono text-sm">PAGE 01 / 99</span>
+                  <button className="px-6 py-2 glass text-cyan-400 font-mono text-xs hover:border-cyan-400 transition" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 70%, 90% 100%, 0 100%)' }}>
+                      NEXT<i className="fas fa-chevron-right ml-2"></i>
+                  </button>
+              </div>
+          </section>
         </>
       )}
     </div>
