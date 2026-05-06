@@ -1,18 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../components/LoadingSpinner';
-import StreakIcon from '../components/StreakIcon';
-import { 
-  Trophy, Target, Zap, Clock, TrendingUp, Shield, 
-  BarChart3, Calendar, ChevronRight, Edit2, Save, X, 
-  Mail, LogOut, Settings, Award, Check, AlertCircle, Camera, User, MessageSquare, Send, Bell, Users, FileText
-} from 'lucide-react';
-import { calculateLevel } from '@/lib/game';
+import './Profile.css';
 
 const timeAgo = (date) => {
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -43,6 +37,20 @@ const AVATARS = [
   { id: 'neo_4', url: '/avatars/neo_4.jpg', name: 'Zenith Zero' },
 ];
 
+function calculateLevel(xp = 0) {
+  return Math.floor(xp / 1000) + 1;
+}
+
+function getCategoryColor(cat) {
+  switch(cat) {
+    case 'phishing': return '#bc13fe'; // neon pink
+    case 'smishing': return '#ec4899';
+    case 'finance': return '#f59e0b';
+    case 'security': return '#0aff00'; // neon green
+    default: return '#00f3ff'; // neon cyan
+  }
+}
+
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
   const [isEditing, setIsEditing] = useState(false);
@@ -57,6 +65,9 @@ export default function ProfilePage() {
   const [newTicket, setNewTicket] = useState({ subject: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userXp, setUserXp] = useState(0);
+  const [animatedXp, setAnimatedXp] = useState(0);
+
+  const canvasRef = useRef(null);
 
   useEffect(() => {
     if (session?.user?.username) {
@@ -77,6 +88,84 @@ export default function ProfilePage() {
     };
   }, [session]);
 
+  // Animated XP Counter
+  useEffect(() => {
+    if (userXp === 0) return;
+    let current = animatedXp;
+    const duration = 1500;
+    const range = userXp - animatedXp;
+    if (range <= 0) {
+       setAnimatedXp(userXp);
+       return;
+    }
+    const stepTime = 30;
+    const increment = Math.max(1, Math.ceil(range / (duration / stepTime)));
+    
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= userXp) {
+        setAnimatedXp(userXp);
+        clearInterval(timer);
+      } else {
+        setAnimatedXp(current);
+      }
+    }, stepTime);
+
+    return () => clearInterval(timer);
+  }, [userXp]);
+
+  // Background Particles
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    let particles = [];
+    let animationFrameId;
+
+    const resize = () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    for(let i=0; i<100; i++) particles.push({
+      x: Math.random()*w, y: Math.random()*h,
+      vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4,
+      s: Math.random()*2
+    });
+
+    const animateBg = () => {
+      ctx.clearRect(0,0,w,h);
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if(p.x<0||p.x>w) p.vx*=-1;
+        if(p.y<0||p.y>h) p.vy*=-1;
+        ctx.fillStyle = 'rgba(0,243,255,0.25)';
+        ctx.fillRect(p.x,p.y,p.s,p.s);
+      });
+      for(let i=0;i<particles.length;i++) {
+        for(let j=i+1;j<particles.length;j++) {
+          let dx = particles[i].x-particles[j].x, dy = particles[i].y-particles[j].y;
+          let dist = Math.sqrt(dx*dx+dy*dy);
+          if(dist<120) {
+            ctx.strokeStyle = `rgba(0,243,255,${0.05*(1-dist/120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y); ctx.stroke();
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(animateBg);
+    };
+    animateBg();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
   const level = calculateLevel(userXp);
 
   const fetchTickets = async () => {
@@ -86,9 +175,7 @@ export default function ProfilePage() {
         const data = await res.json();
         setTickets(data);
       }
-    } catch (err) {
-      console.error("Failed to fetch tickets");
-    }
+    } catch (err) {}
   };
 
   const fetchNotifications = async () => {
@@ -98,9 +185,7 @@ export default function ProfilePage() {
         const data = await res.json();
         setNotifications(data);
       }
-    } catch (err) {
-      console.error("Failed to fetch notifications");
-    }
+    } catch (err) {}
   };
 
   const markNotificationRead = async (id = null) => {
@@ -108,10 +193,7 @@ export default function ProfilePage() {
       await fetch('/api/notifications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          notificationId: id, 
-          action: id ? 'read' : 'read_all' 
-        }),
+        body: JSON.stringify({ notificationId: id, action: id ? 'read' : 'read_all' }),
       });
       fetchNotifications();
     } catch (err) {}
@@ -131,6 +213,7 @@ export default function ProfilePage() {
         setNewTicket({ subject: '', message: '' });
         fetchTickets();
         setUpdateStatus({ type: 'success', message: 'Mission query sent to Command!' });
+        setTimeout(() => setUpdateStatus({ type: '', message: '' }), 3000);
       }
     } catch (err) {
       setUpdateStatus({ type: 'error', message: 'Broadcast failed.' });
@@ -138,35 +221,6 @@ export default function ProfilePage() {
       setIsSubmitting(false);
     }
   };
-
-  if (status === 'loading') {
-    return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <LoadingSpinner message="Analyzing your performance..." />
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <main className="container" style={{ textAlign: 'center', marginTop: '10rem' }}>
-                <h1 style={{ fontSize: '2.5rem', fontWeight: 900 }}>Access Denied</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Please sign in to view your analytics.</p>
-      </main>
-    );
-  }
-
-  const { user } = session;
-  const performance = user.performance || {};
-  const history = [...(user.history || [])].reverse();
-
-  let totalAttempts = 0;
-  let totalSuccesses = 0;
-  CATEGORIES.forEach(cat => {
-    totalAttempts += performance[cat]?.attempts || 0;
-    totalSuccesses += performance[cat]?.successes || 0;
-  });
-  const accuracy = totalAttempts > 0 ? Math.round((totalSuccesses / totalAttempts) * 100) : 0;
 
   const handleUsernameUpdate = async (e) => {
     e.preventDefault();
@@ -183,10 +237,7 @@ export default function ProfilePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      await update({
-        ...session,
-        user: { ...session.user, username: data.username }
-      });
+      await update({ ...session, user: { ...session.user, username: data.username } });
 
       setUpdateStatus({ type: 'success', message: 'Handle updated!' });
       setTimeout(() => {
@@ -213,15 +264,7 @@ export default function ProfilePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      // IMPORTANT: Update session with the NEW image URL/Base64
-      await update({
-        ...session,
-        user: { 
-          ...session.user, 
-          image: data.image || avatarUrl 
-        }
-      });
-
+      await update({ ...session, user: { ...session.user, image: data.image || avatarUrl } });
       setIsAvatarModalOpen(false);
       router.refresh();
     } catch (err) {
@@ -234,503 +277,407 @@ export default function ProfilePage() {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
     if (file.size > 2 * 1024 * 1024) {
       alert("File is too large. Maximum size is 2MB.");
       return;
     }
-
     const reader = new FileReader();
-    reader.onloadend = () => {
-      handleAvatarUpdate(reader.result);
-    };
+    reader.onloadend = () => handleAvatarUpdate(reader.result);
     reader.readAsDataURL(file);
   };
 
+  if (status === 'loading') {
+    return (
+      <div className="profile-page flex items-center justify-center">
+        <LoadingSpinner message="Establishing Neural Link..." />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <main className="profile-page flex items-center justify-center text-center">
+        <div>
+          <h1 className="text-4xl font-orbitron text-red-500 font-bold mb-4 drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]">ACCESS DENIED</h1>
+          <p className="text-gray-400 font-mono">Please sign in to view your operative profile.</p>
+        </div>
+      </main>
+    );
+  }
+
+  const { user } = session;
+  const performance = user.performance || {};
+  const history = [...(user.history || [])].reverse();
+
+  let totalAttempts = 0;
+  let totalSuccesses = 0;
+  CATEGORIES.forEach(cat => {
+    totalAttempts += performance[cat]?.attempts || 0;
+    totalSuccesses += performance[cat]?.successes || 0;
+  });
+  const accuracy = totalAttempts > 0 ? Math.round((totalSuccesses / totalAttempts) * 100) : 0;
+  const circumference = 2 * Math.PI * 85;
+  const offset = circumference - (accuracy / 100) * circumference;
+
   return (
-    <main className="container" style={{ position: 'relative', zIndex: 1, minHeight: '100vh', paddingBottom: '6rem' }}>
+    <main className="profile-page relative">
+      <canvas ref={canvasRef} className="bg-canvas"></canvas>
+      <div className="scanlines"></div>
 
-      <div style={{ marginTop: '3rem' }}>
-        
-        {/* HERO SECTION */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', marginBottom: '3rem' }}>
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="glass-card" 
-            style={{ 
-              flex: '1 1 500px', 
-              padding: '2rem', 
-              display: 'flex', 
-              flexWrap: 'wrap',
-              gap: '2.5rem', 
-              alignItems: 'center', 
-              position: 'relative', 
-              overflow: 'hidden',
-              justifyContent: 'center'
-            }}
-          >
-            <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '300px', height: '300px', background: 'var(--accent-primary)', filter: 'blur(100px)', opacity: 0.05, zIndex: 0 }} />
-
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ width: '120px', height: '120px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '4px solid rgba(255,255,255,0.1)', boxShadow: '0 0 40px rgba(124, 58, 237, 0.2)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {user.image ? (
-                  <img src={user.image} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ fontSize: '3.5rem', fontWeight: 900, color: 'var(--accent-primary)' }}>
-                    {user.name?.charAt(0) || 'U'}
-                  </div>
-                )}
-              </div>
-              <motion.button 
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsAvatarModalOpen(true)}
-                style={{ position: 'absolute', bottom: 0, right: 0, width: '36px', height: '36px', borderRadius: '50%', background: 'var(--accent-primary)', border: '2px solid var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
-              >
-                <Camera size={16} />
-              </motion.button>
-            </div>
-
-            <div style={{ zIndex: 1, flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-                <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0 }}>{user.name || 'Agent'}</h1>
-                <span style={{ fontSize: '0.7rem', fontWeight: 800, padding: '4px 12px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', borderRadius: '1rem', border: '1px solid rgba(16, 185, 129, 0.2)', textTransform: 'uppercase' }}>
-                  {user.league || 'Bronze'} League
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <p style={{ color: 'var(--text-secondary)', fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>@{user.username || 'user'}</p>
-                <button onClick={() => setIsEditing(true)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <Edit2 size={12} />
-                </button>
-              </div>
-              
-              <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Award size={18} color="var(--accent-primary)" />
-                  <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>{user.badges?.length || 0} Badges</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <TrendingUp size={18} color="var(--accent-secondary)" />
-                  <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>Level {Math.floor((user.xp || 0) / 1000) + 1}</span>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-               <button onClick={() => signOut()} style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                 <LogOut size={14} /> Sign Out
-               </button>
-            </div>
-          </motion.div>
-
-          {/* Quick Stats Summary */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: '0 0 280px' }}>
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="glass-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-              <p style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Total XP</p>
-              <h3 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--accent-primary)', margin: 0 }}>{user.xp || 0}</h3>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-              <p style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Current Streak</p>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                <h3 style={{ fontSize: '2rem', fontWeight: 900, color: '#f59e0b', margin: 0 }}>{user.streak || 0}</h3>
-                <StreakIcon size={40} />
-              </div>
-            </motion.div>
+      <div className="min-h-screen flex items-start justify-center p-4 relative z-10 pt-20 pb-20">
+        <div className="w-full max-w-6xl">
+          
+          {/* Header */}
+          <div className="text-center mb-10">
+            <h1 className="font-orbitron text-4xl md:text-5xl font-bold tracking-widest uppercase text-white mb-2 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">Operative Profile</h1>
+            <p className="text-cyan-400 font-mono text-sm tracking-[0.3em]">IDENTITY_VERIFIED // ENCRYPTED_CONNECTION</p>
           </div>
-        </div>
 
-        {/* ANALYTICS GRID */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '400px' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '2.5rem', alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Target size={22} color="var(--accent-primary)" /> Skill Matrix
-            </h3>
-            <SkillRadar performance={performance} />
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <BarChart3 size={22} color="var(--accent-secondary)" /> Category Proficiency
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem', flex: 1, justifyContent: 'center' }}>
-              {CATEGORIES.map(cat => {
-                const stats = performance[cat] || {};
-                const xp = stats.xp || 0;
-                const successes = stats.successes || 0;
-                const attempts = stats.attempts || 0;
-                const catAccuracy = attempts > 0 ? Math.round((successes / attempts) * 100) : 0;
-                const percent = Math.min(100, (xp / 2000) * 100);
-
-                return (
-                  <div key={cat}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
-                      <span style={{ textTransform: 'capitalize', fontWeight: 800, fontSize: '0.9rem' }}>{cat}</span>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>{catAccuracy}% Accuracy</span>
-                    </div>
-                    <div style={{ height: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '5px', overflow: 'hidden' }}>
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${percent}%` }} transition={{ duration: 1.2, delay: 0.3 }} style={{ height: '100%', background: getCategoryColor(cat), boxShadow: `0 0 10px ${getCategoryColor(cat)}40` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }} className="flex-mobile-column">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card" style={{ padding: '2rem' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Clock size={20} color="var(--accent-primary)" /> Mission Log
-            </h3>
-            {history.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {history.slice(0, 6).map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', borderRadius: 'var(--radius-lg)', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)', transition: 'all 0.2s ease' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: item.success ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${item.success ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}` }}>
-                      {item.success ? <Shield size={18} color="var(--accent-success)" /> : <AlertCircle size={18} color="var(--accent-danger)" />}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
-                        <p style={{ fontWeight: 800, margin: 0, fontSize: '0.9rem' }}>{item.type} {item.success ? 'Neutralized' : 'Breached'}</p>
-                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>{timeAgo(item.timestamp)}</p>
-                      </div>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 600 }}>{item.xp > 0 ? `Confirmed +${item.xp} XP gain` : 'Standard drill completed'}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-muted)' }}>
-                <Calendar size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
-                <p style={{ fontWeight: 700 }}>No mission logs found.</p>
-              </div>
-            )}
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2.5rem', alignSelf: 'flex-start' }}>Overall Accuracy</h3>
-            <div style={{ position: 'relative', width: '220px', height: '220px' }}>
-              <svg width="220" height="220" viewBox="0 0 220 220">
-                <circle cx="110" cy="110" r="90" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="15" />
-                <motion.circle cx="110" cy="110" r="90" fill="none" stroke="var(--accent-success)" strokeWidth="15" strokeDasharray="565.5" initial={{ strokeDashoffset: 565.5 }} animate={{ strokeDashoffset: 565.5 - (565.5 * accuracy / 100) }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }} strokeLinecap="round" transform="rotate(-90 110 110)" style={{ filter: 'drop-shadow(0 0 8px var(--accent-success))' }} />
-              </svg>
-              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-                <span style={{ fontSize: '3.5rem', fontWeight: 900, lineHeight: 1 }}>{accuracy}%</span>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Precision</p>
-              </div>
-            </div>
-            <p style={{ marginTop: '2rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, maxWidth: '200px' }}>Based on {totalAttempts} total decisions.</p>
-          </motion.div>
-        </div>
-
-        {/* --- REDACTED DOSSIER (NARRATIVE) --- */}
-        <div style={{ marginTop: '4rem' }}>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '2.5rem', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, right: 0, padding: '1rem', background: 'var(--accent-danger)', color: 'white', fontWeight: 900, fontSize: '0.7rem', letterSpacing: '2px', transform: 'rotate(45deg) translate(25px, -15px)', width: '150px', textAlign: 'center' }}>CLASSIFIED</div>
+          {/* Main Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <FileText size={22} color="var(--accent-danger)" /> Personal Dossier: Case #{(user.username || 'AGENT').toUpperCase()}
-            </h3>
+            {/* Left Col: Profile & Stats */}
+            <div className="lg:col-span-4 space-y-6">
+              
+              {/* Profile Card */}
+              <div className="glass-card rounded-2xl p-8 text-center relative">
+                <button onClick={() => signOut()} className="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition" title="Disconnect">
+                  <i className="fas fa-power-off"></i>
+                </button>
+                {/* Avatar */}
+                <div className="avatar-container mx-auto mb-6" onClick={() => setIsAvatarModalOpen(true)}>
+                  <div className="avatar-border"></div>
+                  {user.image ? (
+                    <img src={user.image} alt="Profile" />
+                  ) : (
+                    <div className="avatar-placeholder text-4xl font-orbitron text-cyan-400">{user.name?.charAt(0) || 'U'}</div>
+                  )}
+                  <div className="scan-beam"></div>
+                  <div className="avatar-overlay">
+                    <i className="fas fa-camera text-white text-2xl"></i>
+                  </div>
+                </div>
+                
+                {/* Name & Username */}
+                <h2 className="text-2xl font-bold text-white font-orbitron mb-1">{user.name || 'Unknown Agent'}</h2>
+                <div className="flex items-center justify-center gap-2 mb-6">
+                  <p className="text-cyan-400 font-mono text-sm">@{user.username || 'user'}</p>
+                  <button onClick={() => setIsEditing(true)} className="text-gray-500 hover:text-cyan-400 transition"><i className="fas fa-edit text-xs"></i></button>
+                </div>
+                
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                    <div className="text-2xl font-bold text-cyan-400 font-orbitron">{animatedXp.toLocaleString()}</div>
+                    <div className="text-xs text-gray-400 font-mono uppercase tracking-wider">Total XP</div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                    <div className="text-2xl font-bold text-pink-400 font-orbitron">Lvl {level}</div>
+                    <div className="text-xs text-gray-400 font-mono uppercase tracking-wider">Level</div>
+                  </div>
+                </div>
+              </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontFamily: 'monospace', fontSize: '1rem', lineHeight: 1.8 }}>
-              <div>
-                <span style={{ color: 'var(--accent-primary)', fontWeight: 800 }}>[ORIGIN]:</span> 
-                <span style={{ marginLeft: '1rem' }}>
-                  The subject was recruited after the {level >= 5 ? 'Global Data Breach of 2024' : '██████ ████ ██████ ██ ████'} where they showed exceptional neural resilience.
-                </span>
+              {/* Overall Accuracy */}
+              <div className="glass-card rounded-2xl p-6 flex flex-col items-center justify-center">
+                <h3 className="text-lg font-bold text-white font-orbitron mb-4 w-full text-left">
+                  <i className="fas fa-crosshairs text-green-400 mr-2"></i>Overall Accuracy
+                </h3>
+                <div className="accuracy-ring">
+                  <svg width="200" height="200" viewBox="0 0 200 200">
+                    <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
+                    <motion.circle 
+                      cx="100" cy="100" r="85" fill="none" stroke="var(--neon-green)" strokeWidth="12" strokeDasharray="534" 
+                      initial={{ strokeDashoffset: 534 }}
+                      animate={{ strokeDashoffset: offset }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      strokeLinecap="round" 
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-4xl font-bold text-white font-orbitron">{accuracy}%</span>
+                    <span className="text-xs text-gray-400 font-mono mt-1">PRECISION</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 font-mono mt-4 text-center">Based on {totalAttempts} data points</p>
+              </div>
+            </div>
+
+            {/* Middle Col: Skill Matrix & Categories */}
+            <div className="lg:col-span-5 space-y-6">
+              
+              {/* Skill Matrix */}
+              <div className="glass-card rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-white font-orbitron mb-4">
+                  <i className="fas fa-radar text-cyan-400 mr-2"></i>Skill Matrix
+                </h3>
+                <div className="flex justify-center my-4">
+                  <SkillRadar performance={performance} />
+                </div>
+              </div>
+
+              {/* Category Proficiency */}
+              <div className="glass-card rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-white font-orbitron mb-6">
+                  <i className="fas fa-chart-bar text-pink-400 mr-2"></i>Category Proficiency
+                </h3>
+                <div className="space-y-5">
+                  {CATEGORIES.map((cat, idx) => {
+                    const stats = performance[cat] || {};
+                    const xp = stats.xp || 0;
+                    const catAcc = stats.attempts > 0 ? Math.round((stats.successes / stats.attempts) * 100) : 0;
+                    const percent = Math.min(100, (xp / 2000) * 100);
+                    const color = getCategoryColor(cat);
+
+                    return (
+                      <div key={idx}>
+                        <div className="flex justify-between mb-2">
+                          <span className="text-sm font-bold text-gray-300 font-mono uppercase tracking-wider">{cat}</span>
+                          <span className="text-xs font-mono" style={{ color }}>{catAcc}% Acc</span>
+                        </div>
+                        <div className="skill-track">
+                          <motion.div 
+                            className="skill-fill" 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percent}%` }}
+                            transition={{ duration: 1.5, delay: 0.2 }}
+                            style={{ background: `linear-gradient(90deg, ${color}, ${color}80)` }} 
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Col: Command Support & Alerts */}
+            <div className="lg:col-span-3 space-y-6">
+              
+              {/* Support Form */}
+              <div className="glass-card rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-white font-orbitron mb-4">
+                  <i className="fas fa-headset text-cyan-400 mr-2"></i>Command Support
+                </h3>
+                <p className="text-xs text-gray-400 font-mono mb-6 leading-relaxed">
+                  Need backup? Submit a mission query to Command Center.
+                </p>
+                
+                <form onSubmit={handleSubmitTicket} className="space-y-4">
+                  {updateStatus.message && (
+                    <div className={`p-2 text-xs font-mono rounded ${updateStatus.type === 'error' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                      {updateStatus.message}
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs font-mono text-cyan-400 uppercase tracking-wider mb-2">Subject</label>
+                    <input type="text" placeholder="Mission ID / Issue" value={newTicket.subject} onChange={e => setNewTicket({...newTicket, subject: e.target.value})} className="cyber-input text-sm" required />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-mono text-cyan-400 uppercase tracking-wider mb-2">Details</label>
+                    <textarea rows="4" placeholder="Describe anomaly..." value={newTicket.message} onChange={e => setNewTicket({...newTicket, message: e.target.value})} className="cyber-input text-sm resize-none" required></textarea>
+                  </div>
+                  <button type="submit" disabled={isSubmitting} className="cyber-btn w-full py-3 rounded text-sm uppercase flex items-center justify-center">
+                    {isSubmitting ? <><i className="fas fa-spinner fa-spin mr-2"></i>ENCRYPTING...</> : <><i className="fas fa-paper-plane mr-2"></i>Transmit</>}
+                  </button>
+                </form>
               </div>
               
-              <div>
-                <span style={{ color: 'var(--accent-primary)', fontWeight: 800 }}>[CLEARANCE]:</span> 
-                <span style={{ marginLeft: '1rem' }}>
-                  {level >= 10 ? 'Level 2 - Tactical Operative' : '██████ ████ - █████████ █████████'}
-                </span>
-              </div>
-
-              <div>
-                <span style={{ color: 'var(--accent-primary)', fontWeight: 800 }}>[MISSION]:</span> 
-                <span style={{ marginLeft: '1rem' }}>
-                  Maintain system integrity across all sectors and neutralize the {level >= 20 ? 'Void Entity' : '████ ██████'}. 
-                  {level < 20 && <span style={{ color: 'var(--accent-danger)', fontSize: '0.7rem', fontWeight: 900, marginLeft: '1rem' }}>[REDACTED: LEVEL 20 REQUIRED]</span>}
-                </span>
-              </div>
-
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem', marginTop: '1rem' }}>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                  "Every simulation completed is another layer of truth unmasked." — The Architect
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* NETWORK & SOCIAL SECTION */}
-        <div style={{ marginTop: '4rem' }}>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card" style={{ padding: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <Users size={22} color="var(--accent-secondary)" /> Operative Network
-              </h3>
-              <Link href="/leaderboard" className="btn-secondary" style={{ fontSize: '0.75rem', fontWeight: 800, padding: '0.5rem 1rem' }}>FIND OPERATIVES</Link>
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-              {/* Mock Friends for now, could be fetched from DB in future */}
-              {[
-                { name: 'Sentinel_01', username: 'sentinel', xp: 4500, league: 'Hacker-Tier', status: 'online' },
-                { name: 'Data_Ghost', username: 'ghost_x', xp: 2800, league: 'Gold', status: 'offline' }
-              ].map((friend, idx) => (
-                <div key={idx} style={{ padding: '1.25rem', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: `2px solid ${friend.status === 'online' ? 'var(--accent-success)' : 'var(--glass-border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 900 }}>
-                    {friend.name.charAt(0)}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800 }}>{friend.name}</h4>
-                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>@{friend.username}</p>
-                  </div>
-                  <Link 
-                    href={`/duels?opponentId=${friend.username}&opponentName=${friend.name}`} 
-                    className="btn-primary" 
-                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.65rem', background: 'var(--accent-danger)' }}
-                  >
-                    CHALLENGE
-                  </Link>
+              {/* Status Feed / Alerts */}
+              <div className="glass-card rounded-2xl p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-sm font-bold text-white font-orbitron uppercase tracking-wider">
+                    <i className="fas fa-satellite-dish text-green-400 mr-2"></i>Command Alerts
+                  </h3>
+                  {notifications.some(n => !n.read) && (
+                    <button onClick={() => markNotificationRead()} className="text-[10px] text-cyan-400 hover:text-white font-mono">CLEAR ALL</button>
+                  )}
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* NOTIFICATIONS SECTION */}
-        <div style={{ marginTop: '4rem' }}>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card" style={{ padding: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <Bell size={22} color="var(--accent-primary)" /> Command Alerts
-              </h3>
-              {notifications.some(n => !n.read) && (
-                <button onClick={() => markNotificationRead()} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase' }}>Mark all as read</button>
-              )}
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '300px', overflowY: 'auto' }} className="no-scrollbar">
-              {notifications.length > 0 ? notifications.map((n, idx) => (
-                <div 
-                  key={idx} 
-                  onClick={() => !n.read && markNotificationRead(n._id)}
-                  style={{ 
-                    padding: '1rem 1.5rem', 
-                    borderRadius: '12px', 
-                    background: n.read ? 'rgba(255,255,255,0.02)' : 'rgba(124, 58, 237, 0.05)', 
-                    border: `1px solid ${n.read ? 'var(--glass-border)' : 'rgba(124, 58, 237, 0.2)'}`,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    cursor: n.read ? 'default' : 'pointer'
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-                      <p style={{ margin: 0, fontWeight: 800, fontSize: '0.9rem', color: n.read ? 'var(--text-primary)' : 'white' }}>{n.title}</p>
-                      {!n.read && <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-primary)' }} />}
+                
+                <div className="space-y-3 max-h-[250px] overflow-y-auto no-scrollbar">
+                  {notifications.length > 0 ? notifications.map((n, idx) => (
+                    <div 
+                      key={idx} 
+                      onClick={() => !n.read && markNotificationRead(n._id)}
+                      className={`p-3 rounded-lg border text-sm transition ${n.read ? 'bg-white/5 border-white/10' : 'bg-cyan-500/10 border-cyan-500/30 cursor-pointer hover:bg-cyan-500/20'}`}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className={`font-mono font-bold ${n.read ? 'text-gray-300' : 'text-cyan-400'}`}>{n.title}</span>
+                        {!n.read && <div className="w-2 h-2 rounded-full bg-cyan-400"></div>}
+                      </div>
+                      <p className="text-xs text-gray-400 mb-2">{n.message}</p>
+                      <div className="text-[10px] text-gray-500 font-mono text-right">{timeAgo(n.createdAt)}</div>
                     </div>
-                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{n.message}</p>
-                  </div>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>{timeAgo(n.createdAt)}</span>
-                </div>
-              )) : (
-                <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-muted)' }}>
-                  <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700 }}>Systems clear. No new alerts.</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* SUPPORT SECTION */}
-        <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '2rem' }} className="flex-mobile-column">
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="glass-card" style={{ padding: '2.5rem' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Shield size={20} color="var(--accent-primary)" /> Command Support
-            </h3>
-            <form onSubmit={handleSubmitTicket} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Subject</label>
-                <input type="text" value={newTicket.subject} onChange={(e) => setNewTicket(prev => ({ ...prev, subject: e.target.value }))} placeholder="Brief description of the issue" style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'white', outline: 'none' }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Mission Query</label>
-                <textarea value={newTicket.message} onChange={(e) => setNewTicket(prev => ({ ...prev, message: e.target.value }))} placeholder="Describe your query in detail..." rows={4} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '12px', color: 'white', outline: 'none', resize: 'none' }} />
-              </div>
-              <button type="submit" disabled={isSubmitting} className="btn-primary" style={{ width: '100%', padding: '1rem', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
-                <Send size={18} /> {isSubmitting ? 'TRANSMITTING...' : 'TRANSMIT QUERY'}
-              </button>
-            </form>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className="glass-card" style={{ padding: '2.5rem' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Mail size={20} color="var(--accent-secondary)" /> Mission Comms
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '500px', overflowY: 'auto' }} className="no-scrollbar">
-              {tickets.length > 0 ? tickets.map((ticket, idx) => (
-                <div key={idx} style={{ padding: '1.5rem', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                    <div>
-                      <span style={{ fontSize: '0.65rem', fontWeight: 900, padding: '2px 8px', borderRadius: '4px', background: ticket.status === 'pending' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: ticket.status === 'pending' ? '#f59e0b' : '#10b981', border: `1px solid ${ticket.status === 'pending' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`, textTransform: 'uppercase', marginBottom: '0.5rem', display: 'inline-block' }}>
-                        {ticket.status}
-                      </span>
-                      <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>{ticket.subject}</h4>
-                    </div>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{timeAgo(ticket.createdAt)}</span>
-                  </div>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.6 }}>{ticket.message}</p>
-                  
-                  {ticket.replies && ticket.replies.length > 0 && (
-                    <div style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(124, 58, 237, 0.05)', borderLeft: '3px solid var(--accent-primary)' }}>
-                      {ticket.replies.map((reply, ridx) => (
-                        <div key={ridx} style={{ marginBottom: ridx < ticket.replies.length - 1 ? '1rem' : 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                            <div style={{ padding: '4px', background: 'var(--accent-primary)', borderRadius: '4px' }}>
-                              <Shield size={12} color="white" />
-                            </div>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--accent-primary)' }}>COMMAND REPLY</span>
-                          </div>
-                          <p style={{ fontSize: '0.85rem', margin: 0, fontWeight: 600 }}>{reply.message}</p>
-                        </div>
-                      ))}
+                  )) : (
+                    <div className="text-center py-6 text-gray-500 font-mono text-xs">
+                      <i className="fas fa-shield-alt text-2xl mb-2 opacity-50 block"></i>
+                      SYSTEMS NORMAL.<br/>NO ALERTS.
                     </div>
                   )}
                 </div>
-              )) : (
-                <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
-                  <MessageSquare size={48} style={{ opacity: 0.1, marginBottom: '1rem' }} />
-                  <p style={{ fontWeight: 700 }}>No active mission queries.</p>
-                </div>
-              )}
+              </div>
             </div>
-          </motion.div>
+          </div>
+
+          {/* Bottom Row: Mission Log & Comms */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            {/* Mission Log */}
+            <div className="glass-card rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white font-orbitron mb-4">
+                <i className="fas fa-history text-cyan-400 mr-2"></i>Mission Log
+              </h3>
+              <div className="space-y-3 max-h-[300px] overflow-y-auto no-scrollbar pr-2">
+                {history.length > 0 ? history.slice(0, 10).map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/10">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${item.success ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                      <i className={`fas ${item.success ? 'fa-shield-check' : 'fa-skull'}`}></i>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center mb-1">
+                        <p className="font-bold text-sm font-orbitron">{item.type} {item.success ? 'Secured' : 'Breached'}</p>
+                        <p className="text-xs text-gray-500 font-mono">{timeAgo(item.timestamp)}</p>
+                      </div>
+                      <p className="text-xs text-gray-400 font-mono">{item.xp > 0 ? `Reward: +${item.xp} XP` : 'Standard Drill'}</p>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="text-center py-8 text-gray-500 font-mono">No missions recorded.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Mission Comms (Tickets) */}
+            <div className="glass-card rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white font-orbitron mb-4">
+                <i className="fas fa-envelope-open-text text-pink-400 mr-2"></i>Mission Comms
+              </h3>
+              <div className="space-y-3 max-h-[300px] overflow-y-auto no-scrollbar pr-2">
+                {tickets.length > 0 ? tickets.map((ticket, idx) => (
+                  <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded font-mono uppercase ${ticket.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}`}>
+                          {ticket.status}
+                        </span>
+                        <h4 className="font-bold text-sm mt-2">{ticket.subject}</h4>
+                      </div>
+                      <span className="text-xs text-gray-500 font-mono">{timeAgo(ticket.createdAt)}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mb-3">{ticket.message}</p>
+                    
+                    {ticket.replies && ticket.replies.length > 0 && (
+                      <div className="p-3 rounded-lg bg-cyan-500/5 border-l-2 border-cyan-400">
+                        {ticket.replies.map((reply, ridx) => (
+                          <div key={ridx} className="mb-2 last:mb-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <i className="fas fa-shield-alt text-cyan-400 text-[10px]"></i>
+                              <span className="text-[10px] font-bold text-cyan-400 font-mono">COMMAND</span>
+                            </div>
+                            <p className="text-xs text-gray-300">{reply.message}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )) : (
+                  <div className="text-center py-8 text-gray-500 font-mono">No active comms channel.</div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center mt-12 font-mono text-xs text-gray-600 tracking-[0.2em]">
+            ENCRYPTED Transmission v4.2.1 // ID: 0x{user._id ? user._id.slice(-6).toUpperCase() : 'PH4N70M'}
+          </div>
         </div>
       </div>
 
-      {/* AVATAR SELECTION MODAL */}
+      {/* Avatar Modal */}
       <AnimatePresence>
         {isAvatarModalOpen && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '2rem 1rem', overflowY: 'auto' }}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAvatarModalOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(5, 7, 10, 0.9)', backdropFilter: 'blur(10px)', zIndex: -1 }} />
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} 
-              className="glass-card" style={{ position: 'relative', width: '100%', maxWidth: '600px', padding: '3rem 2.5rem', zIndex: 1001, margin: 'auto' }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#0a0a10] border border-cyan-500 p-8 rounded-2xl max-w-lg w-full text-center shadow-[0_0_40px_rgba(0,243,255,0.1)]"
             >
-              <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.5rem' }}>Select Identity</h2>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.9rem' }}>Choose your visual representation in the network.</p>
+              <h2 className="text-2xl font-bold text-white font-orbitron mb-2">Select Identity</h2>
+              <p className="text-gray-400 text-sm font-mono mb-6">Choose your visual representation</p>
               
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => document.getElementById('avatar-upload').click()}
-                  style={{ 
-                    cursor: 'pointer', 
-                    borderRadius: '16px', 
-                    overflow: 'hidden', 
-                    border: '2px dashed var(--glass-border)',
-                    aspectRatio: '1/1',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    background: 'rgba(255,255,255,0.02)',
-                    position: 'relative'
-                  }}
-                >
-                  <Camera size={24} color="var(--accent-primary)" />
-                  <span style={{ fontSize: '0.6rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Upload Custom</span>
-                  <input 
-                    type="file" 
-                    id="avatar-upload" 
-                    hidden 
-                    accept="image/*" 
-                    onChange={handleFileUpload} 
-                  />
-                </motion.div>
+              <div className="grid grid-cols-3 gap-3 mb-6">
                 {AVATARS.map(avatar => (
-                  <motion.div
+                  <img 
                     key={avatar.id}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    src={avatar.url} 
                     onClick={() => handleAvatarUpdate(avatar.url)}
-                    style={{ 
-                      cursor: 'pointer', 
-                      borderRadius: '16px', 
-                      overflow: 'hidden', 
-                      border: user.image === avatar.url ? '3px solid var(--accent-primary)' : '2px solid var(--glass-border)',
-                      aspectRatio: '1/1',
-                      position: 'relative'
-                    }}
-                  >
-                    <img src={avatar.url} alt={avatar.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', display: 'flex', alignItems: 'flex-end', padding: '0.5rem', opacity: user.image === avatar.url ? 1 : 0.6 }}>
-                      <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'white', textTransform: 'uppercase' }}>{avatar.name}</span>
-                    </div>
-                    {user.image === avatar.url && (
-                      <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: 'var(--accent-primary)', borderRadius: '50%', padding: '2px', color: 'white' }}>
-                        <Check size={12} />
-                      </div>
-                    )}
-                  </motion.div>
+                    className={`w-full aspect-square rounded-xl cursor-pointer object-cover border transition ${user.image === avatar.url ? 'border-cyan-400 shadow-[0_0_15px_rgba(0,243,255,0.4)]' : 'border-cyan-500/30 hover:border-cyan-400 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)]'}`} 
+                    alt={avatar.name} 
+                  />
                 ))}
               </div>
-
-              <button onClick={() => setIsAvatarModalOpen(false)} className="btn-secondary" style={{ width: '100%' }}>Cancel</button>
+              
+              <div className="mb-6">
+                <label className="cyber-btn px-6 py-3 rounded inline-block cursor-pointer text-sm font-mono text-center w-full">
+                  <i className="fas fa-upload mr-2"></i>Upload Custom
+                  <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                </label>
+              </div>
+              
+              <button onClick={() => setIsAvatarModalOpen(false)} className="text-gray-400 hover:text-white font-mono text-sm">[ CLOSE ]</button>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* EDIT USERNAME MODAL */}
+      {/* Edit Username Modal */}
       <AnimatePresence>
         {isEditing && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'grid', placeItems: 'center', padding: '2rem 1rem', overflowY: 'auto' }}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditing(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(5, 7, 10, 0.9)', backdropFilter: 'blur(10px)', zIndex: -1 }} />
-            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="glass-card" style={{ position: 'relative', width: '100%', maxWidth: '450px', padding: '3rem 2.5rem', zIndex: 1001, margin: 'auto' }}>
-              <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.5rem' }}>Update Handle</h2>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.9rem' }}>Choose a unique identifier.</p>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#0a0a10] border border-cyan-500 p-8 rounded-2xl max-w-md w-full shadow-[0_0_40px_rgba(0,243,255,0.1)]"
+            >
+              <h2 className="text-2xl font-bold text-white font-orbitron mb-2">Update Handle</h2>
+              <p className="text-gray-400 text-sm font-mono mb-6">Choose a unique identifier.</p>
+              
               <form onSubmit={handleUsernameUpdate}>
-                <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
-                  <span style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', fontWeight: 900, color: 'var(--accent-primary)', fontSize: '1.2rem' }}>@</span>
-                  <input type="text" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder="agent_name" autoFocus style={{ width: '100%', padding: '1.25rem 1.25rem 1.25rem 2.75rem', background: 'rgba(255,255,255,0.05)', border: '2px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', fontSize: '1.1rem', fontWeight: 700, outline: 'none' }} />
+                <div className="relative mb-6">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-cyan-400 text-lg">@</span>
+                  <input 
+                    type="text" 
+                    value={username} 
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} 
+                    placeholder="agent_name" 
+                    autoFocus 
+                    className="w-full bg-white/5 border border-cyan-500/30 rounded-lg py-3 pl-10 pr-4 text-white font-mono outline-none focus:border-cyan-400 focus:shadow-[0_0_10px_rgba(0,243,255,0.2)] transition"
+                  />
                 </div>
+                
                 {updateStatus.message && (
-                  <div style={{ padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', background: updateStatus.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: `1px solid ${updateStatus.type === 'success' ? 'var(--accent-success)' : 'var(--accent-danger)'}`, color: updateStatus.type === 'success' ? 'var(--accent-success)' : 'var(--accent-danger)', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    {updateStatus.type === 'success' ? <Check size={18} /> : <AlertCircle size={18} />}
+                  <div className={`p-3 rounded text-sm font-mono mb-6 ${updateStatus.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                    <i className={`fas ${updateStatus.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} mr-2`}></i>
                     {updateStatus.message}
                   </div>
                 )}
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button type="button" onClick={() => setIsEditing(false)} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
-                  <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2, background: 'var(--accent-primary)' }}>{loading ? 'Processing...' : 'Save Identity'}</button>
+                
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setIsEditing(false)} className="flex-1 py-3 rounded border border-gray-600 text-gray-400 hover:text-white hover:border-gray-400 transition font-mono text-sm">Cancel</button>
+                  <button type="submit" disabled={loading} className="cyber-btn flex-[2] py-3 px-6 rounded text-sm text-center">
+                    {loading ? 'Processing...' : 'Save Identity'}
+                  </button>
                 </div>
               </form>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
     </main>
   );
-}
-
-function getCategoryColor(cat) {
-  switch(cat) {
-    case 'phishing': return '#8b5cf6';
-    case 'smishing': return '#ec4899';
-    case 'finance': return '#f59e0b';
-    case 'security': return '#10b981';
-    default: return 'var(--accent-primary)';
-  }
 }
 
 function SkillRadar({ performance }) {
@@ -751,18 +698,27 @@ function SkillRadar({ performance }) {
     <div style={{ position: 'relative', width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {[0.2, 0.4, 0.6, 0.8, 1].map(scale => (
-          <circle key={scale} cx={center} cy={center} r={radius * scale} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+          <circle key={scale} cx={center} cy={center} r={radius * scale} fill="none" stroke="rgba(0,243,255,0.1)" strokeWidth="1" />
         ))}
         {CATEGORIES.map((_, i) => {
           const angle = (i / CATEGORIES.length) * 2 * Math.PI - Math.PI / 2;
-          return <line key={i} x1={center} y1={center} x2={center + radius * Math.cos(angle)} y2={center + radius * Math.sin(angle)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />;
+          return <line key={i} x1={center} y1={center} x2={center + radius * Math.cos(angle)} y2={center + radius * Math.sin(angle)} stroke="rgba(0,243,255,0.1)" strokeWidth="1" />;
         })}
-        <motion.polygon points={points} fill="rgba(139, 92, 246, 0.15)" stroke="var(--accent-primary)" strokeWidth="3" strokeLinejoin="round" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1.5, ease: "backOut", delay: 0.5 }} style={{ filter: 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.4))' }} />
+        <motion.polygon 
+          points={points} 
+          fill="rgba(188, 19, 254, 0.15)" 
+          stroke="var(--neon-cyan)" 
+          strokeWidth="2" 
+          strokeLinejoin="round" 
+          initial={{ scale: 0, opacity: 0 }} 
+          animate={{ scale: 1, opacity: 1 }} 
+          transition={{ duration: 1.5, ease: "backOut", delay: 0.5 }} 
+        />
       </svg>
       {CATEGORIES.map((cat, i) => {
         const angle = (i / CATEGORIES.length) * 2 * Math.PI - Math.PI / 2;
         const r = radius + 25;
-        return <div key={cat} style={{ position: 'absolute', top: center + r * Math.sin(angle), left: center + r * Math.cos(angle), transform: 'translate(-50%, -50%)', fontSize: '0.7rem', fontWeight: 900, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>{cat}</div>;
+        return <div key={cat} style={{ position: 'absolute', top: center + r * Math.sin(angle), left: center + r * Math.cos(angle), transform: 'translate(-50%, -50%)', fontSize: '0.65rem', fontWeight: 900, color: '#e0e0e0', textTransform: 'uppercase', letterSpacing: '1px' }}>{cat}</div>;
       })}
     </div>
   );
