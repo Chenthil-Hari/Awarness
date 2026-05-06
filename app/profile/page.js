@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../components/LoadingSpinner';
 import './Profile.css';
@@ -296,8 +295,10 @@ export default function ProfilePage() {
 
   if (!session) {
     return (
-      <main className="profile-page flex items-center justify-center text-center">
-        <div>
+      <main className="profile-page flex items-center justify-center text-center min-h-screen relative">
+        <canvas ref={canvasRef} className="bg-canvas"></canvas>
+        <div className="scanlines"></div>
+        <div className="relative z-10 glass-card p-12 rounded-2xl">
           <h1 className="text-4xl font-orbitron text-red-500 font-bold mb-4 drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]">ACCESS DENIED</h1>
           <p className="text-gray-400 font-mono">Please sign in to view your operative profile.</p>
         </div>
@@ -320,182 +321,199 @@ export default function ProfilePage() {
   const offset = circumference - (accuracy / 100) * circumference;
 
   return (
-    <main className="profile-page relative">
+    <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
       <canvas ref={canvasRef} className="bg-canvas"></canvas>
       <div className="scanlines"></div>
 
-      <div className="min-h-screen flex items-start justify-center p-4 relative z-10 pt-20 pb-20">
-        <div className="w-full max-w-6xl">
+      <div className="w-full max-w-6xl mt-20 mb-20 relative z-10">
+        
+        {/* Header */}
+        <div className="text-center mb-10">
+          <h1 className="font-orbitron text-4xl md:text-5xl font-bold tracking-widest uppercase text-white mb-2 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">Operative Profile</h1>
+          <p className="text-cyan-400 font-mono text-sm tracking-[0.3em]">IDENTITY_VERIFIED // ENCRYPTED_CONNECTION</p>
+        </div>
+
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          {/* Header */}
-          <div className="text-center mb-10">
-            <h1 className="font-orbitron text-4xl md:text-5xl font-bold tracking-widest uppercase text-white mb-2 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">Operative Profile</h1>
-            <p className="text-cyan-400 font-mono text-sm tracking-[0.3em]">IDENTITY_VERIFIED // ENCRYPTED_CONNECTION</p>
+          {/* Left Col: Profile & Stats */}
+          <div className="lg:col-span-4 space-y-6">
+            
+            {/* Profile Card */}
+            <div className="glass-card rounded-2xl p-8 text-center relative">
+              <button onClick={() => signOut()} className="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition" title="Disconnect">
+                <i className="fas fa-power-off"></i>
+              </button>
+              {/* Avatar */}
+              <div className="avatar-container mx-auto mb-6" onClick={() => setIsAvatarModalOpen(true)}>
+                <div className="avatar-border"></div>
+                {user.image ? (
+                  <img src={user.image} alt="Profile" />
+                ) : (
+                  <div className="w-full h-full rounded-full bg-black border-2 border-cyan-500/30 flex items-center justify-center relative z-[2]">
+                    <span className="text-4xl font-orbitron text-cyan-400">{user.name?.charAt(0) || 'U'}</span>
+                  </div>
+                )}
+                <div className="scan-beam"></div>
+                <div className="avatar-overlay">
+                  <i className="fas fa-camera text-white text-2xl"></i>
+                </div>
+              </div>
+              
+              {/* Name & Username */}
+              <h2 className="text-2xl font-bold text-white font-orbitron mb-1">{user.name || 'Unknown Agent'}</h2>
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <p className="text-cyan-400 font-mono text-sm">@{user.username || 'user'}</p>
+                <button onClick={() => setIsEditing(true)} className="text-gray-500 hover:text-cyan-400 transition"><i className="fas fa-edit text-xs"></i></button>
+              </div>
+              
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-2xl font-bold text-cyan-400 font-orbitron">{animatedXp.toLocaleString()}</div>
+                  <div className="text-xs text-gray-400 font-mono uppercase tracking-wider">Total XP</div>
+                </div>
+                <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-2xl font-bold text-pink-400 font-orbitron">Lvl {level}</div>
+                  <div className="text-xs text-gray-400 font-mono uppercase tracking-wider">Level</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Overall Accuracy */}
+            <div className="glass-card rounded-2xl p-6 flex flex-col items-center justify-center">
+              <h3 className="text-lg font-bold text-white font-orbitron mb-4 w-full text-left">
+                <i className="fas fa-crosshairs text-green-400 mr-2"></i>Overall Accuracy
+              </h3>
+              <div className="accuracy-ring">
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                  <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
+                  <motion.circle 
+                    cx="100" cy="100" r="85" fill="none" stroke="var(--neon-green)" strokeWidth="12" strokeDasharray="534" 
+                    initial={{ strokeDashoffset: 534 }}
+                    animate={{ strokeDashoffset: offset }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    strokeLinecap="round" 
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-4xl font-bold text-white font-orbitron">{accuracy}%</span>
+                  <span className="text-xs text-gray-400 font-mono mt-1">PRECISION</span>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 font-mono mt-4 text-center">Based on {totalAttempts} data points</p>
+            </div>
           </div>
 
-          {/* Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Middle Col: Skill Matrix & Categories */}
+          <div className="lg:col-span-5 space-y-6">
             
-            {/* Left Col: Profile & Stats */}
-            <div className="lg:col-span-4 space-y-6">
-              
-              {/* Profile Card */}
-              <div className="glass-card rounded-2xl p-8 text-center relative">
-                <button onClick={() => signOut()} className="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition" title="Disconnect">
-                  <i className="fas fa-power-off"></i>
-                </button>
-                {/* Avatar */}
-                <div className="avatar-container mx-auto mb-6" onClick={() => setIsAvatarModalOpen(true)}>
-                  <div className="avatar-border"></div>
-                  {user.image ? (
-                    <img src={user.image} alt="Profile" />
-                  ) : (
-                    <div className="avatar-placeholder text-4xl font-orbitron text-cyan-400">{user.name?.charAt(0) || 'U'}</div>
-                  )}
-                  <div className="scan-beam"></div>
-                  <div className="avatar-overlay">
-                    <i className="fas fa-camera text-white text-2xl"></i>
-                  </div>
-                </div>
-                
-                {/* Name & Username */}
-                <h2 className="text-2xl font-bold text-white font-orbitron mb-1">{user.name || 'Unknown Agent'}</h2>
-                <div className="flex items-center justify-center gap-2 mb-6">
-                  <p className="text-cyan-400 font-mono text-sm">@{user.username || 'user'}</p>
-                  <button onClick={() => setIsEditing(true)} className="text-gray-500 hover:text-cyan-400 transition"><i className="fas fa-edit text-xs"></i></button>
-                </div>
-                
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                    <div className="text-2xl font-bold text-cyan-400 font-orbitron">{animatedXp.toLocaleString()}</div>
-                    <div className="text-xs text-gray-400 font-mono uppercase tracking-wider">Total XP</div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                    <div className="text-2xl font-bold text-pink-400 font-orbitron">Lvl {level}</div>
-                    <div className="text-xs text-gray-400 font-mono uppercase tracking-wider">Level</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Overall Accuracy */}
-              <div className="glass-card rounded-2xl p-6 flex flex-col items-center justify-center">
-                <h3 className="text-lg font-bold text-white font-orbitron mb-4 w-full text-left">
-                  <i className="fas fa-crosshairs text-green-400 mr-2"></i>Overall Accuracy
-                </h3>
-                <div className="accuracy-ring">
-                  <svg width="200" height="200" viewBox="0 0 200 200">
-                    <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
-                    <motion.circle 
-                      cx="100" cy="100" r="85" fill="none" stroke="var(--neon-green)" strokeWidth="12" strokeDasharray="534" 
-                      initial={{ strokeDashoffset: 534 }}
-                      animate={{ strokeDashoffset: offset }}
-                      transition={{ duration: 1.5, ease: "easeOut" }}
-                      strokeLinecap="round" 
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-4xl font-bold text-white font-orbitron">{accuracy}%</span>
-                    <span className="text-xs text-gray-400 font-mono mt-1">PRECISION</span>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 font-mono mt-4 text-center">Based on {totalAttempts} data points</p>
+            {/* Skill Matrix */}
+            <div className="glass-card rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white font-orbitron mb-4">
+                <i className="fas fa-radar text-cyan-400 mr-2"></i>Skill Matrix
+              </h3>
+              <div className="flex justify-center my-4">
+                <SkillRadar performance={performance} />
               </div>
             </div>
 
-            {/* Middle Col: Skill Matrix & Categories */}
-            <div className="lg:col-span-5 space-y-6">
-              
-              {/* Skill Matrix */}
-              <div className="glass-card rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white font-orbitron mb-4">
-                  <i className="fas fa-radar text-cyan-400 mr-2"></i>Skill Matrix
-                </h3>
-                <div className="flex justify-center my-4">
-                  <SkillRadar performance={performance} />
-                </div>
-              </div>
+            {/* Category Proficiency */}
+            <div className="glass-card rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white font-orbitron mb-6">
+                <i className="fas fa-chart-bar text-pink-400 mr-2"></i>Category Proficiency
+              </h3>
+              <div className="space-y-5">
+                {CATEGORIES.map((cat, idx) => {
+                  const stats = performance[cat] || {};
+                  const xp = stats.xp || 0;
+                  const catAcc = stats.attempts > 0 ? Math.round((stats.successes / stats.attempts) * 100) : 0;
+                  const percent = Math.min(100, (xp / 2000) * 100);
+                  const color = getCategoryColor(cat);
 
-              {/* Category Proficiency */}
-              <div className="glass-card rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white font-orbitron mb-6">
-                  <i className="fas fa-chart-bar text-pink-400 mr-2"></i>Category Proficiency
-                </h3>
-                <div className="space-y-5">
-                  {CATEGORIES.map((cat, idx) => {
-                    const stats = performance[cat] || {};
-                    const xp = stats.xp || 0;
-                    const catAcc = stats.attempts > 0 ? Math.round((stats.successes / stats.attempts) * 100) : 0;
-                    const percent = Math.min(100, (xp / 2000) * 100);
-                    const color = getCategoryColor(cat);
-
-                    return (
-                      <div key={idx}>
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm font-bold text-gray-300 font-mono uppercase tracking-wider">{cat}</span>
-                          <span className="text-xs font-mono" style={{ color }}>{catAcc}% Acc</span>
-                        </div>
-                        <div className="skill-track">
-                          <motion.div 
-                            className="skill-fill" 
-                            initial={{ width: 0 }}
-                            animate={{ width: `${percent}%` }}
-                            transition={{ duration: 1.5, delay: 0.2 }}
-                            style={{ background: `linear-gradient(90deg, ${color}, ${color}80)` }} 
-                          />
-                        </div>
+                  return (
+                    <div key={idx}>
+                      <div className="flex justify-between mb-2">
+                        <span className="text-sm font-bold text-gray-300 font-mono uppercase tracking-wider">{cat}</span>
+                        <span className="text-xs font-mono" style={{ color }}>{catAcc}% Acc</span>
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="skill-track">
+                        <motion.div 
+                          className="skill-fill" 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percent}%` }}
+                          transition={{ duration: 1.5, delay: 0.2 }}
+                          style={{ background: `linear-gradient(90deg, ${color}, ${color}80)` }} 
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
+          </div>
 
-            {/* Right Col: Command Support & Alerts */}
-            <div className="lg:col-span-3 space-y-6">
+          {/* Right Col: Command Support & Alerts */}
+          <div className="lg:col-span-3 space-y-6">
+            
+            {/* Support Form */}
+            <div className="glass-card rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white font-orbitron mb-4">
+                <i className="fas fa-headset text-cyan-400 mr-2"></i>Command Support
+              </h3>
+              <p className="text-xs text-gray-400 font-mono mb-6 leading-relaxed">
+                Need backup? Submit a mission query to Command Center. Response ETA: &lt;24hrs.
+              </p>
               
-              {/* Support Form */}
-              <div className="glass-card rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white font-orbitron mb-4">
-                  <i className="fas fa-headset text-cyan-400 mr-2"></i>Command Support
+              <form onSubmit={handleSubmitTicket} className="space-y-4">
+                {updateStatus.message && (
+                  <div className={`p-2 text-xs font-mono rounded ${updateStatus.type === 'error' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                    {updateStatus.message}
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs font-mono text-cyan-400 uppercase tracking-wider mb-2">Subject</label>
+                  <input type="text" placeholder="Mission ID / Issue Type" value={newTicket.subject} onChange={e => setNewTicket({...newTicket, subject: e.target.value})} className="cyber-input text-sm" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-cyan-400 uppercase tracking-wider mb-2">Details</label>
+                  <textarea rows="4" placeholder="Describe the anomaly..." value={newTicket.message} onChange={e => setNewTicket({...newTicket, message: e.target.value})} className="cyber-input text-sm resize-none" required></textarea>
+                </div>
+                <button type="submit" disabled={isSubmitting} className="cyber-btn w-full py-3 rounded text-sm uppercase flex items-center justify-center">
+                  {isSubmitting ? <><i className="fas fa-spinner fa-spin mr-2"></i>ENCRYPTING...</> : <><i className="fas fa-paper-plane mr-2"></i>Transmit</>}
+                </button>
+              </form>
+            </div>
+            
+            {/* System Status / Alerts */}
+            <div className="glass-card rounded-2xl p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-bold text-white font-orbitron uppercase tracking-wider">
+                  <i className="fas fa-satellite-dish text-green-400 mr-2"></i>System Status
                 </h3>
-                <p className="text-xs text-gray-400 font-mono mb-6 leading-relaxed">
-                  Need backup? Submit a mission query to Command Center.
-                </p>
-                
-                <form onSubmit={handleSubmitTicket} className="space-y-4">
-                  {updateStatus.message && (
-                    <div className={`p-2 text-xs font-mono rounded ${updateStatus.type === 'error' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
-                      {updateStatus.message}
-                    </div>
-                  )}
-                  <div>
-                    <label className="block text-xs font-mono text-cyan-400 uppercase tracking-wider mb-2">Subject</label>
-                    <input type="text" placeholder="Mission ID / Issue" value={newTicket.subject} onChange={e => setNewTicket({...newTicket, subject: e.target.value})} className="cyber-input text-sm" required />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-mono text-cyan-400 uppercase tracking-wider mb-2">Details</label>
-                    <textarea rows="4" placeholder="Describe anomaly..." value={newTicket.message} onChange={e => setNewTicket({...newTicket, message: e.target.value})} className="cyber-input text-sm resize-none" required></textarea>
-                  </div>
-                  <button type="submit" disabled={isSubmitting} className="cyber-btn w-full py-3 rounded text-sm uppercase flex items-center justify-center">
-                    {isSubmitting ? <><i className="fas fa-spinner fa-spin mr-2"></i>ENCRYPTING...</> : <><i className="fas fa-paper-plane mr-2"></i>Transmit</>}
-                  </button>
-                </form>
+                {notifications.some(n => !n.read) && (
+                  <button onClick={() => markNotificationRead()} className="text-[10px] text-cyan-400 hover:text-white font-mono">CLEAR ALL ALERTS</button>
+                )}
               </div>
               
-              {/* Status Feed / Alerts */}
-              <div className="glass-card rounded-2xl p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-bold text-white font-orbitron uppercase tracking-wider">
-                    <i className="fas fa-satellite-dish text-green-400 mr-2"></i>Command Alerts
-                  </h3>
-                  {notifications.some(n => !n.read) && (
-                    <button onClick={() => markNotificationRead()} className="text-[10px] text-cyan-400 hover:text-white font-mono">CLEAR ALL</button>
-                  )}
-                </div>
-                
-                <div className="space-y-3 max-h-[250px] overflow-y-auto no-scrollbar">
-                  {notifications.length > 0 ? notifications.map((n, idx) => (
+              <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-400 font-mono">Firewall</span>
+                      <span className="text-green-400 font-mono text-xs"><i className="fas fa-check-circle mr-1"></i>ACTIVE</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-400 font-mono">Encryption</span>
+                      <span className="text-green-400 font-mono text-xs"><i className="fas fa-lock mr-1"></i>AES-256</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-400 font-mono">Threat Level</span>
+                      <span className="text-yellow-400 font-mono text-xs"><i className="fas fa-exclamation-triangle mr-1"></i>MODERATE</span>
+                  </div>
+              </div>
+
+              {notifications.length > 0 && (
+                <div className="space-y-3 max-h-[200px] overflow-y-auto no-scrollbar pt-4 border-t border-white/10">
+                  {notifications.map((n, idx) => (
                     <div 
                       key={idx} 
                       onClick={() => !n.read && markNotificationRead(n._id)}
@@ -508,95 +526,90 @@ export default function ProfilePage() {
                       <p className="text-xs text-gray-400 mb-2">{n.message}</p>
                       <div className="text-[10px] text-gray-500 font-mono text-right">{timeAgo(n.createdAt)}</div>
                     </div>
-                  )) : (
-                    <div className="text-center py-6 text-gray-500 font-mono text-xs">
-                      <i className="fas fa-shield-alt text-2xl mb-2 opacity-50 block"></i>
-                      SYSTEMS NORMAL.<br/>NO ALERTS.
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Row: Mission Log & Comms */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          {/* Mission Log */}
+          <div className="glass-card rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-white font-orbitron mb-4">
+              <i className="fas fa-history text-cyan-400 mr-2"></i>Mission Log
+            </h3>
+            <div className="space-y-3 max-h-[300px] overflow-y-auto no-scrollbar pr-2">
+              {history.length > 0 ? history.slice(0, 10).map((item, idx) => (
+                <div key={idx} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/10">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${item.success ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                    <i className={`fas ${item.success ? 'fa-shield-check' : 'fa-skull'}`}></i>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="font-bold text-sm font-orbitron">{item.type} {item.success ? 'Secured' : 'Breached'}</p>
+                      <p className="text-xs text-gray-500 font-mono">{timeAgo(item.timestamp)}</p>
+                    </div>
+                    <p className="text-xs text-gray-400 font-mono">{item.xp > 0 ? `Reward: +${item.xp} XP` : 'Standard Drill'}</p>
+                  </div>
+                </div>
+              )) : (
+                <div className="text-center py-8 text-gray-500 font-mono">No missions recorded.</div>
+              )}
+            </div>
+          </div>
+
+          {/* Mission Comms (Tickets) */}
+          <div className="glass-card rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-white font-orbitron mb-4">
+              <i className="fas fa-envelope-open-text text-pink-400 mr-2"></i>Mission Comms
+            </h3>
+            <div className="space-y-3 max-h-[300px] overflow-y-auto no-scrollbar pr-2">
+              {tickets.length > 0 ? tickets.map((ticket, idx) => (
+                <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded font-mono uppercase ${ticket.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}`}>
+                        {ticket.status}
+                      </span>
+                      <h4 className="font-bold text-sm mt-2">{ticket.subject}</h4>
+                    </div>
+                    <span className="text-xs text-gray-500 font-mono">{timeAgo(ticket.createdAt)}</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-3">{ticket.message}</p>
+                  
+                  {ticket.replies && ticket.replies.length > 0 && (
+                    <div className="p-3 rounded-lg bg-cyan-500/5 border-l-2 border-cyan-400">
+                      {ticket.replies.map((reply, ridx) => (
+                        <div key={ridx} className="mb-2 last:mb-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <i className="fas fa-shield-alt text-cyan-400 text-[10px]"></i>
+                            <span className="text-[10px] font-bold text-cyan-400 font-mono">COMMAND</span>
+                          </div>
+                          <p className="text-xs text-gray-300">{reply.message}</p>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
-              </div>
+              )) : (
+                <div className="text-center py-8 text-gray-500 font-mono">No active comms channel.</div>
+              )}
             </div>
           </div>
+        </div>
 
-          {/* Bottom Row: Mission Log & Comms */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            {/* Mission Log */}
-            <div className="glass-card rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white font-orbitron mb-4">
-                <i className="fas fa-history text-cyan-400 mr-2"></i>Mission Log
-              </h3>
-              <div className="space-y-3 max-h-[300px] overflow-y-auto no-scrollbar pr-2">
-                {history.length > 0 ? history.slice(0, 10).map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/10">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${item.success ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
-                      <i className={`fas ${item.success ? 'fa-shield-check' : 'fa-skull'}`}></i>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center mb-1">
-                        <p className="font-bold text-sm font-orbitron">{item.type} {item.success ? 'Secured' : 'Breached'}</p>
-                        <p className="text-xs text-gray-500 font-mono">{timeAgo(item.timestamp)}</p>
-                      </div>
-                      <p className="text-xs text-gray-400 font-mono">{item.xp > 0 ? `Reward: +${item.xp} XP` : 'Standard Drill'}</p>
-                    </div>
-                  </div>
-                )) : (
-                  <div className="text-center py-8 text-gray-500 font-mono">No missions recorded.</div>
-                )}
-              </div>
-            </div>
-
-            {/* Mission Comms (Tickets) */}
-            <div className="glass-card rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white font-orbitron mb-4">
-                <i className="fas fa-envelope-open-text text-pink-400 mr-2"></i>Mission Comms
-              </h3>
-              <div className="space-y-3 max-h-[300px] overflow-y-auto no-scrollbar pr-2">
-                {tickets.length > 0 ? tickets.map((ticket, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <span className={`text-[10px] font-bold px-2 py-1 rounded font-mono uppercase ${ticket.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}`}>
-                          {ticket.status}
-                        </span>
-                        <h4 className="font-bold text-sm mt-2">{ticket.subject}</h4>
-                      </div>
-                      <span className="text-xs text-gray-500 font-mono">{timeAgo(ticket.createdAt)}</span>
-                    </div>
-                    <p className="text-xs text-gray-400 mb-3">{ticket.message}</p>
-                    
-                    {ticket.replies && ticket.replies.length > 0 && (
-                      <div className="p-3 rounded-lg bg-cyan-500/5 border-l-2 border-cyan-400">
-                        {ticket.replies.map((reply, ridx) => (
-                          <div key={ridx} className="mb-2 last:mb-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <i className="fas fa-shield-alt text-cyan-400 text-[10px]"></i>
-                              <span className="text-[10px] font-bold text-cyan-400 font-mono">COMMAND</span>
-                            </div>
-                            <p className="text-xs text-gray-300">{reply.message}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )) : (
-                  <div className="text-center py-8 text-gray-500 font-mono">No active comms channel.</div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="text-center mt-12 font-mono text-xs text-gray-600 tracking-[0.2em]">
-            ENCRYPTED Transmission v4.2.1 // ID: 0x{user._id ? user._id.slice(-6).toUpperCase() : 'PH4N70M'}
-          </div>
+        {/* Footer */}
+        <div className="text-center mt-12 font-mono text-xs text-gray-600 tracking-[0.2em]">
+          ENCRYPTED Transmission v4.2.1 // ID: 0x{user._id ? user._id.slice(-6).toUpperCase() : 'PH4N70M'}
         </div>
       </div>
 
       {/* Avatar Modal */}
       <AnimatePresence>
         {isAvatarModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -634,7 +647,7 @@ export default function ProfilePage() {
       {/* Edit Username Modal */}
       <AnimatePresence>
         {isEditing && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -676,7 +689,7 @@ export default function ProfilePage() {
         )}
       </AnimatePresence>
 
-    </main>
+    </div>
   );
 }
 
@@ -697,8 +710,14 @@ function SkillRadar({ performance }) {
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {[0.2, 0.4, 0.6, 0.8, 1].map(scale => (
-          <circle key={scale} cx={center} cy={center} r={radius * scale} fill="none" stroke="rgba(0,243,255,0.1)" strokeWidth="1" />
+        {[0.25, 0.5, 0.75, 1].map(scale => (
+          <polygon key={scale} 
+            points={CATEGORIES.map((_, i) => {
+              const angle = (i / CATEGORIES.length) * 2 * Math.PI - Math.PI / 2;
+              return `${center + radius * scale * Math.cos(angle)},${center + radius * scale * Math.sin(angle)}`;
+            }).join(' ')}
+            fill="none" stroke="rgba(0,243,255,0.1)" strokeWidth="1" 
+          />
         ))}
         {CATEGORIES.map((_, i) => {
           const angle = (i / CATEGORIES.length) * 2 * Math.PI - Math.PI / 2;
@@ -709,7 +728,7 @@ function SkillRadar({ performance }) {
           fill="rgba(188, 19, 254, 0.15)" 
           stroke="var(--neon-cyan)" 
           strokeWidth="2" 
-          strokeLinejoin="round" 
+          strokeLinejoin="miter" 
           initial={{ scale: 0, opacity: 0 }} 
           animate={{ scale: 1, opacity: 1 }} 
           transition={{ duration: 1.5, ease: "backOut", delay: 0.5 }} 
