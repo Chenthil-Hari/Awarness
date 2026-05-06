@@ -9,10 +9,10 @@ import './Leaderboard.css';
 
 /* ── League config ── */
 const LEAGUES = [
-  { id: 'Bronze',      label: 'ALL TIME'   },
-  { id: 'Silver',      label: 'WEEKLY'  },
-  { id: 'Gold',        label: 'MONTHLY'     },
-  { id: 'Hacker-Tier', label: 'OPERATIVES'   },
+  { id: 'Bronze',      label: 'RECRUIT'   },
+  { id: 'Silver',      label: 'SENTINEL'  },
+  { id: 'Gold',        label: 'ELITE'     },
+  { id: 'Hacker-Tier', label: 'PHANTOM'   },
 ];
 
 function initials(name = '') {
