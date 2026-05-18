@@ -124,7 +124,7 @@ export default function SimulationViewer({ scenario, onExit }) {
         <div style={{ padding: '1.5rem', flex: 1, overflowY: 'auto' }}>
           <AnimatePresence mode="wait">
             <motion.div
-              key={currentStep.text}
+              key={currentStep?.text || 'empty'}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
@@ -132,12 +132,12 @@ export default function SimulationViewer({ scenario, onExit }) {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem' }}>
                 <p style={{ fontSize: '1.1rem', lineHeight: 1.5, margin: 0, color: 'var(--text-primary)', flex: 1 }}>
-                  {currentStep.text}
+                  {currentStep?.text || "No story data available for this mission step."}
                 </p>
                 <button 
                   onClick={() => {
                     window.speechSynthesis.cancel();
-                    const utterance = new SpeechSynthesisUtterance(currentStep.text);
+                    const utterance = new SpeechSynthesisUtterance(currentStep?.text || "");
                     utterance.rate = 0.9;
                     utterance.pitch = 1;
                     window.speechSynthesis.speak(utterance);
@@ -152,7 +152,7 @@ export default function SimulationViewer({ scenario, onExit }) {
 
               {!isComplete ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {currentStep.options.map((option, idx) => (
+                  {currentStep?.options?.map((option, idx) => (
                     <button
                       key={idx}
                       className="btn-secondary"
@@ -193,9 +193,9 @@ export default function SimulationViewer({ scenario, onExit }) {
                     <CheckCircle2 size={40} color="var(--accent-success)" style={{ marginBottom: '1rem' }} />
                   )}
                   <h3 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>
-                    {currentStep.failed ? 'Failed' : 'Success!'}
+                    {currentStep?.failed ? 'Failed' : 'Success!'}
                   </h3>
-                  <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>{currentStep.text}</p>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>{currentStep?.text}</p>
                   
                   <div className="flex-mobile-column" style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem' }}>
                     <button className="btn-secondary" onClick={reset} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>

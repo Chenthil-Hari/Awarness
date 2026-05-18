@@ -82,7 +82,7 @@ export default function ScenariosPage() {
           <ScenarioCard 
             key={scenario.id} 
             scenario={scenario} 
-            onSelect={(s) => setSelectedScenario(s)} 
+            onClick={() => setSelectedScenario(scenario)} 
           />
         ))}
       </div>

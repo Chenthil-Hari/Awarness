@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, BarChart2, Brain, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save, Globe, Send, Sparkles, ShieldCheck, Vote, Map as MapIcon, ThumbsUp, ThumbsDown, Trophy, Calendar, Image as ImageIcon, Folder, FileText, Upload, Key, Lock, Workflow, Activity, Settings, Award, Monitor, Smartphone, RefreshCw, AlertCircle, Download, Mic } from 'lucide-react';
+import { Shield, Users, BookOpen, AlertTriangle, Trash2, CheckCircle, BarChart3, BarChart2, Brain, ArrowUpRight, User, ExternalLink, ShieldAlert, LogOut, Sun, Moon, Ghost, Mail, Command, Bot, Zap, Eye, EyeOff, Layout, Plus, Minus, Save, Globe, Send, Sparkles, ShieldCheck, Vote, Map as MapIcon, ThumbsUp, ThumbsDown, Trophy, Calendar, Image as ImageIcon, Folder, FileText, Upload, Key, Lock, Workflow, Activity, Settings, Award, Monitor, Smartphone, RefreshCw, AlertCircle, Download, Mic, ShoppingCart, Swords, Radio, Target } from 'lucide-react';
 import AdminCommandBar from '../components/AdminCommandBar';
 import * as XLSX from 'xlsx';
 import { getPusherClient } from '@/lib/pusher';
@@ -1093,7 +1093,14 @@ function AdminPage() {
             { id: 'support', icon: <Bot size={18} />, label: 'Support' },
             { id: 'broadcast', icon: <Send size={18} />, label: 'Broadcast' },
             { id: 'compliance', icon: <FileText size={18} />, label: 'Compliance' },
-            { id: 'sentinel', icon: <Eye size={18} />, label: 'Sentinel' }
+            { id: 'sentinel', icon: <Eye size={18} />, label: 'Sentinel' },
+            { id: 'shop-management', icon: <ShoppingCart size={18} />, label: 'Black Market' },
+            { id: 'league-management', icon: <Award size={18} />, label: 'Leagues' },
+            { id: 'multiplayer-ops', icon: <Swords size={18} />, label: 'Operations' },
+            { id: 'global-threat', icon: <Radio size={18} />, label: 'Live Events' },
+            { id: 'simulator-control', icon: <Target size={18} />, label: 'Simulator' },
+            { id: 'noc-map', icon: <MapIcon size={18} />, label: 'NOC / Map' },
+            { id: 'ai-management', icon: <Brain size={18} />, label: 'AI Persona' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -2821,6 +2828,176 @@ function AdminPage() {
               </div>
             </div>
             )}
+
+          {activeTab === 'shop-management' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
+                    <ShoppingCart size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>Black Market <span className="gradient-text">Inventory</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Manage digital assets, cyberware pricing, and limited drops</p>
+                  </div>
+                </div>
+                <div style={{ padding: '3rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed var(--glass-border)' }}>
+                  <ShoppingCart size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+                  <h4 style={{ margin: '0 0 0.5rem 0' }}>Inventory Terminal Offline</h4>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Establish connection to main shop database to manage items.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'league-management' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ padding: '0.8rem', background: '#f59e0b', borderRadius: '12px', color: 'black' }}>
+                    <Award size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>League <span style={{ color: '#f59e0b' }}>Seasons</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Manage tiers, trigger season resets, and view Hall of Fame</p>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+                  {['Recruit', 'Sentinel', 'Elite', 'Phantom'].map((tier, i) => (
+                    <div key={tier} style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--glass-border)', textAlign: 'center' }}>
+                      <h4 style={{ margin: '0 0 0.5rem 0' }}>{tier}</h4>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{i * 5000} XP min</p>
+                    </div>
+                  ))}
+                </div>
+                <button className="btn-primary" style={{ width: '100%', padding: '1rem' }}>TRIGGER SEASON RESET</button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'multiplayer-ops' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ padding: '0.8rem', background: 'var(--accent-secondary)', borderRadius: '12px', color: 'white' }}>
+                    <Swords size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>Multiplayer <span style={{ color: 'var(--accent-secondary)' }}>Operations</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Monitor active Duels, Heists, and adjust global modifiers</p>
+                  </div>
+                </div>
+                <div style={{ padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                  <p style={{ fontWeight: 800, marginBottom: '1rem' }}>Active Global Modifiers</p>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <span style={{ padding: '0.5rem 1rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700 }}>None Active</span>
+                  </div>
+                  <button className="btn-secondary" style={{ marginTop: '1.5rem' }}>+ INJECT NEW MODIFIER</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'global-threat' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ padding: '0.8rem', background: '#ef4444', borderRadius: '12px', color: 'white' }}>
+                    <Radio size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>Global <span style={{ color: '#ef4444' }}>Threat Injection</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Trigger DEFCON events and massive simulated incursions</p>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                   <div style={{ padding: '2rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '16px', border: '1px solid rgba(239, 68, 68, 0.2)', textAlign: 'center' }}>
+                     <h3 style={{ color: '#ef4444', marginBottom: '1rem' }}>DEFCON STATUS</h3>
+                     <h1 style={{ fontSize: '4rem', margin: '1rem 0', fontWeight: 900, color: '#10b981' }}>5</h1>
+                     <button className="btn-secondary" style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}>ELEVATE THREAT LEVEL</button>
+                   </div>
+                   <div style={{ padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                     <h4 style={{ marginBottom: '1rem' }}>Simulated Incursions</h4>
+                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No global hacks currently active. Network is stable.</p>
+                     <button className="btn-primary" style={{ marginTop: '1rem', width: '100%' }}>TRIGGER NEW INCURSION</button>
+                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'simulator-control' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
+                    <Target size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>Advanced <span className="gradient-text">Simulator</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Manage Deepfake Detective and Smishing scenarios</p>
+                  </div>
+                </div>
+                <div style={{ padding: '3rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed var(--glass-border)' }}>
+                  <Target size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+                  <h4 style={{ margin: '0 0 0.5rem 0' }}>Campaign Builder</h4>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Upload deepfakes or craft phishing hooks for the community.</p>
+                  <button className="btn-primary" style={{ marginTop: '1.5rem' }}>OPEN BUILDER</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'noc-map' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ padding: '0.8rem', background: '#3b82f6', borderRadius: '12px', color: 'white' }}>
+                    <MapIcon size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>Network Operations <span style={{ color: '#3b82f6' }}>Center</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Real-time surveillance and live map</p>
+                  </div>
+                </div>
+                <div style={{ height: '400px', background: 'rgba(0,0,0,0.5)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)' }}>
+                  <p style={{ color: 'var(--text-muted)' }}>Live Map Feed Initializing...</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'ai-management' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', background: isDark ? 'var(--glass-bg)' : 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', borderRadius: '12px', color: 'white' }}>
+                    <Brain size={24} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>AI <span className="gradient-text">Persona Management</span></h2>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Control "Void" glitch-taunts and AI Buddy tone</p>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                    <h4 style={{ marginBottom: '1rem' }}>Buddy AI Tone</h4>
+                    <select style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '8px' }}>
+                      <option>Helpful Guide</option>
+                      <option>Strict Overseer</option>
+                      <option>Sarcastic Hacker</option>
+                    </select>
+                  </div>
+                  <div style={{ padding: '1.5rem', background: 'rgba(124, 58, 237, 0.05)', borderRadius: '16px', border: '1px solid rgba(124, 58, 237, 0.2)' }}>
+                    <h4 style={{ marginBottom: '1rem', color: 'var(--accent-primary)' }}>"Void" Taunt Matrix</h4>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Manage glitch messages sent on mission failure.</p>
+                    <button className="btn-secondary" style={{ width: '100%', marginTop: '0.5rem' }}>EDIT TAUNTS</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           </div>
           </motion.div>
         </AnimatePresence>
