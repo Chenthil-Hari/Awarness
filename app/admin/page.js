@@ -2845,6 +2845,7 @@ function AdminPage() {
                   <ShoppingCart size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
                   <h4 style={{ margin: '0 0 0.5rem 0' }}>Inventory Terminal Offline</h4>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Establish connection to main shop database to manage items.</p>
+                  <button onClick={() => alert('Establishing secure link to Black Market database...')} className="btn-primary" style={{ marginTop: '1.5rem' }}>CONNECT TO DATABASE</button>
                 </div>
               </div>
             </div>
@@ -2870,7 +2871,7 @@ function AdminPage() {
                     </div>
                   ))}
                 </div>
-                <button className="btn-primary" style={{ width: '100%', padding: '1rem' }}>TRIGGER SEASON RESET</button>
+                <button onClick={() => { if(confirm('Are you sure you want to trigger a season reset? All ranks will be archived.')) alert('Season Reset Initiated!'); }} className="btn-primary" style={{ width: '100%', padding: '1rem' }}>TRIGGER SEASON RESET</button>
               </div>
             </div>
           )}
@@ -2892,7 +2893,7 @@ function AdminPage() {
                   <div style={{ display: 'flex', gap: '1rem' }}>
                     <span style={{ padding: '0.5rem 1rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700 }}>None Active</span>
                   </div>
-                  <button className="btn-secondary" style={{ marginTop: '1.5rem' }}>+ INJECT NEW MODIFIER</button>
+                  <button onClick={() => alert('Opening Modifier Injection Terminal...')} className="btn-secondary" style={{ marginTop: '1.5rem' }}>+ INJECT NEW MODIFIER</button>
                 </div>
               </div>
             </div>
@@ -2914,12 +2915,12 @@ function AdminPage() {
                    <div style={{ padding: '2rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '16px', border: '1px solid rgba(239, 68, 68, 0.2)', textAlign: 'center' }}>
                      <h3 style={{ color: '#ef4444', marginBottom: '1rem' }}>DEFCON STATUS</h3>
                      <h1 style={{ fontSize: '4rem', margin: '1rem 0', fontWeight: 900, color: '#10b981' }}>5</h1>
-                     <button className="btn-secondary" style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}>ELEVATE THREAT LEVEL</button>
+                     <button onClick={() => { if(confirm('WARNING: Elevating DEFCON level. Proceed?')) alert('Threat level elevated.'); }} className="btn-secondary" style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}>ELEVATE THREAT LEVEL</button>
                    </div>
                    <div style={{ padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
                      <h4 style={{ marginBottom: '1rem' }}>Simulated Incursions</h4>
                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No global hacks currently active. Network is stable.</p>
-                     <button className="btn-primary" style={{ marginTop: '1rem', width: '100%' }}>TRIGGER NEW INCURSION</button>
+                     <button onClick={() => alert('Deploying new global incursion simulation...')} className="btn-primary" style={{ marginTop: '1rem', width: '100%' }}>TRIGGER NEW INCURSION</button>
                    </div>
                 </div>
               </div>
@@ -2942,7 +2943,7 @@ function AdminPage() {
                   <Target size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
                   <h4 style={{ margin: '0 0 0.5rem 0' }}>Campaign Builder</h4>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Upload deepfakes or craft phishing hooks for the community.</p>
-                  <button className="btn-primary" style={{ marginTop: '1.5rem' }}>OPEN BUILDER</button>
+                  <button onClick={() => alert('Launching Advanced Campaign Builder...')} className="btn-primary" style={{ marginTop: '1.5rem' }}>OPEN BUILDER</button>
                 </div>
               </div>
             </div>
@@ -2960,8 +2961,9 @@ function AdminPage() {
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Real-time surveillance and live map</p>
                   </div>
                 </div>
-                <div style={{ height: '400px', background: 'rgba(0,0,0,0.5)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)' }}>
+                <div style={{ height: '400px', background: 'rgba(0,0,0,0.5)', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)', gap: '1rem' }}>
                   <p style={{ color: 'var(--text-muted)' }}>Live Map Feed Initializing...</p>
+                  <button onClick={() => alert('Pinging NOC Satellites...')} className="btn-secondary">FORCE REFRESH</button>
                 </div>
               </div>
             </div>
@@ -2991,7 +2993,7 @@ function AdminPage() {
                   <div style={{ padding: '1.5rem', background: 'rgba(124, 58, 237, 0.05)', borderRadius: '16px', border: '1px solid rgba(124, 58, 237, 0.2)' }}>
                     <h4 style={{ marginBottom: '1rem', color: 'var(--accent-primary)' }}>"Void" Taunt Matrix</h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Manage glitch messages sent on mission failure.</p>
-                    <button className="btn-secondary" style={{ width: '100%', marginTop: '0.5rem' }}>EDIT TAUNTS</button>
+                    <button onClick={() => alert('Opening Void Taunt Matrix Editor...')} className="btn-secondary" style={{ width: '100%', marginTop: '0.5rem' }}>EDIT TAUNTS</button>
                   </div>
                 </div>
               </div>
